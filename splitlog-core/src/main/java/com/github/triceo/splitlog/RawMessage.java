@@ -4,8 +4,8 @@ import java.util.List;
 
 public class RawMessage {
 
-    public RawMessage(List<String> lines) {
-        
+    public RawMessage(final List<String> lines) {
+
     }
 
 }

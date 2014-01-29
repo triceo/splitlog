@@ -5,37 +5,35 @@ import java.util.List;
 
 // FIXME should probably become abstract, with the isStartingLine an abstract method.
 public class JBossServerLogTailSplitter implements TailSplitter {
-    
-    private final List<String> lines = new ArrayList<String>();
-    
-    protected boolean isStartingLine(final String line) {
-        // FIXME this will treat each line as a new message
-        return true;
-    }
 
-    @Override
-    public RawMessage addLine(String line) {
-        final boolean restart = isStartingLine(line);
+    private final List<String> lines = new ArrayList<String>();
+
+    public RawMessage addLine(final String line) {
+        final boolean restart = this.isStartingLine(line);
         if (restart) {
-            if (lines.isEmpty()) {
-                lines.add(line);
-                return forceProcessing();
+            if (this.lines.isEmpty()) {
+                this.lines.add(line);
+                return this.forceProcessing();
             } else {
-                RawMessage msg = forceProcessing();
-                lines.add(line);
+                final RawMessage msg = this.forceProcessing();
+                this.lines.add(line);
                 return msg;
             }
         } else {
-            lines.add(line);
+            this.lines.add(line);
             return null;
         }
     }
 
-    @Override
     public RawMessage forceProcessing() {
-        RawMessage msg = new RawMessage(lines);
-        lines.clear();
+        final RawMessage msg = new RawMessage(this.lines);
+        this.lines.clear();
         return msg;
+    }
+
+    protected boolean isStartingLine(final String line) {
+        // FIXME this will treat each line as a new message
+        return true;
     }
 
 }
