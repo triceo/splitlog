@@ -20,4 +20,15 @@ public class RawMessage {
         return this.lines;
     }
 
+    @Override
+    public String toString() {
+        final String newline = System.getProperty("line.separator");
+        final StringBuilder sb = new StringBuilder();
+        for (final String line : this.lines) {
+            sb.append(line);
+            sb.append(newline);
+        }
+        return sb.toString().trim();
+    }
+
 }
