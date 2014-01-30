@@ -1,11 +1,23 @@
 package com.github.triceo.splitlog;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RawMessage {
 
-    public RawMessage(final List<String> lines) {
+    private final List<String> lines;
 
+    public RawMessage(final List<String> lines) {
+        this.lines = Collections.unmodifiableList(new ArrayList<String>(lines));
+    }
+
+    public String getFirstLine() {
+        return this.getLines().get(0);
+    }
+
+    public List<String> getLines() {
+        return this.lines;
     }
 
 }

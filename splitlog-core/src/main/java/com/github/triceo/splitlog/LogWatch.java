@@ -18,8 +18,7 @@ public class LogWatch {
     protected LogWatch(final File watchedFile, final TailSplitter splitter,
             final MessageClassifier<MessageType> typeClassifier,
             final MessageClassifier<MessageSeverity> severityClassifier) {
-        // FIXME this needs to be a generic logwatch, not server log watch
-        this.listener = new LogWatchTailerListener(new JBossServerLogTailSplitter());
+        this.listener = new LogWatchTailerListener(splitter);
         this.tailer = new Tailer(watchedFile, this.listener);
         this.tailer.run();
     }

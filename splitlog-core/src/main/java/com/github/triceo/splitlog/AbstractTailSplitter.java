@@ -3,8 +3,7 @@ package com.github.triceo.splitlog;
 import java.util.ArrayList;
 import java.util.List;
 
-// FIXME should probably become abstract, with the isStartingLine an abstract method.
-public class JBossServerLogTailSplitter implements TailSplitter {
+public abstract class AbstractTailSplitter implements TailSplitter {
 
     private final List<String> lines = new ArrayList<String>();
 
@@ -31,9 +30,6 @@ public class JBossServerLogTailSplitter implements TailSplitter {
         return msg;
     }
 
-    protected boolean isStartingLine(final String line) {
-        // FIXME this will treat each line as a new message
-        return true;
-    }
+    abstract protected boolean isStartingLine(final String line);
 
 }
