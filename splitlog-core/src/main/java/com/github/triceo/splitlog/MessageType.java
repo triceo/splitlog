@@ -7,6 +7,6 @@ package com.github.triceo.splitlog;
  */
 public enum MessageType {
 
-    LOG;
+    LOG, TAG;
 
 }

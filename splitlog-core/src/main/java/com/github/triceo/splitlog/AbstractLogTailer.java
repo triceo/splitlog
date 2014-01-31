@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 
-abstract class AbstractLogTailer implements Tailable {
+abstract class AbstractLogTailer {
 
     private final LogWatch watch;
 
@@ -29,13 +29,15 @@ abstract class AbstractLogTailer implements Tailable {
 
     protected abstract void notifyOfMessage(Message msg);
 
-    public AbstractLogTailer startTailing() {
-        return this.watch.startTailing();
-    }
-
-    public boolean terminateTailing() {
-        return this.watch.terminateTailing(this);
-    }
+    /**
+     * Mark the current location in the tail by a custom message. It is up to
+     * the implementors to decide whether or not a tag inserted at the same time
+     * twice is inserted twice, or the second tag overwrites the first.
+     * 
+     * @param tagLine
+     *            Text of the message.
+     */
+    public abstract void tag(String tagLine);
 
     /**
      * Will block until a message arrives, for which the condition is true.

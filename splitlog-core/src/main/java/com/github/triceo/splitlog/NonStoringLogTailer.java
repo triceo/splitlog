@@ -1,6 +1,9 @@
 package com.github.triceo.splitlog;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
@@ -16,13 +19,21 @@ class NonStoringLogTailer extends AbstractLogTailer {
     private MessageCondition blockingCondition = null;
     private CyclicBarrier blocker = new CyclicBarrier(2);
 
+    private final Map<Integer, Message> tags = new TreeMap<Integer, Message>();
+
     public NonStoringLogTailer(final LogWatch watch) {
         super(watch);
     }
 
     @Override
     public List<Message> getMessages() {
-        return this.getWatch().getAllMessages(this);
+        final List<Message> messages = new LinkedList<Message>(this.getWatch().getAllMessages(this));
+        int offset = 0;
+        for (final Map.Entry<Integer, Message> entry : this.tags.entrySet()) {
+            messages.add(entry.getKey() + offset, entry.getValue());
+            offset++;
+        }
+        return messages;
     }
 
     @Override
@@ -43,6 +54,13 @@ class NonStoringLogTailer extends AbstractLogTailer {
     private void refreshBarrier() {
         this.blockingCondition = null;
         this.blocker = new CyclicBarrier(2);
+    }
+
+    @Override
+    public void tag(final String tagLine) {
+        final int messageId = this.getWatch().getAllMessages(this).size();
+        final Message message = new Message(tagLine);
+        this.tags.put(messageId, message);
     }
 
     @Override

@@ -1,5 +1,8 @@
 package com.github.triceo.splitlog;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Message {
 
     private final RawMessage rawMessage;
@@ -11,6 +14,17 @@ public class Message {
         this.rawMessage = raw;
         this.severity = severityClassifier.classify(raw);
         this.type = typeClassifier.classify(raw);
+    }
+
+    /**
+     * Creates a one-line message of type {@link MessageType#TAG}.
+     */
+    public Message(final String message) {
+        final List<String> lines = new ArrayList<String>();
+        lines.add(message);
+        this.rawMessage = new RawMessage(lines);
+        this.severity = MessageSeverity.UNKNOWN;
+        this.type = MessageType.TAG;
     }
 
     @Override

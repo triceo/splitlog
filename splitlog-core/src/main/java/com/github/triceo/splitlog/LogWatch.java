@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.input.Tailer;
 
-public class LogWatch implements Tailable {
+public class LogWatch {
 
     private final Tailer tailer;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
