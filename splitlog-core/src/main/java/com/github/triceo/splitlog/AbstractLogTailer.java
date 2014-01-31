@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 
@@ -35,6 +36,27 @@ abstract class AbstractLogTailer implements Tailable {
     public boolean terminateTailing() {
         return this.watch.terminateTailing(this);
     }
+
+    /**
+     * Will block until a message arrives, for which the condition is true.
+     * 
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @return Whether the message actually arrived, or the method unblocked due
+     *         to some other reason.
+     */
+    public abstract boolean waitFor(MessageCondition condition);
+
+    /**
+     * Will block until a message arrives, for which the condition is true. If
+     * none arrives before the timeout, it unblocks anyway.
+     * 
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @return Whether the message actually arrived, or the method unblocked due
+     *         to some other reason.
+     */
+    public abstract boolean waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
     public boolean write(final OutputStream stream) {
         BufferedWriter w = null;
