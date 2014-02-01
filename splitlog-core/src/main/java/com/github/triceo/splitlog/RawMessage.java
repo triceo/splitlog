@@ -9,6 +9,11 @@ public class RawMessage {
     private final List<String> lines;
 
     public RawMessage(final List<String> lines) {
+        if (lines == null || lines.size() == 0) {
+            throw new IllegalArgumentException("Message must have at least one line.");
+        } else if (lines.contains(null)) {
+            throw new IllegalArgumentException("Neither line can be null.");
+        }
         this.lines = Collections.unmodifiableList(new ArrayList<String>(lines));
     }
 
