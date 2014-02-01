@@ -9,17 +9,31 @@ public class Message {
     private final MessageSeverity severity;
     private final MessageType type;
 
+    public Message(final RawMessage raw) {
+        this(raw, null);
+    }
+
+    public Message(final RawMessage raw, final MessageClassifier<MessageType> typeClassifier) {
+        this(raw, typeClassifier, null);
+    }
+
     public Message(final RawMessage raw, final MessageClassifier<MessageType> typeClassifier,
             final MessageClassifier<MessageSeverity> severityClassifier) {
+        if (raw == null) {
+            throw new IllegalArgumentException("Message must not be null.");
+        }
         this.rawMessage = raw;
-        this.severity = severityClassifier.classify(raw);
-        this.type = typeClassifier.classify(raw);
+        this.severity = (severityClassifier == null) ? MessageSeverity.UNKNOWN : severityClassifier.classify(raw);
+        this.type = (typeClassifier == null) ? MessageType.TAG : typeClassifier.classify(raw);
     }
 
     /**
      * Creates a one-line message of type {@link MessageType#TAG}.
      */
     public Message(final String message) {
+        if ((message == null) || (message.length() == 0)) {
+            throw new IllegalArgumentException("Message must not be empty.");
+        }
         final List<String> lines = new ArrayList<String>();
         lines.add(message);
         this.rawMessage = new RawMessage(lines);
@@ -46,6 +60,12 @@ public class Message {
         } else if (!this.rawMessage.equals(other.rawMessage)) {
             return false;
         }
+        if (this.severity != other.severity) {
+            return false;
+        }
+        if (this.type != other.type) {
+            return false;
+        }
         return true;
     }
 
@@ -66,6 +86,8 @@ public class Message {
         final int prime = 31;
         int result = 1;
         result = (prime * result) + ((this.rawMessage == null) ? 0 : this.rawMessage.hashCode());
+        result = (prime * result) + ((this.severity == null) ? 0 : this.severity.hashCode());
+        result = (prime * result) + ((this.type == null) ? 0 : this.type.hashCode());
         return result;
     }
 
