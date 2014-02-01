@@ -5,7 +5,7 @@ import java.io.File;
 public class LogWatchFactory {
 
     public static LogWatch newLogWatch(final File logToWatch) {
-        return new LogWatch(logToWatch, new DefaultTailSplitter(), new MessageClassifier<MessageType>() {
+        return new LogWatch(logToWatch, new PerLineTailSplitter(), new MessageClassifier<MessageType>() {
 
             public MessageType classify(final RawMessage m) {
                 return MessageType.LOG;

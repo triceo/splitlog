@@ -1,6 +1,6 @@
 package com.github.triceo.splitlog;
 
-public class DefaultTailSplitter extends AbstractTailSplitter {
+public class PerLineTailSplitter extends AbstractTailSplitter {
 
     @Override
     protected boolean isStartingLine(final String line) {

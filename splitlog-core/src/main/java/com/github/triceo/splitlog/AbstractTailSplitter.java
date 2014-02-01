@@ -25,6 +25,9 @@ public abstract class AbstractTailSplitter implements TailSplitter {
     }
 
     public RawMessage forceProcessing() {
+        if (this.lines.size() == 0) {
+            return null;
+        }
         final RawMessage msg = new RawMessage(this.lines);
         this.lines.clear();
         return msg;
