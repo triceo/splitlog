@@ -73,14 +73,32 @@ public class LogWatch {
         return this.messageQueue.get(index + startingId);
     }
 
-    public boolean isTailing(final AbstractLogTailer tail) {
-        return this.tailers.contains(tail);
-    }
-
+    /**
+     * Whether or not {@link #terminateTailing()} has been called.
+     * 
+     * @return True if it has.
+     */
     public boolean isTerminated() {
         return this.isTerminated.get();
     }
 
+    /**
+     * Whether or not {@link #terminateTailing(AbstractLogTailer)} has been
+     * called for this tailer.
+     * 
+     * @param tail
+     *            Tailer in question.
+     * @return True if it has.
+     */
+    public boolean isTerminated(final AbstractLogTailer tail) {
+        return this.tailers.contains(tail);
+    }
+
+    /**
+     * Begin watching for new messages from this point in time.
+     * 
+     * @return API for watching for messages.
+     */
     public AbstractLogTailer startTailing() {
         final int startingMessageId = this.messageQueue.size();
         final AbstractLogTailer tail = new NonStoringLogTailer(this);
@@ -89,6 +107,11 @@ public class LogWatch {
         return tail;
     }
 
+    /**
+     * Stop tailing for all tailers and free resources.
+     * 
+     * @return True if terminated as a result, false if already terminated.
+     */
     public boolean terminateTailing() {
         final boolean isTailing = !this.isTerminated();
         if (!isTailing) {
@@ -103,6 +126,13 @@ public class LogWatch {
         return true;
     }
 
+    /**
+     * Terminate a particular tailer.
+     * 
+     * @param tail
+     *            This tailer will receive no more messages.
+     * @return True if terminated as a result, false if already terminated.
+     */
     public boolean terminateTailing(final AbstractLogTailer tail) {
         this.tailers.remove(tail);
         final int endingMessageId = this.messageQueue.size();

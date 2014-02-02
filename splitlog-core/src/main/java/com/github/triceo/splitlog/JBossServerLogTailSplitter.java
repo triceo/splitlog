@@ -5,6 +5,10 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Provides a tail splitter capable of understanding the JBossAS server.log
+ * format, specifically the severities and message types.
+ */
 class JBossServerLogTailSplitter extends AbstractTailSplitter {
 
     // hh:mm:ss,mmm

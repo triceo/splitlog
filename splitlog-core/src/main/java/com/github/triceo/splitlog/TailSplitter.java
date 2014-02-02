@@ -5,10 +5,14 @@ public interface TailSplitter {
     /**
      * Read one line from the log and convert it into a message, if possible.
      * 
+     * Message will only be returned after all of its lines have been through
+     * this method. Therefore, it is likely that an actual Message instance
+     * would only be returned when the first line of a new message is submitted.
+     * 
      * @param line
      *            Line from the tailed file.
-     * @return Message element if considered to be a full message. Null in case
-     *         that this line does not end the message.
+     * @return Message element if considered to be a complete message. Null in
+     *         case that the line does not end the message.
      */
     Message addLine(String line);
 

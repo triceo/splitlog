@@ -32,10 +32,33 @@ public abstract class AbstractTailSplitter implements TailSplitter {
         }
     }
 
+    /**
+     * Read the message and find the date when the message was submitted.
+     * 
+     * @param message
+     *            Message in question.
+     * @return Date from the message, or the current date if not found.
+     */
     abstract protected Date determineDate(final RawMessage message);
 
+    /**
+     * Read the message and try to find its severity.
+     * 
+     * @param message
+     *            Message in question.
+     * @return Severity included in the message, {@link MessageSeverity#UNKNOWN}
+     *         otherwise.
+     */
     abstract protected MessageSeverity determineSeverity(final RawMessage message);
 
+    /**
+     * Read the message and try to find its type.
+     * 
+     * @param message
+     *            Message in question.
+     * @return Type guessed from the message, {@value MessageType#LOG} if
+     *         undetermined.
+     */
     abstract protected MessageType determineType(final RawMessage message);
 
     public Message forceProcessing() {
@@ -47,6 +70,16 @@ public abstract class AbstractTailSplitter implements TailSplitter {
         return this.processRawMessage(msg);
     }
 
+    /**
+     * Whether or not this particular line from the log starts a new log
+     * message. If so, it will be used to trigger the return of an actual
+     * Message instance from {@link #addLine(String)}. This instance will hold
+     * the previous message that has been just considered finished.
+     * 
+     * @param line
+     *            Line from the log.
+     * @return True if this is the first line of a new log message.
+     */
     abstract protected boolean isStartingLine(final String line);
 
     private Message processRawMessage(final RawMessage msg) {
@@ -57,6 +90,15 @@ public abstract class AbstractTailSplitter implements TailSplitter {
         return new Message(strippedLines, this.determineDate(msg), this.determineType(msg), this.determineSeverity(msg));
     }
 
+    /**
+     * Take a line from the log and attempt to strip it of metadata, such as
+     * severity, type and date.
+     * 
+     * @param line
+     *            Line from the log.
+     * @return The same line, stripped of metadata. Usually just the actual
+     *         information being logged.
+     */
     abstract protected String stripOfMetadata(final String line);
 
 }

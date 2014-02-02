@@ -17,6 +17,11 @@ abstract class AbstractLogTailer {
         this.watch = watch;
     }
 
+    /**
+     * Retrieve messages that this tailer has been notified of.
+     * 
+     * @return Messages we are aware of, in their original order.
+     */
     public abstract List<Message> getMessages();
 
     protected LogWatch getWatch() {
@@ -24,9 +29,16 @@ abstract class AbstractLogTailer {
     }
 
     public boolean isTerminated() {
-        return this.watch.isTailing(this);
+        return this.watch.isTerminated(this);
     }
 
+    /**
+     * Notify the tailer of a new message in the watched log. Must never be
+     * called by users, just from the library code.
+     * 
+     * @param msg
+     *            The message.
+     */
     protected abstract void notifyOfMessage(Message msg);
 
     /**
@@ -60,6 +72,13 @@ abstract class AbstractLogTailer {
      */
     public abstract boolean waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
+    /**
+     * Will output the log, including tags, into a stream.
+     * 
+     * @param stream
+     *            Target.
+     * @return True if written, false otherwise.
+     */
     public boolean write(final OutputStream stream) {
         BufferedWriter w = null;
         try {

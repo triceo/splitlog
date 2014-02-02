@@ -12,11 +12,16 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This is a log tailer that holds no message data, just the tags. For message
+ * data, it will always turn to the underlying {@link LogWatch}.
+ */
 class NonStoringLogTailer extends AbstractLogTailer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringLogTailer.class);
 
     private MessageCondition blockingCondition = null;
+    // FIXME this assumes that only the tail thread and user thread are present
     private CyclicBarrier blocker = new CyclicBarrier(2);
 
     private final Map<Integer, Message> tags = new TreeMap<Integer, Message>();
@@ -56,6 +61,10 @@ class NonStoringLogTailer extends AbstractLogTailer {
         this.blocker = new CyclicBarrier(2);
     }
 
+    /**
+     * See {@link AbstractLogTailer#tag(String)}. Subsequent tags at the same
+     * locations will overwrite each other.
+     */
     @Override
     public void tag(final String tagLine) {
         final int messageId = this.getWatch().getAllMessages(this).size();
