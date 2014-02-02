@@ -1,8 +1,10 @@
 package com.github.triceo.splitlog;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 // FIXME implement message date
@@ -11,20 +13,21 @@ public class Message {
     private final List<String> lines;
     private final MessageSeverity severity;
     private final MessageType type;
+    private final Date date;
 
     public Message(final Collection<String> raw) {
-        this(raw, MessageType.TAG);
+        this(raw, Calendar.getInstance().getTime(), MessageType.LOG);
     }
 
-    public Message(final Collection<String> raw, final MessageSeverity severity) {
-        this(raw, MessageType.LOG, severity);
+    public Message(final Collection<String> raw, final Date d, final MessageSeverity severity) {
+        this(raw, d, MessageType.LOG, severity);
     }
 
-    public Message(final Collection<String> raw, final MessageType type) {
-        this(raw, type, MessageSeverity.UNKNOWN);
+    public Message(final Collection<String> raw, final Date d, final MessageType type) {
+        this(raw, d, type, MessageSeverity.UNKNOWN);
     }
 
-    public Message(final Collection<String> raw, final MessageType type, final MessageSeverity severity) {
+    public Message(final Collection<String> raw, final Date d, final MessageType type, final MessageSeverity severity) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
         } else if (severity == null) {
@@ -35,6 +38,7 @@ public class Message {
         this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
         this.severity = severity;
         this.type = type;
+        this.date = (Date) d.clone();
     }
 
     /**
@@ -49,6 +53,7 @@ public class Message {
         this.lines = Collections.unmodifiableList(lines);
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
+        this.date = Calendar.getInstance().getTime();
     }
 
     @Override
@@ -79,6 +84,10 @@ public class Message {
         return true;
     }
 
+    public Date getDate() {
+        return this.date;
+    }
+
     public List<String> getLines() {
         return this.lines;
     }
@@ -104,7 +113,7 @@ public class Message {
     // FIXME needs to print line by line
     @Override
     public String toString() {
-        return "(" + this.type + ") " + this.severity + " " + this.lines;
+        return this.date + " (" + this.type + ") " + this.severity + " " + this.lines;
     }
 
 }

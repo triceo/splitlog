@@ -43,7 +43,8 @@ public class LogWatch {
     }
 
     protected List<Message> getAllMessages(final AbstractLogTailer tail) {
-        return this.messageQueue.subList(this.startingMessageIds.get(tail), this.getEndingId(tail));
+        return new ArrayList<Message>(this.messageQueue.subList(this.startingMessageIds.get(tail),
+                this.getEndingId(tail)));
     }
 
     /**

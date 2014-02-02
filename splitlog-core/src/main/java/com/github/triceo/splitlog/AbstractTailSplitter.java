@@ -7,21 +7,27 @@ import java.util.List;
 
 public abstract class AbstractTailSplitter implements TailSplitter {
 
-    private final List<String> lines = new ArrayList<String>();
+    private List<String> lines = new ArrayList<String>();
 
     public Message addLine(final String line) {
         final boolean restart = this.isStartingLine(line);
         if (restart) {
             if (this.lines.isEmpty()) {
                 this.lines.add(line);
-                return this.forceProcessing();
+                return null;
             } else {
                 final Message msg = this.forceProcessing();
                 this.lines.add(line);
                 return msg;
             }
         } else {
-            this.lines.add(line);
+            /*
+             * we need to make sure that we are only recording from the first
+             * starting line.
+             */
+            if (!this.lines.isEmpty()) {
+                this.lines.add(line);
+            }
             return null;
         }
     }
@@ -37,18 +43,18 @@ public abstract class AbstractTailSplitter implements TailSplitter {
             return null;
         }
         final RawMessage msg = new RawMessage(this.lines);
-        this.lines.clear();
+        this.lines = new ArrayList<String>();
         return this.processRawMessage(msg);
     }
 
     abstract protected boolean isStartingLine(final String line);
 
     private Message processRawMessage(final RawMessage msg) {
-        final Collection<String> lines = new ArrayList<String>();
+        final Collection<String> strippedLines = new ArrayList<String>();
         for (final String line : msg.getLines()) {
-            lines.add(this.stripOfMetadata(line));
+            strippedLines.add(this.stripOfMetadata(line));
         }
-        return new Message(lines, this.determineType(msg), this.determineSeverity(msg));
+        return new Message(strippedLines, this.determineDate(msg), this.determineType(msg), this.determineSeverity(msg));
     }
 
     abstract protected String stripOfMetadata(final String line);

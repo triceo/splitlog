@@ -29,7 +29,7 @@ class LogWriter {
     }
 
     /**
-     * Writes a message to the log and waits until the tailer receives it.
+     * Writes a message to the log.
      * 
      * @param line
      *            Message to write.
@@ -49,7 +49,7 @@ class LogWriter {
                     LogWriter.LOGGER.info("Written log message '{}'.", line);
                     return true;
                 } catch (final IOException ex) {
-                    LogWriter.LOGGER.info("Failed writing log message '{}'.", line, ex);
+                    LogWriter.LOGGER.warn("Failed writing log message '{}'.", line, ex);
                     return false;
                 } finally {
                     IOUtils.closeQuietly(w);
@@ -58,21 +58,34 @@ class LogWriter {
 
         });
         try {
-            if (!result.get()) {
-                return false;
-            }
-            return tailer.waitFor(new MessageCondition() {
-
-                public boolean accept(final Message msg) {
-                    // wait until any message is received
-                    return true;
-                }
-
-            }, 10, TimeUnit.SECONDS);
+            return result.get();
         } catch (final Exception ex) {
-            LogWriter.LOGGER.info("Failed executing the write operation for line '{}'.", line, ex);
+            LogWriter.LOGGER.warn("Failed writing log message '{}'.", line, ex);
             return false;
         }
+    }
+
+    /**
+     * Writes a message to the log and waits until the tailer receives it.
+     * 
+     * @param line
+     *            Message to write.
+     * @param tailer
+     *            Tailer to wait for the message.
+     * @return If the message has been written.
+     */
+    public boolean writeWithWaiting(final String line, final AbstractLogTailer tailer) {
+        if (!this.write(line, tailer)) {
+            return false;
+        }
+        return tailer.waitFor(new MessageCondition() {
+
+            public boolean accept(final Message msg) {
+                // wait until any message is received
+                return true;
+            }
+
+        }, 10, TimeUnit.SECONDS);
     }
 
 }

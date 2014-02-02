@@ -8,4 +8,8 @@ public class LogWatchFactory {
         return new LogWatch(logToWatch, new SimpleTailSplitter());
     }
 
+    public static LogWatch newLogWatch(final File logToWatch, final TailSplitter splitter) {
+        return new LogWatch(logToWatch, splitter);
+    }
+
 }

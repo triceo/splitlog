@@ -12,11 +12,16 @@ public class SimpleTailSplitterTest {
         for (int i = 0; i < 10; i++) {
             // send a couple lines through the splitter
             final Message msg = splitter.addLine(line);
-            Assert.assertNotNull(msg); // make sure the line is processed
-            Assert.assertEquals(1, msg.getLines().size());
-            Assert.assertEquals(line, msg.getLines().get(0));
+            Assert.assertNull(msg); // make sure the line is not yet processed
+            final Message msg2 = splitter.addLine(line + "2");
+            /*
+             * now the second message has been registered, the original one is
+             * processed
+             */
+            Assert.assertEquals(1, msg2.getLines().size());
+            Assert.assertEquals(line, msg2.getLines().get(0));
+            Assert.assertNotNull(splitter.forceProcessing());
         }
-        Assert.assertNull(splitter.forceProcessing());
     }
 
 }

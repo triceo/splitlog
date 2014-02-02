@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -41,7 +42,7 @@ public class MessageTest {
     public void testGetSeverity() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
         final Collection<String> raw = Arrays.asList(lines);
-        final Message msg = new Message(raw, MessageSeverity.INFO);
+        final Message msg = new Message(raw, Calendar.getInstance().getTime(), MessageSeverity.INFO);
         Assert.assertEquals(MessageSeverity.INFO, msg.getSeverity());
     }
 
@@ -49,7 +50,7 @@ public class MessageTest {
     public void testGetType() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
         final Collection<String> raw = Arrays.asList(lines);
-        final Message msg = new Message(raw, MessageType.LOG);
+        final Message msg = new Message(raw, Calendar.getInstance().getTime(), MessageType.LOG);
         Assert.assertEquals(MessageType.LOG, msg.getType());
     }
 
