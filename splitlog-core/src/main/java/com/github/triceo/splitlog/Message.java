@@ -15,6 +15,8 @@ public class Message {
     private final MessageType type;
     private final Date date;
 
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
     public Message(final Collection<String> raw) {
         this(raw, Calendar.getInstance().getTime(), MessageType.LOG);
     }
@@ -110,10 +112,19 @@ public class Message {
         return result;
     }
 
-    // FIXME needs to print line by line
     @Override
     public String toString() {
-        return this.date + " (" + this.type + ") " + this.severity + " " + this.lines;
+        final StringBuilder sb = new StringBuilder();
+        sb.append(this.date);
+        sb.append(" (");
+        sb.append(this.type);
+        sb.append(") ");
+        sb.append(this.severity);
+        for (final String line : this.lines) {
+            sb.append(line);
+            sb.append(Message.LINE_SEPARATOR);
+        }
+        return sb.toString();
     }
 
 }
