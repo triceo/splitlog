@@ -81,8 +81,6 @@ public class LogWatch {
         return this.isTerminated.get();
     }
 
-    // FIXME should probably enable switching between storing and non-storing
-    // tailers
     public AbstractLogTailer startTailing() {
         final int startingMessageId = this.messageQueue.size();
         final AbstractLogTailer tail = new NonStoringLogTailer(this);

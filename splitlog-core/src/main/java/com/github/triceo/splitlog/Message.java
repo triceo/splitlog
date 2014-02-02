@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-// FIXME implement message date
 public class Message {
 
     private final List<String> lines;
