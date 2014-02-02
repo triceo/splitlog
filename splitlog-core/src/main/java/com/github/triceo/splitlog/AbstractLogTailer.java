@@ -65,7 +65,7 @@ abstract class AbstractLogTailer {
         try {
             w = new BufferedWriter(new OutputStreamWriter(stream));
             for (final Message msg : this.getMessages()) {
-                w.write(msg.getRawMessage().toString());
+                w.write(msg.toString());
                 w.newLine();
             }
             return true;

@@ -35,16 +35,16 @@ public class NonStoringLogTailerTest {
         final AbstractLogTailer tailer = NonStoringLogTailerTest.logwatch.startTailing();
         // test simple messages
         NonStoringLogTailerTest.writer.write(message1, tailer);
-        Assert.assertEquals(message1, tailer.getMessages().get(0).getRawMessage().getFirstLine());
+        Assert.assertEquals(message1, tailer.getMessages().get(0).getLines().get(0));
         NonStoringLogTailerTest.writer.write(message1, tailer);
-        Assert.assertEquals(message1, tailer.getMessages().get(1).getRawMessage().getFirstLine());
+        Assert.assertEquals(message1, tailer.getMessages().get(1).getLines().get(0));
         // test multi-line messages; each line should be its own message
         NonStoringLogTailerTest.writer.write(message2part1 + "\n" + message2part2, tailer);
         NonStoringLogTailerTest.writer.write(message3part1 + "\r\n" + message3part2, tailer);
-        Assert.assertEquals(message2part1, tailer.getMessages().get(2).getRawMessage().getFirstLine());
-        Assert.assertEquals(message2part2, tailer.getMessages().get(3).getRawMessage().getFirstLine());
-        Assert.assertEquals(message3part1, tailer.getMessages().get(4).getRawMessage().getFirstLine());
-        Assert.assertEquals(message3part2, tailer.getMessages().get(5).getRawMessage().getFirstLine());
+        Assert.assertEquals(message2part1, tailer.getMessages().get(2).getLines().get(0));
+        Assert.assertEquals(message2part2, tailer.getMessages().get(3).getLines().get(0));
+        Assert.assertEquals(message3part1, tailer.getMessages().get(4).getLines().get(0));
+        Assert.assertEquals(message3part2, tailer.getMessages().get(5).getLines().get(0));
         NonStoringLogTailerTest.logwatch.terminateTailing(tailer);
     }
 
@@ -65,13 +65,13 @@ public class NonStoringLogTailerTest {
         tailer.tag(tag2);
         NonStoringLogTailerTest.writer.write(message3, tailer);
         tailer.tag(tag3);
-        Assert.assertEquals(tag0, tailer.getMessages().get(0).getRawMessage().getFirstLine());
-        Assert.assertEquals(message1, tailer.getMessages().get(1).getRawMessage().getFirstLine());
-        Assert.assertEquals(tag1, tailer.getMessages().get(2).getRawMessage().getFirstLine());
-        Assert.assertEquals(message2, tailer.getMessages().get(3).getRawMessage().getFirstLine());
-        Assert.assertEquals(tag2, tailer.getMessages().get(4).getRawMessage().getFirstLine());
-        Assert.assertEquals(message3, tailer.getMessages().get(5).getRawMessage().getFirstLine());
-        Assert.assertEquals(tag3, tailer.getMessages().get(6).getRawMessage().getFirstLine());
+        Assert.assertEquals(tag0, tailer.getMessages().get(0).getLines().get(0));
+        Assert.assertEquals(message1, tailer.getMessages().get(1).getLines().get(0));
+        Assert.assertEquals(tag1, tailer.getMessages().get(2).getLines().get(0));
+        Assert.assertEquals(message2, tailer.getMessages().get(3).getLines().get(0));
+        Assert.assertEquals(tag2, tailer.getMessages().get(4).getLines().get(0));
+        Assert.assertEquals(message3, tailer.getMessages().get(5).getLines().get(0));
+        Assert.assertEquals(tag3, tailer.getMessages().get(6).getLines().get(0));
         NonStoringLogTailerTest.logwatch.terminateTailing(tailer);
     }
 

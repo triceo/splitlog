@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -43,7 +44,11 @@ public abstract class AbstractTailSplitter implements TailSplitter {
     abstract protected boolean isStartingLine(final String line);
 
     private Message processRawMessage(final RawMessage msg) {
-        return new Message(msg, this.determineType(msg), this.determineSeverity(msg));
+        final Collection<String> lines = new ArrayList<String>();
+        for (final String line : msg.getLines()) {
+            lines.add(this.stripOfMetadata(line));
+        }
+        return new Message(lines, this.determineType(msg), this.determineSeverity(msg));
     }
 
     abstract protected String stripOfMetadata(final String line);

@@ -1,18 +1,26 @@
 package com.github.triceo.splitlog;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MessageTest {
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptyMessage() {
+        final Collection<String> raw = Collections.emptyList();
+        new Message(raw);
+    }
+
     @Test
     public void testEqualsMessage() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
-        final RawMessage raw1 = new RawMessage(Arrays.asList(lines));
-        final RawMessage raw2 = new RawMessage(Arrays.asList(lines));
-        final RawMessage raw3 = new RawMessage(Arrays.asList(lines).subList(1, 3));
+        final Collection<String> raw1 = Arrays.asList(lines);
+        final Collection<String> raw2 = Arrays.asList(lines);
+        final Collection<String> raw3 = Arrays.asList(lines).subList(1, 3);
         Assert.assertEquals(new Message(raw1), new Message(raw1));
         Assert.assertEquals(new Message(raw1), new Message(raw2));
         Assert.assertNotEquals(new Message(raw1), new Message(raw3));
@@ -32,22 +40,22 @@ public class MessageTest {
     @Test
     public void testGetSeverity() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
-        final RawMessage raw = new RawMessage(Arrays.asList(lines));
-        final Message msg = new Message(raw, null, MessageSeverity.INFO);
+        final Collection<String> raw = Arrays.asList(lines);
+        final Message msg = new Message(raw, MessageSeverity.INFO);
         Assert.assertEquals(MessageSeverity.INFO, msg.getSeverity());
     }
 
     @Test
     public void testGetType() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
-        final RawMessage raw = new RawMessage(Arrays.asList(lines));
+        final Collection<String> raw = Arrays.asList(lines);
         final Message msg = new Message(raw, MessageType.LOG);
         Assert.assertEquals(MessageType.LOG, msg.getType());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullMessage() {
-        final RawMessage raw = null;
+        final Collection<String> raw = null;
         new Message(raw);
     }
 
@@ -63,8 +71,8 @@ public class MessageTest {
         final Message msg = new Message(line);
         Assert.assertEquals(MessageSeverity.UNKNOWN, msg.getSeverity());
         Assert.assertEquals(MessageType.TAG, msg.getType());
-        Assert.assertEquals(1, msg.getRawMessage().getLines().size());
-        Assert.assertEquals(line, msg.getRawMessage().getFirstLine());
+        Assert.assertEquals(1, msg.getLines().size());
+        Assert.assertEquals(line, msg.getLines().get(0));
     }
 
 }

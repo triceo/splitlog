@@ -1,29 +1,40 @@
 package com.github.triceo.splitlog;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+// FIXME implement message date
 public class Message {
 
-    private final RawMessage rawMessage;
+    private final List<String> lines;
     private final MessageSeverity severity;
     private final MessageType type;
 
-    public Message(final RawMessage raw) {
-        this(raw, null);
+    public Message(final Collection<String> raw) {
+        this(raw, MessageType.TAG);
     }
 
-    public Message(final RawMessage raw, final MessageType type) {
-        this(raw, type, null);
+    public Message(final Collection<String> raw, final MessageSeverity severity) {
+        this(raw, MessageType.LOG, severity);
     }
 
-    public Message(final RawMessage raw, final MessageType type, final MessageSeverity severity) {
-        if (raw == null) {
+    public Message(final Collection<String> raw, final MessageType type) {
+        this(raw, type, MessageSeverity.UNKNOWN);
+    }
+
+    public Message(final Collection<String> raw, final MessageType type, final MessageSeverity severity) {
+        if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
+        } else if (severity == null) {
+            throw new IllegalArgumentException("Severity must not be null.");
+        } else if (type == null) {
+            throw new IllegalArgumentException("Type must not be null.");
         }
-        this.rawMessage = raw;
-        this.severity = (severity == null) ? MessageSeverity.UNKNOWN : severity;
-        this.type = (type == null) ? MessageType.TAG : type;
+        this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
+        this.severity = severity;
+        this.type = type;
     }
 
     /**
@@ -35,7 +46,7 @@ public class Message {
         }
         final List<String> lines = new ArrayList<String>();
         lines.add(message);
-        this.rawMessage = new RawMessage(lines);
+        this.lines = Collections.unmodifiableList(lines);
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
     }
@@ -52,11 +63,11 @@ public class Message {
             return false;
         }
         final Message other = (Message) obj;
-        if (this.rawMessage == null) {
-            if (other.rawMessage != null) {
+        if (this.lines == null) {
+            if (other.lines != null) {
                 return false;
             }
-        } else if (!this.rawMessage.equals(other.rawMessage)) {
+        } else if (!this.lines.equals(other.lines)) {
             return false;
         }
         if (this.severity != other.severity) {
@@ -68,8 +79,8 @@ public class Message {
         return true;
     }
 
-    public RawMessage getRawMessage() {
-        return this.rawMessage;
+    public List<String> getLines() {
+        return this.lines;
     }
 
     public MessageSeverity getSeverity() {
@@ -84,15 +95,16 @@ public class Message {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = (prime * result) + ((this.rawMessage == null) ? 0 : this.rawMessage.hashCode());
+        result = (prime * result) + ((this.lines == null) ? 0 : this.lines.hashCode());
         result = (prime * result) + ((this.severity == null) ? 0 : this.severity.hashCode());
         result = (prime * result) + ((this.type == null) ? 0 : this.type.hashCode());
         return result;
     }
 
+    // FIXME needs to print line by line
     @Override
     public String toString() {
-        return "(" + this.type + ") " + this.severity + " " + this.rawMessage;
+        return "(" + this.type + ") " + this.severity + " " + this.lines;
     }
 
 }
