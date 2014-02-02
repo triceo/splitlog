@@ -73,17 +73,48 @@ abstract class AbstractLogTailer {
     public abstract boolean waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
     /**
-     * Will output the log, including tags, into a stream.
+     * Will output all the messages, including tags, into a stream.
      * 
      * @param stream
      *            Target.
      * @return True if written, false otherwise.
      */
     public boolean write(final OutputStream stream) {
+        return this.write(stream, new MessageCondition() {
+
+            public boolean accept(final Message msg) {
+                // accept every message
+                return true;
+            }
+
+        });
+    }
+
+    /**
+     * Will output the messages, including tags, that meet a specific condition,
+     * into a stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param condition
+     *            When this object's {@link MessageCondition#accept(Message)}
+     *            returns true on a message, the message will be included in the
+     *            stream.
+     * @return True if written, false otherwise.
+     */
+    public boolean write(final OutputStream stream, final MessageCondition condition) {
+        if (stream == null) {
+            throw new IllegalArgumentException("Stream may not be null.");
+        } else if (condition == null) {
+            throw new IllegalArgumentException("Condition may not be null.");
+        }
         BufferedWriter w = null;
         try {
             w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
             for (final Message msg : this.getMessages()) {
+                if (!condition.accept(msg)) {
+                    continue;
+                }
                 w.write(msg.toString());
                 w.newLine();
             }
@@ -94,5 +125,4 @@ abstract class AbstractLogTailer {
             IOUtils.closeQuietly(w);
         }
     }
-
 }
