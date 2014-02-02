@@ -82,7 +82,7 @@ abstract class AbstractLogTailer {
     public boolean write(final OutputStream stream) {
         BufferedWriter w = null;
         try {
-            w = new BufferedWriter(new OutputStreamWriter(stream));
+            w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
             for (final Message msg : this.getMessages()) {
                 w.write(msg.toString());
                 w.newLine();
