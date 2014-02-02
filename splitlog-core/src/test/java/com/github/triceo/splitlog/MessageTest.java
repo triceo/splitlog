@@ -7,22 +7,6 @@ import org.junit.Test;
 
 public class MessageTest {
 
-    private static final MessageClassifier<MessageType> TYPE_CLASSIFIER = new MessageClassifier<MessageType>() {
-
-        public MessageType classify(final RawMessage m) {
-            return MessageType.LOG;
-        }
-
-    };
-
-    private static final MessageClassifier<MessageSeverity> SEVERITY_CLASSIFIER = new MessageClassifier<MessageSeverity>() {
-
-        public MessageSeverity classify(final RawMessage m) {
-            return MessageSeverity.INFO;
-        }
-
-    };
-
     @Test
     public void testEqualsMessage() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
@@ -49,7 +33,7 @@ public class MessageTest {
     public void testGetSeverity() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
         final RawMessage raw = new RawMessage(Arrays.asList(lines));
-        final Message msg = new Message(raw, null, MessageTest.SEVERITY_CLASSIFIER);
+        final Message msg = new Message(raw, null, MessageSeverity.INFO);
         Assert.assertEquals(MessageSeverity.INFO, msg.getSeverity());
     }
 
@@ -57,7 +41,7 @@ public class MessageTest {
     public void testGetType() {
         final String[] lines = new String[] { "Test", "Test2", "Test3" };
         final RawMessage raw = new RawMessage(Arrays.asList(lines));
-        final Message msg = new Message(raw, MessageTest.TYPE_CLASSIFIER);
+        final Message msg = new Message(raw, MessageType.LOG);
         Assert.assertEquals(MessageType.LOG, msg.getType());
     }
 

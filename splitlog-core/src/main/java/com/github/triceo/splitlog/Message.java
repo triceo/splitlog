@@ -13,18 +13,17 @@ public class Message {
         this(raw, null);
     }
 
-    public Message(final RawMessage raw, final MessageClassifier<MessageType> typeClassifier) {
-        this(raw, typeClassifier, null);
+    public Message(final RawMessage raw, final MessageType type) {
+        this(raw, type, null);
     }
 
-    public Message(final RawMessage raw, final MessageClassifier<MessageType> typeClassifier,
-            final MessageClassifier<MessageSeverity> severityClassifier) {
+    public Message(final RawMessage raw, final MessageType type, final MessageSeverity severity) {
         if (raw == null) {
             throw new IllegalArgumentException("Message must not be null.");
         }
         this.rawMessage = raw;
-        this.severity = (severityClassifier == null) ? MessageSeverity.UNKNOWN : severityClassifier.classify(raw);
-        this.type = (typeClassifier == null) ? MessageType.TAG : typeClassifier.classify(raw);
+        this.severity = (severity == null) ? MessageSeverity.UNKNOWN : severity;
+        this.type = (type == null) ? MessageType.TAG : type;
     }
 
     /**

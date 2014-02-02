@@ -10,7 +10,7 @@ public interface TailSplitter {
      * @return Message element if considered to be a full message. Null in case
      *         that this line does not end the message.
      */
-    RawMessage addLine(String line);
+    Message addLine(String line);
 
     /**
      * Will convert existing lines into a message, regardless whether the
@@ -18,6 +18,6 @@ public interface TailSplitter {
      * 
      * @return
      */
-    RawMessage forceProcessing();
+    Message forceProcessing();
 
 }

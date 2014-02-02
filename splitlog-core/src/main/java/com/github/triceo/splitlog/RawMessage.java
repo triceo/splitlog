@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RawMessage {
+class RawMessage {
 
     private final List<String> lines;
 

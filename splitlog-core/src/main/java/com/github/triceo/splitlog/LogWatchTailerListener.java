@@ -33,7 +33,7 @@ class LogWatchTailerListener implements TailerListener {
     }
 
     public void handle(final String line) {
-        final RawMessage msg = this.splitter.addLine(line);
+        final Message msg = this.splitter.addLine(line);
         if (msg != null) {
             this.watcher.addMessage(msg);
         }

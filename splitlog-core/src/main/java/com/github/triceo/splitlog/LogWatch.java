@@ -22,8 +22,6 @@ public class LogWatch {
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final Set<AbstractLogTailer> tailers = new LinkedHashSet<AbstractLogTailer>();
     private final LogWatchTailerListener listener;
-    private final MessageClassifier<MessageType> typeClassifier;
-    private final MessageClassifier<MessageSeverity> severityClassifier;
     // these hashmaps are weak; when a tailer is terminated and removed from
     // logwatch, we don't want to keep it anymore
     private final Map<AbstractLogTailer, Integer> startingMessageIds = new WeakHashMap<AbstractLogTailer, Integer>(),
@@ -31,18 +29,13 @@ public class LogWatch {
 
     private final List<Message> messageQueue = new CopyOnWriteArrayList<Message>();
 
-    protected LogWatch(final File watchedFile, final TailSplitter splitter,
-            final MessageClassifier<MessageType> typeClassifier,
-            final MessageClassifier<MessageSeverity> severityClassifier) {
+    protected LogWatch(final File watchedFile, final TailSplitter splitter) {
         this.listener = new LogWatchTailerListener(this, splitter);
-        this.typeClassifier = typeClassifier;
-        this.severityClassifier = severityClassifier;
         this.tailer = new Tailer(watchedFile, this.listener);
         this.executor.execute(this.tailer);
     }
 
-    protected void addMessage(final RawMessage msg) {
-        final Message message = new Message(msg, this.typeClassifier, this.severityClassifier);
+    protected void addMessage(final Message message) {
         this.messageQueue.add(message);
         for (final AbstractLogTailer t : this.tailers) {
             t.notifyOfMessage(message);
