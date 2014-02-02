@@ -8,11 +8,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.input.Tailer;
 
 public class LogWatch {
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private final Tailer tailer;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
@@ -34,7 +38,7 @@ public class LogWatch {
         this.typeClassifier = typeClassifier;
         this.severityClassifier = severityClassifier;
         this.tailer = new Tailer(watchedFile, this.listener);
-        this.tailer.run();
+        this.executor.execute(this.tailer);
     }
 
     protected void addMessage(final RawMessage msg) {
@@ -103,6 +107,7 @@ public class LogWatch {
             this.terminateTailing(chunk);
         }
         this.isTerminated.set(false);
+        this.executor.shutdownNow();
         return true;
     }
 

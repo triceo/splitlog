@@ -91,4 +91,9 @@ public class Message {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "(" + this.type + ") " + this.severity + " " + this.rawMessage;
+    }
+
 }
