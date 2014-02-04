@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
  * Provides a tail splitter capable of understanding the JBossAS server.log
  * format, specifically the severities and message types.
  */
-class JBossServerLogTailSplitter extends AbstractTailSplitter {
+public class JBossServerLogTailSplitter extends AbstractTailSplitter {
 
     // hh:mm:ss,mmm
     private static final String DATE_SUBPATTERN = "(([01]?[0-9])|2[0-3]):([0-5][0-9]):([0-5][0-9]),([0-9][0-9][0-9])";
