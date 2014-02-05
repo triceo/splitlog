@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 
-abstract class AbstractLogTailer {
+public abstract class AbstractLogTailer {
 
     private final LogWatch watch;
 
