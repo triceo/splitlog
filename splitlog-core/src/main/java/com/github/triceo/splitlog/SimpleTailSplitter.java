@@ -3,7 +3,7 @@ package com.github.triceo.splitlog;
 import java.util.Calendar;
 import java.util.Date;
 
-class SimpleTailSplitter extends AbstractTailSplitter {
+public class SimpleTailSplitter extends AbstractTailSplitter {
 
     @Override
     protected Date determineDate(final RawMessage message) {
