@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.splitters;
 
 import java.util.ArrayList;
 import java.util.Collections;

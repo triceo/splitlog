@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.conditions;
 
 public interface BooleanCondition<T> {
 

@@ -1,10 +1,12 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.splitters;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.github.triceo.splitlog.splitters.RawMessage;
 
 public class RawMessageTest {
 

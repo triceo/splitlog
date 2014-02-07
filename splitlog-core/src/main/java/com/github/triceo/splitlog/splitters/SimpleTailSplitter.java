@@ -1,7 +1,10 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.splitters;
 
 import java.util.Calendar;
 import java.util.Date;
+
+import com.github.triceo.splitlog.MessageSeverity;
+import com.github.triceo.splitlog.MessageType;
 
 public class SimpleTailSplitter extends AbstractTailSplitter {
 

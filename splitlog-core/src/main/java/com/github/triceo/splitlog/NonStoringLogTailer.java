@@ -12,6 +12,9 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.conditions.LineCondition;
+import com.github.triceo.splitlog.conditions.MessageCondition;
+
 /**
  * This is a log tailer that holds no message data, just the tags. For message
  * data, it will always turn to the underlying {@link LogWatch}.

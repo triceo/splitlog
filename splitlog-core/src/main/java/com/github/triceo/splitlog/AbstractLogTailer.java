@@ -9,6 +9,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 
+import com.github.triceo.splitlog.conditions.BooleanCondition;
+import com.github.triceo.splitlog.conditions.LineCondition;
+import com.github.triceo.splitlog.conditions.MessageCondition;
+
 public abstract class AbstractLogTailer {
 
     private final LogWatch watch;

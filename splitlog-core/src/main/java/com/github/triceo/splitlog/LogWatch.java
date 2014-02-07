@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.input.Tailer;
 
+import com.github.triceo.splitlog.splitters.TailSplitter;
+
 public class LogWatch {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();

@@ -1,9 +1,12 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.splitters;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.github.triceo.splitlog.MessageSeverity;
+import com.github.triceo.splitlog.MessageType;
 
 /**
  * Provides a tail splitter capable of understanding the JBossAS server.log

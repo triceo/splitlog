@@ -1,4 +1,6 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.splitters;
+
+import com.github.triceo.splitlog.Message;
 
 public interface TailSplitter {
 

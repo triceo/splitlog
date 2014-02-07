@@ -1,7 +1,10 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.splitters;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.github.triceo.splitlog.Message;
+import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
 public class SimpleTailSplitterTest {
 

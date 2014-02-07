@@ -1,9 +1,13 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.splitters;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import com.github.triceo.splitlog.Message;
+import com.github.triceo.splitlog.MessageSeverity;
+import com.github.triceo.splitlog.MessageType;
 
 public abstract class AbstractTailSplitter implements TailSplitter {
 
