@@ -111,7 +111,7 @@ public abstract class AbstractLogTailer {
      * @return True if written, false otherwise.
      */
     public boolean write(final OutputStream stream) {
-        return this.write(stream, new MessageCondition() {
+        return this.write(stream, new BooleanCondition<Message>() {
 
             public boolean accept(final Message msg) {
                 // accept every message
@@ -133,7 +133,7 @@ public abstract class AbstractLogTailer {
      *            stream.
      * @return True if written, false otherwise.
      */
-    public boolean write(final OutputStream stream, final MessageCondition condition) {
+    public boolean write(final OutputStream stream, final BooleanCondition<Message> condition) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");
         } else if (condition == null) {
