@@ -33,6 +33,15 @@ public abstract class AbstractLogTailer {
     }
 
     /**
+     * Notify the tailer of a new line in the watched log. Must never be called
+     * by users, just from the library code.
+     * 
+     * @param line
+     *            The line.
+     */
+    protected abstract void notifyOfLine(String line);
+
+    /**
      * Notify the tailer of a new message in the watched log. Must never be
      * called by users, just from the library code.
      * 
@@ -50,6 +59,28 @@ public abstract class AbstractLogTailer {
      *            Text of the message.
      */
     public abstract void tag(String tagLine);
+
+    /**
+     * Will block until a line appears in the log, for which the condition is
+     * true.
+     * 
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @return Whether the line actually appeared, or the method unblocked due
+     *         to some other reason.
+     */
+    public abstract boolean waitFor(LineCondition condition);
+
+    /**
+     * Will block until a line appears in the log, for which the condition is
+     * true. If none appears before the timeout, it unblocks anyway.
+     * 
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @return Whether the line actuall appeared, or the method unblocked due to
+     *         some other reason.
+     */
+    public abstract boolean waitFor(LineCondition condition, long timeout, TimeUnit unit);
 
     /**
      * Will block until a message arrives, for which the condition is true.

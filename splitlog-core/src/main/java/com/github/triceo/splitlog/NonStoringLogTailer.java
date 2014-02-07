@@ -15,19 +15,25 @@ import org.slf4j.LoggerFactory;
 /**
  * This is a log tailer that holds no message data, just the tags. For message
  * data, it will always turn to the underlying {@link LogWatch}.
+ * 
+ * This class assumes that LogWatch and user code are the only two threads that
+ * use it. Never use one instance of this class from two or more user threads.
+ * Otherwise, expect unpredictable behavior from waitFor() methods.
  */
 class NonStoringLogTailer extends AbstractLogTailer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringLogTailer.class);
 
-    private MessageCondition blockingCondition = null;
+    private MessageCondition messageBlockingCondition = null;
+    private LineCondition lineBlockingCondition = null;
     // FIXME this assumes that only the tail thread and user thread are present
-    private CyclicBarrier blocker = new CyclicBarrier(2);
+    private CyclicBarrier blocker;
 
     private final Map<Integer, Message> tags = new TreeMap<Integer, Message>();
 
     public NonStoringLogTailer(final LogWatch watch) {
         super(watch);
+        this.refreshBarrier();
     }
 
     @Override
@@ -42,22 +48,38 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    protected void notifyOfMessage(final Message msg) {
-        if (this.blockingCondition == null) {
+    protected void notifyOfLine(final String line) {
+        if (this.lineBlockingCondition == null) {
             return;
-        } else if (this.blockingCondition.accept(msg)) {
+        } else if (this.lineBlockingCondition.accept(line)) {
             try {
                 this.blocker.await();
             } catch (final Exception e) {
                 this.blocker.reset();
             } finally {
+                this.lineBlockingCondition = null;
+                this.refreshBarrier();
+            }
+        }
+    }
+
+    @Override
+    protected void notifyOfMessage(final Message msg) {
+        if (this.messageBlockingCondition == null) {
+            return;
+        } else if (this.messageBlockingCondition.accept(msg)) {
+            try {
+                this.blocker.await();
+            } catch (final Exception e) {
+                this.blocker.reset();
+            } finally {
+                this.messageBlockingCondition = null;
                 this.refreshBarrier();
             }
         }
     }
 
     private void refreshBarrier() {
-        this.blockingCondition = null;
         this.blocker = new CyclicBarrier(2);
     }
 
@@ -73,36 +95,49 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    public boolean waitFor(final MessageCondition condition) {
-        this.blockingCondition = condition;
+    public boolean waitFor(final LineCondition condition) {
+        this.lineBlockingCondition = condition;
+        return this.waitFor(-1, TimeUnit.NANOSECONDS);
+    }
+
+    @Override
+    public boolean waitFor(final LineCondition condition, final long timeout, final TimeUnit unit) {
+        this.lineBlockingCondition = condition;
+        return this.waitFor(timeout, unit);
+    }
+
+    private boolean waitFor(final long timeout, final TimeUnit unit) {
         try {
-            this.blocker.await();
+            if (timeout < 0) {
+                this.blocker.await();
+            } else {
+                this.blocker.await(timeout, unit);
+            }
             return true;
-        } catch (final Exception e) {
-            NonStoringLogTailer.LOGGER.warn("Waiting for message aborted.", e);
+        } catch (final InterruptedException e) {
+            NonStoringLogTailer.LOGGER.warn("Waiting interrupted.", e);
             return false;
-        } finally {
-            this.refreshBarrier();
+        } catch (final BrokenBarrierException e) {
+            NonStoringLogTailer.LOGGER.warn("Waiting aborted.", e);
+            return false;
+        } catch (final TimeoutException e) {
+            NonStoringLogTailer.LOGGER.info("Waiting ended in a timeout.");
+            return false;
         }
     }
 
     @Override
+    public boolean waitFor(final MessageCondition condition) {
+        this.messageBlockingCondition = condition;
+        return this.waitFor(-1, TimeUnit.NANOSECONDS);
+    }
+
+    @Override
     public boolean waitFor(final MessageCondition condition, final long timeout, final TimeUnit unit) {
-        this.blockingCondition = condition;
-        try {
-            this.blocker.await(timeout, unit);
-            return true;
-        } catch (final InterruptedException e) {
-            NonStoringLogTailer.LOGGER.warn("Waiting for message aborted.", e);
-            return false;
-        } catch (final BrokenBarrierException e) {
-            NonStoringLogTailer.LOGGER.warn("Waiting for message aborted.", e);
-            return false;
-        } catch (final TimeoutException e) {
-            NonStoringLogTailer.LOGGER.info("Waiting for message ended in a timeout.");
-            return false;
-        } finally {
-            this.refreshBarrier();
+        if (timeout < 1) {
+            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
+        this.messageBlockingCondition = condition;
+        return this.waitFor(timeout, unit);
     }
 }

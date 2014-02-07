@@ -11,12 +11,10 @@ class LogWatchTailerListener implements TailerListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchTailerListener.class);
 
-    private final TailSplitter splitter;
     private final LogWatch watcher;
     private File watchedFile;
 
-    public LogWatchTailerListener(final LogWatch watcher, final TailSplitter splitter) {
-        this.splitter = splitter;
+    public LogWatchTailerListener(final LogWatch watcher) {
         this.watcher = watcher;
     }
 
@@ -33,10 +31,7 @@ class LogWatchTailerListener implements TailerListener {
     }
 
     public void handle(final String line) {
-        final Message msg = this.splitter.addLine(line);
-        if (msg != null) {
-            this.watcher.addMessage(msg);
-        }
+        this.watcher.addLine(line);
     }
 
     public void init(final Tailer tailer) {

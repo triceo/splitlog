@@ -19,6 +19,7 @@ public class LogWatch {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private final Tailer tailer;
+    private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final Set<AbstractLogTailer> tailers = new LinkedHashSet<AbstractLogTailer>();
     private final LogWatchTailerListener listener;
@@ -30,15 +31,22 @@ public class LogWatch {
     private final List<Message> messageQueue = new CopyOnWriteArrayList<Message>();
 
     protected LogWatch(final File watchedFile, final TailSplitter splitter) {
-        this.listener = new LogWatchTailerListener(this, splitter);
+        this.listener = new LogWatchTailerListener(this);
+        this.splitter = splitter;
         this.tailer = new Tailer(watchedFile, this.listener);
         this.executor.execute(this.tailer);
     }
 
-    protected void addMessage(final Message message) {
-        this.messageQueue.add(message);
+    protected void addLine(final String line) {
+        final Message message = this.splitter.addLine(line);
+        if (message != null) {
+            this.messageQueue.add(message);
+        }
         for (final AbstractLogTailer t : this.tailers) {
-            t.notifyOfMessage(message);
+            t.notifyOfLine(line);
+            if (message != null) {
+                t.notifyOfMessage(message);
+            }
         }
     }
 
@@ -118,7 +126,11 @@ public class LogWatch {
             return false;
         }
         this.tailer.stop();
+        final Message message = this.splitter.forceProcessing();
         for (final AbstractLogTailer chunk : new ArrayList<AbstractLogTailer>(this.tailers)) {
+            if (message != null) {
+                chunk.notifyOfMessage(message);
+            }
             this.terminateTailing(chunk);
         }
         this.isTerminated.set(false);
