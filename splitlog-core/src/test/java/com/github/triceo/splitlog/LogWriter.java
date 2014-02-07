@@ -29,7 +29,7 @@ class LogWriter {
     }
 
     /**
-     * Writes a message to the log.
+     * Writes a line to the log and waits until the tailer receives it.
      * 
      * @param line
      *            Message to write.
@@ -38,6 +38,30 @@ class LogWriter {
      * @return If the message has been written.
      */
     public boolean write(final String line, final AbstractLogTailer tailer) {
+        if (!this.writeWithoutWaiting(line, tailer)) {
+            return false;
+        }
+        // wait until the last part of the string is finally present
+        return tailer.waitFor(new LineCondition() {
+
+            public boolean accept(final String receivedLine) {
+                final String textStr[] = line.split("\\r?\\n");
+                return (textStr[textStr.length - 1].trim().equals(receivedLine.trim()));
+            }
+
+        }, 10, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Writes a message to the log.
+     * 
+     * @param line
+     *            Message to write.
+     * @param tailer
+     *            Tailer to wait for the message.
+     * @return If the message has been written.
+     */
+    private boolean writeWithoutWaiting(final String line, final AbstractLogTailer tailer) {
         final Future<Boolean> result = this.e.submit(new Callable<Boolean>() {
 
             public Boolean call() throws Exception {
@@ -63,29 +87,6 @@ class LogWriter {
             LogWriter.LOGGER.warn("Failed writing log message '{}'.", line, ex);
             return false;
         }
-    }
-
-    /**
-     * Writes a message to the log and waits until the tailer receives it.
-     * 
-     * @param line
-     *            Message to write.
-     * @param tailer
-     *            Tailer to wait for the message.
-     * @return If the message has been written.
-     */
-    public boolean writeWithWaiting(final String line, final AbstractLogTailer tailer) {
-        if (!this.write(line, tailer)) {
-            return false;
-        }
-        return tailer.waitFor(new MessageCondition() {
-
-            public boolean accept(final Message msg) {
-                // wait until any message is received
-                return true;
-            }
-
-        }, 10, TimeUnit.SECONDS);
     }
 
 }

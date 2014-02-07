@@ -42,21 +42,11 @@ public class NonStoringLogTailerTest {
         final AbstractLogTailer tailer = logwatch.startTailing();
         // test simple messages
         NonStoringLogTailerTest.writer.write(message1, tailer);
-        NonStoringLogTailerTest.writer.writeWithWaiting(message1, tailer);
-        // test multi-line messages; each line should be its own message
-        NonStoringLogTailerTest.writer.writeWithWaiting(message2part1 + "\n" + message2part2, tailer);
-        NonStoringLogTailerTest.writer.writeWithWaiting(message3part1 + "\r\n" + message3part2, tailer);
-        try {
-            /*
-             * we're only waiting for one message, while there will be two. this
-             * wait prevents CME in the next step.
-             */
-            Thread.sleep(1000);
-        } catch (final InterruptedException e) {
-            // nothing to do
-        }
+        NonStoringLogTailerTest.writer.write(message1, tailer);
+        NonStoringLogTailerTest.writer.write(message2part1 + "\n" + message2part2, tailer);
+        NonStoringLogTailerTest.writer.write(message3part1 + "\r\n" + message3part2, tailer);
+        // now validate the results
         final List<Message> messages = tailer.getMessages();
-        Assert.assertEquals(message1, messages.get(0).getLines().get(0));
         Assert.assertEquals(message1, messages.get(1).getLines().get(0));
         Assert.assertEquals(message2part1, messages.get(2).getLines().get(0));
         Assert.assertEquals(message2part2, messages.get(3).getLines().get(0));
@@ -78,10 +68,10 @@ public class NonStoringLogTailerTest {
         final AbstractLogTailer tailer = logwatch.startTailing();
         tailer.tag(tag0);
         NonStoringLogTailerTest.writer.write(message1, tailer);
-        NonStoringLogTailerTest.writer.writeWithWaiting(message2, tailer);
+        NonStoringLogTailerTest.writer.write(message2, tailer);
         tailer.tag(tag1); // message1 will only be written after message2 has
                           // been sent
-        NonStoringLogTailerTest.writer.writeWithWaiting(message3, tailer);
+        NonStoringLogTailerTest.writer.write(message3, tailer);
         tailer.tag(tag2); // message2 will only be written after message3 has
                           // been sent
         Assert.assertEquals(tag0, tailer.getMessages().get(0).getLines().get(0));
