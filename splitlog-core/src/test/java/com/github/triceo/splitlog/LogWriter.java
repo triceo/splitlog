@@ -37,11 +37,11 @@ class LogWriter {
      *            Message to write.
      * @param tailer
      *            Tailer to wait for the message.
-     * @return If the message has been written.
+     * @return The line that was written, or null otherwise.
      */
-    public boolean write(final String line, final AbstractLogTailer tailer) {
+    public String write(final String line, final AbstractLogTailer tailer) {
         if (!this.writeWithoutWaiting(line, tailer)) {
-            return false;
+            return null;
         }
         // wait until the last part of the string is finally present
         return tailer.waitFor(new LineCondition() {

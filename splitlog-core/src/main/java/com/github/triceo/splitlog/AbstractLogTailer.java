@@ -70,10 +70,9 @@ public abstract class AbstractLogTailer {
      * 
      * @param condition
      *            Condition that needs to be true for the method to unblock.
-     * @return Whether the line actually appeared, or the method unblocked due
-     *         to some other reason.
+     * @return Null if the method unblocked due to some other reason.
      */
-    public abstract boolean waitFor(LineCondition condition);
+    public abstract String waitFor(LineCondition condition);
 
     /**
      * Will block until a line appears in the log, for which the condition is
@@ -81,20 +80,18 @@ public abstract class AbstractLogTailer {
      * 
      * @param condition
      *            Condition that needs to be true for the method to unblock.
-     * @return Whether the line actuall appeared, or the method unblocked due to
-     *         some other reason.
+     * @return Null if the method unblocked due to some other reason.
      */
-    public abstract boolean waitFor(LineCondition condition, long timeout, TimeUnit unit);
+    public abstract String waitFor(LineCondition condition, long timeout, TimeUnit unit);
 
     /**
      * Will block until a message arrives, for which the condition is true.
      * 
      * @param condition
      *            Condition that needs to be true for the method to unblock.
-     * @return Whether the message actually arrived, or the method unblocked due
-     *         to some other reason.
+     * @return Null if the method unblocked due to some other reason.
      */
-    public abstract boolean waitFor(MessageCondition condition);
+    public abstract Message waitFor(MessageCondition condition);
 
     /**
      * Will block until a message arrives, for which the condition is true. If
@@ -102,10 +99,9 @@ public abstract class AbstractLogTailer {
      * 
      * @param condition
      *            Condition that needs to be true for the method to unblock.
-     * @return Whether the message actually arrived, or the method unblocked due
-     *         to some other reason.
+     * @return Null if the method unblocked due to some other reason.
      */
-    public abstract boolean waitFor(MessageCondition condition, long timeout, TimeUnit unit);
+    public abstract Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
     /**
      * Will output all the messages, including tags, into a stream.

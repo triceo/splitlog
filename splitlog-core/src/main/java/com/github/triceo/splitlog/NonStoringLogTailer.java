@@ -27,6 +27,8 @@ class NonStoringLogTailer extends AbstractLogTailer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringLogTailer.class);
 
+    private Message receivedMessage;
+    private String receivedLine;
     private MessageCondition messageBlockingCondition = null;
     private LineCondition lineBlockingCondition = null;
     // FIXME this assumes that only the tail thread and user thread are present
@@ -57,6 +59,7 @@ class NonStoringLogTailer extends AbstractLogTailer {
         } else if (this.lineBlockingCondition.accept(line)) {
             try {
                 this.blocker.await();
+                this.receivedLine = line;
             } catch (final Exception e) {
                 this.blocker.reset();
             } finally {
@@ -73,6 +76,7 @@ class NonStoringLogTailer extends AbstractLogTailer {
         } else if (this.messageBlockingCondition.accept(msg)) {
             try {
                 this.blocker.await();
+                this.receivedMessage = msg;
             } catch (final Exception e) {
                 this.blocker.reset();
             } finally {
@@ -98,15 +102,15 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    public boolean waitFor(final LineCondition condition) {
+    public String waitFor(final LineCondition condition) {
         this.lineBlockingCondition = condition;
-        return this.waitFor(-1, TimeUnit.NANOSECONDS);
+        return this.waitForLine(-1, TimeUnit.NANOSECONDS);
     }
 
     @Override
-    public boolean waitFor(final LineCondition condition, final long timeout, final TimeUnit unit) {
+    public String waitFor(final LineCondition condition, final long timeout, final TimeUnit unit) {
         this.lineBlockingCondition = condition;
-        return this.waitFor(timeout, unit);
+        return this.waitForLine(timeout, unit);
     }
 
     private boolean waitFor(final long timeout, final TimeUnit unit) {
@@ -130,17 +134,49 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    public boolean waitFor(final MessageCondition condition) {
+    public Message waitFor(final MessageCondition condition) {
         this.messageBlockingCondition = condition;
-        return this.waitFor(-1, TimeUnit.NANOSECONDS);
+        return this.waitForMessage(-1, TimeUnit.NANOSECONDS);
     }
 
     @Override
-    public boolean waitFor(final MessageCondition condition, final long timeout, final TimeUnit unit) {
+    public Message waitFor(final MessageCondition condition, final long timeout, final TimeUnit unit) {
         if (timeout < 1) {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
         this.messageBlockingCondition = condition;
-        return this.waitFor(timeout, unit);
+        return this.waitForMessage(timeout, unit);
+    }
+
+    private String waitForLine(final long timeout, final TimeUnit unit) {
+        final boolean waitSucceeded = this.waitFor(timeout, unit);
+        if (waitSucceeded) {
+            final String result = this.receivedLine;
+            if (result == null) {
+                // should never happen; check concurrency logic if it does
+                throw new IllegalStateException("Waiting for a line has succeeded, yet the line is null.");
+            } else {
+                this.receivedLine = null;
+                return result;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private Message waitForMessage(final long timeout, final TimeUnit unit) {
+        final boolean waitSucceeded = this.waitFor(timeout, unit);
+        if (waitSucceeded) {
+            final Message result = this.receivedMessage;
+            if (result == null) {
+                // should never happen; check concurrency logic if it does
+                throw new IllegalStateException("Waiting for a message has succeeded, yet the message is null.");
+            } else {
+                this.receivedMessage = null;
+                return result;
+            }
+        } else {
+            return null;
+        }
     }
 }

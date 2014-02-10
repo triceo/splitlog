@@ -41,10 +41,14 @@ public class NonStoringLogTailerTest {
         final LogWatch logwatch = LogWatchFactory.newLogWatch(NonStoringLogTailerTest.watchedFile);
         final AbstractLogTailer tailer = logwatch.startTailing();
         // test simple messages
-        NonStoringLogTailerTest.writer.write(message1, tailer);
-        NonStoringLogTailerTest.writer.write(message1, tailer);
-        NonStoringLogTailerTest.writer.write(message2part1 + "\n" + message2part2, tailer);
-        NonStoringLogTailerTest.writer.write(message3part1 + "\r\n" + message3part2, tailer);
+        String result = NonStoringLogTailerTest.writer.write(message1, tailer);
+        Assert.assertEquals(message1, result);
+        result = NonStoringLogTailerTest.writer.write(message1, tailer);
+        Assert.assertEquals(message1, result);
+        result = NonStoringLogTailerTest.writer.write(message2part1 + "\n" + message2part2, tailer);
+        Assert.assertEquals(message2part2, result);
+        result = NonStoringLogTailerTest.writer.write(message3part1 + "\r\n" + message3part2, tailer);
+        Assert.assertEquals(message3part2, result);
         // now validate the results
         final List<Message> messages = tailer.getMessages();
         Assert.assertEquals(message1, messages.get(1).getLines().get(0));
@@ -67,11 +71,14 @@ public class NonStoringLogTailerTest {
         final LogWatch logwatch = LogWatchFactory.newLogWatch(NonStoringLogTailerTest.watchedFile);
         final AbstractLogTailer tailer = logwatch.startTailing();
         tailer.tag(tag0);
-        NonStoringLogTailerTest.writer.write(message1, tailer);
-        NonStoringLogTailerTest.writer.write(message2, tailer);
+        String result = NonStoringLogTailerTest.writer.write(message1, tailer);
+        Assert.assertEquals(message1, result);
+        result = NonStoringLogTailerTest.writer.write(message2, tailer);
+        Assert.assertEquals(message2, result);
         tailer.tag(tag1); // message1 will only be written after message2 has
                           // been sent
-        NonStoringLogTailerTest.writer.write(message3, tailer);
+        result = NonStoringLogTailerTest.writer.write(message3, tailer);
+        Assert.assertEquals(message3, result);
         tailer.tag(tag2); // message2 will only be written after message3 has
                           // been sent
         Assert.assertEquals(tag0, tailer.getMessages().get(0).getLines().get(0));
