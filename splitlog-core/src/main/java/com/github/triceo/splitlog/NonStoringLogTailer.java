@@ -21,7 +21,7 @@ import com.github.triceo.splitlog.conditions.MessageCondition;
  * 
  * This class assumes that LogWatch and user code are the only two threads that
  * use it. Never use one instance of this class from two or more user threads.
- * Otherwise, expect unpredictable behavior from waitFor() methods.
+ * Otherwise, unpredictable behavior from waitFor() methods is possible.
  */
 class NonStoringLogTailer extends AbstractLogTailer {
 
@@ -53,10 +53,12 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    protected void notifyOfLine(final String line) {
+    protected synchronized void notifyOfLine(final String line) {
         if (this.lineBlockingCondition == null) {
+            // this does nothing with the line
             return;
         } else if (this.lineBlockingCondition.accept(line)) {
+            // we have a line we were looking for, unblock
             try {
                 this.blocker.await();
                 this.receivedLine = line;
@@ -70,10 +72,12 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    protected void notifyOfMessage(final Message msg) {
+    protected synchronized void notifyOfMessage(final Message msg) {
         if (this.messageBlockingCondition == null) {
+            // this does nothing with the message
             return;
         } else if (this.messageBlockingCondition.accept(msg)) {
+            // we have a message we were looking for, unblock
             try {
                 this.blocker.await();
                 this.receivedMessage = msg;
@@ -101,14 +105,27 @@ class NonStoringLogTailer extends AbstractLogTailer {
         this.tags.put(messageId, message);
     }
 
+    /**
+     * Will throw an exception if any other thread tries to specify a wait on
+     * the instance while another thread is already waiting.
+     */
     @Override
     public String waitFor(final LineCondition condition) {
         this.lineBlockingCondition = condition;
         return this.waitForLine(-1, TimeUnit.NANOSECONDS);
     }
 
+    /**
+     * Will throw an exception if any other thread tries to specify a wait on
+     * the instance while another thread is already waiting.
+     */
     @Override
     public String waitFor(final LineCondition condition, final long timeout, final TimeUnit unit) {
+        if (this.lineBlockingCondition != null) {
+            throw new IllegalStateException("This tailer is already waiting for a line.");
+        } else if (timeout < 1) {
+            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
+        }
         this.lineBlockingCondition = condition;
         return this.waitForLine(timeout, unit);
     }
@@ -133,15 +150,25 @@ class NonStoringLogTailer extends AbstractLogTailer {
         }
     }
 
+    /**
+     * Will throw an exception if any other thread tries to specify a wait on
+     * the instance while another thread is already waiting.
+     */
     @Override
     public Message waitFor(final MessageCondition condition) {
         this.messageBlockingCondition = condition;
         return this.waitForMessage(-1, TimeUnit.NANOSECONDS);
     }
 
+    /**
+     * Will throw an exception if any other thread tries to specify a wait on
+     * the instance while another thread is already waiting.
+     */
     @Override
     public Message waitFor(final MessageCondition condition, final long timeout, final TimeUnit unit) {
-        if (timeout < 1) {
+        if (this.messageBlockingCondition != null) {
+            throw new IllegalStateException("This tailer is already waiting for a message.");
+        } else if (timeout < 1) {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
         this.messageBlockingCondition = condition;
