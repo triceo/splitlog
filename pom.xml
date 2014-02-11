@@ -46,6 +46,7 @@
           <version>3.1</version>
           <configuration>
             <compilerVersion>${java.version}</compilerVersion>
+            <source>${java.version}</source>
             <target>${java.version}</target>
             <testTarget>${java.version}</testTarget>
           </configuration>
