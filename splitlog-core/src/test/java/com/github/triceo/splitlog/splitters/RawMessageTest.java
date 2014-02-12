@@ -6,8 +6,6 @@ import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.github.triceo.splitlog.splitters.RawMessage;
-
 public class RawMessageTest {
 
     @Test

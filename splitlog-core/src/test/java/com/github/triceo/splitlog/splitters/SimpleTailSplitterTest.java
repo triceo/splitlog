@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.github.triceo.splitlog.Message;
-import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
 public class SimpleTailSplitterTest {
 

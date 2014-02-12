@@ -18,22 +18,27 @@ class LogWatchTailerListener implements TailerListener {
         this.watcher = watcher;
     }
 
+    @Override
     public void fileNotFound() {
         LogWatchTailerListener.LOGGER.info("Log file not found: {}.", this.watchedFile);
     }
 
+    @Override
     public void fileRotated() {
         LogWatchTailerListener.LOGGER.info("Log file rotated: {}.", this.watchedFile);
     }
 
+    @Override
     public void handle(final Exception ex) {
         LogWatchTailerListener.LOGGER.warn("Exception from the log tailer.", ex);
     }
 
+    @Override
     public void handle(final String line) {
         this.watcher.addLine(line);
     }
 
+    @Override
     public void init(final Tailer tailer) {
         this.watchedFile = tailer.getFile();
     }

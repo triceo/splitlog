@@ -46,6 +46,7 @@ class LogWriter {
         // wait until the last part of the string is finally present
         return tailer.waitFor(new LineCondition() {
 
+            @Override
             public boolean accept(final String receivedLine) {
                 final String textStr[] = line.split("\\r?\\n");
                 return (textStr[textStr.length - 1].trim().equals(receivedLine.trim()));
@@ -66,6 +67,7 @@ class LogWriter {
     private boolean writeWithoutWaiting(final String line, final AbstractLogTailer tailer) {
         final Future<Boolean> result = this.e.submit(new Callable<Boolean>() {
 
+            @Override
             public Boolean call() throws Exception {
                 BufferedWriter w = null;
                 try {

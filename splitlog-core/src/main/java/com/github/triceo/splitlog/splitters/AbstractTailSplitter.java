@@ -13,6 +13,7 @@ public abstract class AbstractTailSplitter implements TailSplitter {
 
     private List<String> lines = new ArrayList<String>();
 
+    @Override
     public Message addLine(final String line) {
         final boolean restart = this.isStartingLine(line);
         if (restart) {
@@ -65,6 +66,7 @@ public abstract class AbstractTailSplitter implements TailSplitter {
      */
     abstract protected MessageType determineType(final RawMessage message);
 
+    @Override
     public Message forceProcessing() {
         if (this.lines.size() == 0) {
             return null;

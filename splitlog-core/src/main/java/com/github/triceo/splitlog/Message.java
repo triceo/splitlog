@@ -86,7 +86,7 @@ public class Message {
     }
 
     public Date getDate() {
-        return (Date)this.date.clone();
+        return (Date) this.date.clone();
     }
 
     public List<String> getLines() {

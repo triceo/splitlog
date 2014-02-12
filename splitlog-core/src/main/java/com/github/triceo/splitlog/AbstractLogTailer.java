@@ -113,6 +113,7 @@ public abstract class AbstractLogTailer {
     public boolean write(final OutputStream stream) {
         return this.write(stream, new BooleanCondition<Message>() {
 
+            @Override
             public boolean accept(final Message msg) {
                 // accept every message
                 return true;
