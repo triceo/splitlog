@@ -104,7 +104,8 @@ public abstract class AbstractLogTailer {
     public abstract Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
     /**
-     * Will output all the messages, including tags, into a stream.
+     * Will output all the messages, including tags, into a stream. Will close
+     * the stream in the process.
      * 
      * @param stream
      *            Target.
@@ -124,7 +125,7 @@ public abstract class AbstractLogTailer {
 
     /**
      * Will output the messages, including tags, that meet a specific condition,
-     * into a stream.
+     * into a stream. Will close the stream in the process.
      * 
      * @param stream
      *            Target.
@@ -147,7 +148,7 @@ public abstract class AbstractLogTailer {
                 if (!condition.accept(msg)) {
                     continue;
                 }
-                w.write(msg.toString());
+                w.write(msg.toString().trim());
                 w.newLine();
             }
             return true;
