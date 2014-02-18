@@ -14,7 +14,7 @@ public abstract class AbstractTailSplitter implements TailSplitter {
     private List<String> lines = new ArrayList<String>();
 
     @Override
-    public Message addLine(final String line) {
+    public synchronized Message addLine(final String line) {
         final boolean restart = this.isStartingLine(line);
         if (restart) {
             if (this.lines.isEmpty()) {

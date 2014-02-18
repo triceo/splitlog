@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.input.Tailer;
@@ -18,7 +16,9 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 
 public class LogWatch {
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    public static LogWatchBuilder forFile(final File f) {
+        return new LogWatchBuilder(f);
+    }
 
     private final Tailer tailer;
     private final TailSplitter splitter;
@@ -32,11 +32,12 @@ public class LogWatch {
 
     private final List<Message> messageQueue = new CopyOnWriteArrayList<Message>();
 
-    protected LogWatch(final File watchedFile, final TailSplitter splitter) {
+    protected LogWatch(final File watchedFile, final TailSplitter splitter, final long delayBetweenReads,
+            final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
         this.listener = new LogWatchTailerListener(this);
         this.splitter = splitter;
-        this.tailer = new Tailer(watchedFile, this.listener);
-        this.executor.execute(this.tailer);
+        this.tailer = Tailer.create(watchedFile, this.listener, delayBetweenReads, ignoreExistingContent,
+                reopenBetweenReads, bufferSize);
     }
 
     protected void addLine(final String line) {
@@ -136,7 +137,6 @@ public class LogWatch {
             this.terminateTailing(chunk);
         }
         this.isTerminated.set(false);
-        this.executor.shutdownNow();
         return true;
     }
 
