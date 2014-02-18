@@ -119,6 +119,7 @@ public class Message {
         sb.append(this.type);
         sb.append(") ");
         sb.append(this.severity);
+        sb.append(" ");
         for (final String line : this.lines) {
             sb.append(line);
             sb.append(Message.LINE_SEPARATOR);
