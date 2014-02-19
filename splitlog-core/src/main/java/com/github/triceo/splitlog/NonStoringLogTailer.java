@@ -5,14 +5,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.conditions.BooleanCondition;
 import com.github.triceo.splitlog.conditions.LineCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 
@@ -30,16 +29,21 @@ class NonStoringLogTailer extends AbstractLogTailer {
 
     private Message receivedMessage;
     private String receivedLine;
-    private MessageCondition messageBlockingCondition = null;
-    private LineCondition lineBlockingCondition = null;
+    private BooleanCondition<Message> messageBlockingCondition = null;
+    private BooleanCondition<String> lineBlockingCondition = null;
     // FIXME this assumes that only the tail thread and user thread are present
-    private CyclicBarrier blocker;
+    private final Semaphore blocker = new Semaphore(1);
 
     private final Map<Integer, Message> tags = new TreeMap<Integer, Message>();
 
     public NonStoringLogTailer(final LogWatch watch) {
         super(watch);
-        this.refreshBarrier();
+        try {
+            // acquire the permit, so that the future waits block
+            this.blocker.acquire();
+        } catch (final InterruptedException e) {
+            throw new IllegalStateException("Couldn't initialize tailer.", e);
+        }
     }
 
     @Override
@@ -65,45 +69,35 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    protected synchronized void notifyOfLine(final String line) {
+    protected void notifyOfLine(final String line) {
         if (this.lineBlockingCondition == null) {
             // this does nothing with the line
             return;
         } else if (this.lineBlockingCondition.accept(line)) {
-            // we have a line we were looking for, unblock
-            try {
-                this.blocker.await();
-                this.receivedLine = line;
-            } catch (final Exception e) {
-                this.blocker.reset();
-            } finally {
-                this.lineBlockingCondition = null;
-                this.refreshBarrier();
+            if (this.blocker.availablePermits() > 0) {
+                // this shouldn't happen, since the condition != null
+                throw new IllegalStateException("No thread is waiting on the line condition.");
             }
+            // we have a line we were looking for, unblock
+            this.receivedLine = line;
+            this.blocker.release();
         }
     }
 
     @Override
-    protected synchronized void notifyOfMessage(final Message msg) {
+    protected void notifyOfMessage(final Message msg) {
         if (this.messageBlockingCondition == null) {
             // this does nothing with the message
             return;
         } else if (this.messageBlockingCondition.accept(msg)) {
-            // we have a message we were looking for, unblock
-            try {
-                this.blocker.await();
-                this.receivedMessage = msg;
-            } catch (final Exception e) {
-                this.blocker.reset();
-            } finally {
-                this.messageBlockingCondition = null;
-                this.refreshBarrier();
+            if (this.blocker.availablePermits() > 0) {
+                // this shouldn't happen, since the condition != null
+                throw new IllegalStateException("No thread is waiting on the message condition.");
             }
+            // we have a message we were looking for, unblock
+            this.receivedMessage = msg;
+            this.blocker.release();
         }
-    }
-
-    private void refreshBarrier() {
-        this.blocker = new CyclicBarrier(2);
     }
 
     /**
@@ -123,8 +117,7 @@ class NonStoringLogTailer extends AbstractLogTailer {
      */
     @Override
     public String waitFor(final LineCondition condition) {
-        this.lineBlockingCondition = condition;
-        return this.waitForLine(-1, TimeUnit.NANOSECONDS);
+        return this.waitForLine(condition, -1, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -133,31 +126,22 @@ class NonStoringLogTailer extends AbstractLogTailer {
      */
     @Override
     public String waitFor(final LineCondition condition, final long timeout, final TimeUnit unit) {
-        if (this.lineBlockingCondition != null) {
-            throw new IllegalStateException("This tailer is already waiting for a line.");
-        } else if (timeout < 1) {
+        if (timeout < 1) {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
-        this.lineBlockingCondition = condition;
-        return this.waitForLine(timeout, unit);
+        return this.waitForLine(condition, timeout, unit);
     }
 
-    private boolean waitFor(final long timeout, final TimeUnit unit) {
+    private synchronized boolean waitFor(final long timeout, final TimeUnit unit) {
         try {
             if (timeout < 0) {
-                this.blocker.await();
+                this.blocker.acquire();
+                return true;
             } else {
-                this.blocker.await(timeout, unit);
+                return this.blocker.tryAcquire(timeout, unit);
             }
-            return true;
         } catch (final InterruptedException e) {
             NonStoringLogTailer.LOGGER.warn("Waiting interrupted.", e);
-            return false;
-        } catch (final BrokenBarrierException e) {
-            NonStoringLogTailer.LOGGER.warn("Waiting aborted.", e);
-            return false;
-        } catch (final TimeoutException e) {
-            NonStoringLogTailer.LOGGER.info("Waiting ended in a timeout.");
             return false;
         }
     }
@@ -168,8 +152,7 @@ class NonStoringLogTailer extends AbstractLogTailer {
      */
     @Override
     public Message waitFor(final MessageCondition condition) {
-        this.messageBlockingCondition = condition;
-        return this.waitForMessage(-1, TimeUnit.NANOSECONDS);
+        return this.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -178,16 +161,14 @@ class NonStoringLogTailer extends AbstractLogTailer {
      */
     @Override
     public Message waitFor(final MessageCondition condition, final long timeout, final TimeUnit unit) {
-        if (this.messageBlockingCondition != null) {
-            throw new IllegalStateException("This tailer is already waiting for a message.");
-        } else if (timeout < 1) {
+        if (timeout < 1) {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
-        this.messageBlockingCondition = condition;
-        return this.waitForMessage(timeout, unit);
+        return this.waitForMessage(condition, timeout, unit);
     }
 
-    private String waitForLine(final long timeout, final TimeUnit unit) {
+    private String waitForLine(final BooleanCondition<String> condition, final long timeout, final TimeUnit unit) {
+        this.setLineCondition(condition);
         final boolean waitSucceeded = this.waitFor(timeout, unit);
         if (waitSucceeded) {
             final String result = this.receivedLine;
@@ -196,14 +177,30 @@ class NonStoringLogTailer extends AbstractLogTailer {
                 throw new IllegalStateException("Waiting for a line has succeeded, yet the line is null.");
             } else {
                 this.receivedLine = null;
+                this.lineBlockingCondition = null;
                 return result;
             }
         } else {
             return null;
         }
     }
+    
+    private synchronized void setMessageCondition(BooleanCondition<Message> condition) {
+        if (this.messageBlockingCondition != null) {
+            throw new IllegalStateException("Another thread is already waiting for a message.");
+        }
+        this.messageBlockingCondition = condition;
+    }
 
-    private Message waitForMessage(final long timeout, final TimeUnit unit) {
+    private synchronized void setLineCondition(BooleanCondition<String> condition) {
+        if (this.lineBlockingCondition != null) {
+            throw new IllegalStateException("Another thread is already waiting for a line.");
+        }
+        this.lineBlockingCondition = condition;
+    }
+
+    private Message waitForMessage(final BooleanCondition<Message> condition, final long timeout, final TimeUnit unit) {
+        this.setMessageCondition(condition);
         final boolean waitSucceeded = this.waitFor(timeout, unit);
         if (waitSucceeded) {
             final Message result = this.receivedMessage;
@@ -212,6 +209,7 @@ class NonStoringLogTailer extends AbstractLogTailer {
                 throw new IllegalStateException("Waiting for a message has succeeded, yet the message is null.");
             } else {
                 this.receivedMessage = null;
+                this.messageBlockingCondition = null;
                 return result;
             }
         } else {
