@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 
-import com.github.triceo.splitlog.conditions.BooleanCondition;
 import com.github.triceo.splitlog.conditions.LineCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 
@@ -22,11 +21,32 @@ public abstract class AbstractLogTailer {
     }
 
     /**
-     * Retrieve messages that this tailer has been notified of.
+     * Retrieve messages that this tailer has been notified of, including tags
      * 
      * @return Messages we are aware of, in their original order.
      */
-    public abstract List<Message> getMessages();
+    public List<Message> getMessages() {
+        return this.getMessages(new MessageCondition() {
+
+            @Override
+            public boolean accept(final Message evaluate) {
+                // accept every message
+                return true;
+            }
+
+        });
+    }
+
+    /**
+     * Retrieve messages that this tailer has been notified of, if a certain
+     * condition holds true for them, including tags.
+     * 
+     * @param condition
+     *            The condition.
+     * @return Every message we are aware of, for which
+     *         {@link MessageCondition#accept(Message)} is true.
+     */
+    public abstract List<Message> getMessages(final MessageCondition condition);
 
     protected LogWatch getWatch() {
         return this.watch;
@@ -104,15 +124,15 @@ public abstract class AbstractLogTailer {
     public abstract Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
     /**
-     * Will output all the messages, including tags, into a stream. Will close
-     * the stream in the process.
+     * Will write to a stream that which is be returned by
+     * {@link #getMessages()}.
      * 
      * @param stream
      *            Target.
      * @return True if written, false otherwise.
      */
     public boolean write(final OutputStream stream) {
-        return this.write(stream, new BooleanCondition<Message>() {
+        return this.write(stream, new MessageCondition() {
 
             @Override
             public boolean accept(final Message msg) {
@@ -124,18 +144,17 @@ public abstract class AbstractLogTailer {
     }
 
     /**
-     * Will output the messages, including tags, that meet a specific condition,
-     * into a stream. Will close the stream in the process.
+     * Will write to a stream that which is be returned by
+     * {@link #getMessages(MessageCondition)}.
      * 
      * @param stream
      *            Target.
      * @param condition
-     *            When this object's {@link MessageCondition#accept(Message)}
-     *            returns true on a message, the message will be included in the
-     *            stream.
+     *            The condition to pass to
+     *            {@link #getMessages(MessageCondition)}.
      * @return True if written, false otherwise.
      */
-    public boolean write(final OutputStream stream, final BooleanCondition<Message> condition) {
+    public boolean write(final OutputStream stream, final MessageCondition condition) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");
         } else if (condition == null) {
@@ -144,10 +163,7 @@ public abstract class AbstractLogTailer {
         BufferedWriter w = null;
         try {
             w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
-            for (final Message msg : this.getMessages()) {
-                if (!condition.accept(msg)) {
-                    continue;
-                }
+            for (final Message msg : this.getMessages(condition)) {
                 w.write(msg.toString().trim());
                 w.newLine();
             }
@@ -158,4 +174,5 @@ public abstract class AbstractLogTailer {
             IOUtils.closeQuietly(w);
         }
     }
+
 }

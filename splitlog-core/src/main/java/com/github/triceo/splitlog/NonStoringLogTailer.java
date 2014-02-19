@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +43,25 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     @Override
-    public List<Message> getMessages() {
-        final List<Message> messages = new LinkedList<Message>(this.getWatch().getAllMessages(this));
-        int offset = 0;
-        for (final Map.Entry<Integer, Message> entry : this.tags.entrySet()) {
-            messages.add(entry.getKey() + offset, entry.getValue());
-            offset++;
+    public List<Message> getMessages(final MessageCondition condition) {
+        final List<Message> messages = new LinkedList<Message>();
+        int messageId = 0;
+        for (final Message msg : this.getWatch().getAllMessages(this)) {
+            // insert a tag if there is one for this particular spot
+            if (this.tags.containsKey(messageId)) {
+                messages.add(this.tags.get(messageId));
+            }
+            // insert a message if accepted
+            if (condition.accept(msg)) {
+                messages.add(msg);
+            }
+            messageId++;
         }
-        return messages;
+        // if there is a tag after the last message, this will catch it
+        if (this.tags.containsKey(messageId)) {
+            messages.add(this.tags.get(messageId));
+        }
+        return Collections.unmodifiableList(messages);
     }
 
     @Override

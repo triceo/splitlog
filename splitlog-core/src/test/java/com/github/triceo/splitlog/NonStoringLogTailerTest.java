@@ -99,11 +99,13 @@ public class NonStoringLogTailerTest {
         Assert.assertEquals(message3, result);
         tailer.tag(tag2); // message2 will only be written after message3 has
                           // been sent
-        Assert.assertEquals(tag0, tailer.getMessages().get(0).getLines().get(0));
-        Assert.assertEquals(message1, tailer.getMessages().get(1).getLines().get(0));
-        Assert.assertEquals(tag1, tailer.getMessages().get(2).getLines().get(0));
-        Assert.assertEquals(message2, tailer.getMessages().get(3).getLines().get(0));
-        Assert.assertEquals(tag2, tailer.getMessages().get(4).getLines().get(0));
+        final List<Message> messages = tailer.getMessages();
+        Assert.assertEquals(5, messages.size());
+        Assert.assertEquals(tag0, messages.get(0).getLines().get(0));
+        Assert.assertEquals(message1, messages.get(1).getLines().get(0));
+        Assert.assertEquals(tag1, messages.get(2).getLines().get(0));
+        Assert.assertEquals(message2, messages.get(3).getLines().get(0));
+        Assert.assertEquals(tag2, messages.get(4).getLines().get(0));
         logwatch.terminateTailing();
     }
 
