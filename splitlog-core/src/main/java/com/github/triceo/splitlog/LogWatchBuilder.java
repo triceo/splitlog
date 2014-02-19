@@ -18,7 +18,7 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
  * <dt>The default interval between each read</dt>
  * <dd>See {@link #DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS}.</dd>
  * <dt>The buffer size for reading</dt>
- * <dd>See {@link #DEFAULT_READ_BUFFER_SIZE_BYTES}.</dd>
+ * <dd>See {@link #DEFAULT_READ_BUFFER_SIZE_IN_BYTES}.</dd>
  * <dt>Default tail splitter</dt>
  * <dd>See {@link SimpleTailSplitter}</dd>
  * </dl>
@@ -26,14 +26,14 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 public class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
-    public static final int DEFAULT_READ_BUFFER_SIZE_BYTES = 4096;
+    public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
 
     private final File fileToWatch;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
 
-    private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_BYTES;
+    private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
     protected LogWatchBuilder(final File fileToWatch) {
         this.fileToWatch = fileToWatch;
