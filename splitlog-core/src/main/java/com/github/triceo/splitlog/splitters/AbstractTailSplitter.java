@@ -67,7 +67,7 @@ public abstract class AbstractTailSplitter implements TailSplitter {
     abstract protected MessageType determineType(final RawMessage message);
 
     @Override
-    public Message forceProcessing() {
+    public synchronized Message forceProcessing() {
         if (this.lines.size() == 0) {
             return null;
         }
