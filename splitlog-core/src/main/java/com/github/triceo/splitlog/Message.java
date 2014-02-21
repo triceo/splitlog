@@ -7,12 +7,15 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
+
 public class Message {
 
     private final List<String> lines;
     private final MessageSeverity severity;
     private final MessageType type;
     private final Date date;
+    private final ExceptionDescriptor exceptionDescriptor;
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
@@ -29,6 +32,11 @@ public class Message {
     }
 
     public Message(final Collection<String> raw, final Date d, final MessageType type, final MessageSeverity severity) {
+        this(raw, d, type, severity, null);
+    }
+
+    public Message(final Collection<String> raw, final Date d, final MessageType type, final MessageSeverity severity,
+            final ExceptionDescriptor exception) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
         } else if (severity == null) {
@@ -40,6 +48,7 @@ public class Message {
         this.severity = severity;
         this.type = type;
         this.date = (Date) d.clone();
+        this.exceptionDescriptor = exception;
     }
 
     /**
@@ -55,6 +64,7 @@ public class Message {
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
         this.date = Calendar.getInstance().getTime();
+        this.exceptionDescriptor = null;
     }
 
     @Override
@@ -89,6 +99,16 @@ public class Message {
         return (Date) this.date.clone();
     }
 
+    /**
+     * Get data about exception included in this message.
+     * 
+     * @return Exception data, if {@link #hasException()} returns true. Null in
+     *         any other case.
+     */
+    public ExceptionDescriptor getExceptionDescriptor() {
+        return this.exceptionDescriptor;
+    }
+
     public List<String> getLines() {
         return this.lines;
     }
@@ -99,6 +119,10 @@ public class Message {
 
     public MessageType getType() {
         return this.type;
+    }
+
+    public boolean hasException() {
+        return this.exceptionDescriptor != null;
     }
 
     @Override

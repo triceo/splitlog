@@ -8,6 +8,7 @@ import java.util.List;
 import com.github.triceo.splitlog.Message;
 import com.github.triceo.splitlog.MessageSeverity;
 import com.github.triceo.splitlog.MessageType;
+import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
 
 public abstract class AbstractTailSplitter implements TailSplitter {
 
@@ -45,6 +46,17 @@ public abstract class AbstractTailSplitter implements TailSplitter {
      * @return Date from the message, or the current date if not found.
      */
     abstract protected Date determineDate(final RawMessage message);
+
+    /**
+     * Read the message and try to identify an exception stack trace within.
+     * 
+     * @param message
+     *            Message in question.
+     * @return Exception data if found, null otherwise.
+     */
+    protected ExceptionDescriptor determineException(final RawMessage message) {
+        return ExceptionDescriptor.parseStackTrace(message.getLines());
+    }
 
     /**
      * Read the message and try to find its severity.
@@ -93,7 +105,8 @@ public abstract class AbstractTailSplitter implements TailSplitter {
         for (final String line : msg.getLines()) {
             strippedLines.add(this.stripOfMetadata(line));
         }
-        return new Message(strippedLines, this.determineDate(msg), this.determineType(msg), this.determineSeverity(msg));
+        return new Message(strippedLines, this.determineDate(msg), this.determineType(msg),
+                this.determineSeverity(msg), this.determineException(msg));
     }
 
     /**
