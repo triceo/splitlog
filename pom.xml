@@ -108,4 +108,32 @@
       </plugin>
     </plugins>
   </reporting>
+  <url>http://triceo.github.io/splitlog/</url>
+  <scm>
+    <url>https://github.com/triceo/splitlog</url>
+    <connection>scm:git:https://github.com/triceo/splitlog.git</connection>
+    <developerConnection>scm:git:https://github.com/triceo/splitlog.git</developerConnection>
+  </scm>
+  <issueManagement>
+    <system>github</system>
+    <url>https://github.com/triceo/splitlog/issues</url>
+  </issueManagement>
+  <developers>
+    <developer>
+      <id>triceo</id>
+      <name>Lukáš Petrovický</name>
+      <organization>Red Hat, Inc.</organization>
+      <organizationUrl>http://www.redhat.com/</organizationUrl>
+      <email>lukas@petrovicky.net</email>
+      <timezone>America/New_York</timezone>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
 </project>
