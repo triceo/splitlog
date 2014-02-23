@@ -9,6 +9,10 @@ import java.util.List;
 
 import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
 
+/**
+ * A set of lines from the watched file, that is likely to constitute a single
+ * log message.
+ */
 public class Message {
 
     private final List<String> lines;
