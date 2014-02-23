@@ -1,3 +1,4 @@
 com.github.triceo.splitlog
 com.github.triceo.splitlog.conditions
+com.github.triceo.splitlog.exceptions
 com.github.triceo.splitlog.splitters
