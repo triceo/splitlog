@@ -10,7 +10,7 @@ import com.github.triceo.splitlog.MessageSeverity;
 import com.github.triceo.splitlog.MessageType;
 import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
 
-public abstract class AbstractTailSplitter implements TailSplitter {
+abstract class AbstractTailSplitter implements TailSplitter {
 
     private List<String> lines = new ArrayList<String>();
 

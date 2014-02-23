@@ -6,7 +6,7 @@ import java.util.Date;
 import com.github.triceo.splitlog.MessageSeverity;
 import com.github.triceo.splitlog.MessageType;
 
-public class SimpleTailSplitter extends AbstractTailSplitter {
+final public class SimpleTailSplitter extends AbstractTailSplitter {
 
     @Override
     protected Date determineDate(final RawMessage message) {

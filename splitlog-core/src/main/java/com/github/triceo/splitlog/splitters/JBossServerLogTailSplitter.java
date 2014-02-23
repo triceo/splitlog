@@ -12,7 +12,7 @@ import com.github.triceo.splitlog.MessageType;
  * Provides a tail splitter capable of understanding the JBossAS server.log
  * format, specifically the severities and message types.
  */
-public class JBossServerLogTailSplitter extends AbstractTailSplitter {
+final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
 
     // hh:mm:ss,mmm
     private static final String DATE_SUBPATTERN = "(([01]?[0-9])|2[0-3]):([0-5][0-9]):([0-5][0-9]),([0-9][0-9][0-9])";
