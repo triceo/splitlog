@@ -22,7 +22,8 @@ public interface TailSplitter {
      * Will convert existing lines into a message, regardless whether the
      * message is complete or not.
      * 
-     * @return
+     * @return Message element, even if message isn't completely read; or null
+     *         if no message.
      */
     Message forceProcessing();
 

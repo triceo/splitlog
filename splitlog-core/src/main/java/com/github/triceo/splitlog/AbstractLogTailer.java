@@ -43,8 +43,7 @@ public abstract class AbstractLogTailer {
      * 
      * @param condition
      *            The condition.
-     * @return Every message we are aware of, for which
-     *         {@link MessageCondition#accept(Message)} is true.
+     * @return Every message we are aware of, for which the condition holds true.
      */
     public abstract List<Message> getMessages(final MessageCondition condition);
 

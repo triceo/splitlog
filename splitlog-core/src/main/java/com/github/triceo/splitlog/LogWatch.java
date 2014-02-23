@@ -63,7 +63,6 @@ public class LogWatch {
      * 
      * @param tail
      *            Tailer in question.
-     * @return
      */
     private int getEndingId(final AbstractLogTailer tail) {
         return this.endingMessageIds.containsKey(tail) ? this.endingMessageIds.get(tail) : this.messageQueue.size();
