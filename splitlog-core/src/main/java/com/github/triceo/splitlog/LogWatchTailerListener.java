@@ -11,10 +11,12 @@ class LogWatchTailerListener implements TailerListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchTailerListener.class);
 
-    private final LogWatch watcher;
+    private final DefaultLogWatch watcher;
     private File watchedFile;
 
-    public LogWatchTailerListener(final LogWatch watcher) {
+    // TODO ideally this would accept AbstractLogWatch instead, to enable
+    // different impls
+    public LogWatchTailerListener(final DefaultLogWatch watcher) {
         this.watcher = watcher;
     }
 

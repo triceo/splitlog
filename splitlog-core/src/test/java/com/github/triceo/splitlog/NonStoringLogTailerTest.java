@@ -22,11 +22,11 @@ public class NonStoringLogTailerTest {
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatch.forFile(NonStoringLogTailerTest.watchedFile) },
-                { LogWatch.forFile(NonStoringLogTailerTest.watchedFile).closingAfterReading()
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile) },
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile).closingAfterReading()
                         .ignoringPreexistingContent() },
-                { LogWatch.forFile(NonStoringLogTailerTest.watchedFile).closingAfterReading() },
-                { LogWatch.forFile(NonStoringLogTailerTest.watchedFile).ignoringPreexistingContent() } });
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile).closingAfterReading() },
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile).ignoringPreexistingContent() } });
     }
 
     private final LogWatchBuilder builder;

@@ -26,7 +26,20 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 public class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
+
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
+
+    /**
+     * Used to construct a {@link LogWatch} for a particular log file.
+     * 
+     * @param f
+     *            File to watch.
+     * @return Builder that is used to configure the new log watch instance
+     *         before using.
+     */
+    public static LogWatchBuilder forFile(final File f) {
+        return new LogWatchBuilder(f);
+    }
 
     private final File fileToWatch;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
@@ -60,7 +73,7 @@ public class LogWatchBuilder {
         if (splitter == null) {
             throw new IllegalArgumentException("A splitter must be provided.");
         }
-        return new LogWatch(this.fileToWatch, splitter, this.delayBetweenReads, !this.readingFromBeginning,
+        return new DefaultLogWatch(this.fileToWatch, splitter, this.delayBetweenReads, !this.readingFromBeginning,
                 this.closingBetweenReads, this.bufferSize);
     }
 

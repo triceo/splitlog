@@ -36,7 +36,7 @@ class NonStoringLogTailer extends AbstractLogTailer {
 
     private final Map<Integer, Message> tags = new TreeMap<Integer, Message>();
 
-    public NonStoringLogTailer(final LogWatch watch) {
+    public NonStoringLogTailer(final DefaultLogWatch watch) {
         super(watch);
         try {
             // acquire the permit, so that the future waits block
@@ -98,6 +98,20 @@ class NonStoringLogTailer extends AbstractLogTailer {
             this.receivedMessage = msg;
             this.blocker.release();
         }
+    }
+
+    private synchronized void setLineCondition(final BooleanCondition<String> condition) {
+        if (this.lineBlockingCondition != null) {
+            throw new IllegalStateException("Another thread is already waiting for a line.");
+        }
+        this.lineBlockingCondition = condition;
+    }
+
+    private synchronized void setMessageCondition(final BooleanCondition<Message> condition) {
+        if (this.messageBlockingCondition != null) {
+            throw new IllegalStateException("Another thread is already waiting for a message.");
+        }
+        this.messageBlockingCondition = condition;
     }
 
     /**
@@ -183,20 +197,6 @@ class NonStoringLogTailer extends AbstractLogTailer {
         } else {
             return null;
         }
-    }
-    
-    private synchronized void setMessageCondition(BooleanCondition<Message> condition) {
-        if (this.messageBlockingCondition != null) {
-            throw new IllegalStateException("Another thread is already waiting for a message.");
-        }
-        this.messageBlockingCondition = condition;
-    }
-
-    private synchronized void setLineCondition(BooleanCondition<String> condition) {
-        if (this.lineBlockingCondition != null) {
-            throw new IllegalStateException("Another thread is already waiting for a line.");
-        }
-        this.lineBlockingCondition = condition;
     }
 
     private Message waitForMessage(final BooleanCondition<Message> condition, final long timeout, final TimeUnit unit) {

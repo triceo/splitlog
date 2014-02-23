@@ -20,9 +20,9 @@ import com.github.triceo.splitlog.conditions.MessageCondition;
  */
 abstract class AbstractLogTailer implements LogTailer {
 
-    private final LogWatch watch;
+    private final DefaultLogWatch watch;
 
-    protected AbstractLogTailer(final LogWatch watch) {
+    protected AbstractLogTailer(final DefaultLogWatch watch) {
         this.watch = watch;
     }
 
@@ -42,7 +42,7 @@ abstract class AbstractLogTailer implements LogTailer {
     @Override
     public abstract List<Message> getMessages(final MessageCondition condition);
 
-    protected LogWatch getWatch() {
+    protected DefaultLogWatch getWatch() {
         return this.watch;
     }
 
