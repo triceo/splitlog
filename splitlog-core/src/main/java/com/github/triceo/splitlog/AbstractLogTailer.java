@@ -12,7 +12,13 @@ import org.apache.commons.io.IOUtils;
 import com.github.triceo.splitlog.conditions.LineCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 
-public abstract class AbstractLogTailer {
+/**
+ * Internal API for a log tailer that, on top of the public API, provides ways
+ * of notifying the tailer of new messages. Every tailer, such as
+ * {@link NonStoringLogTailer}, needs to extend this class.
+ * 
+ */
+abstract class AbstractLogTailer implements LogTailer {
 
     private final LogWatch watch;
 
@@ -20,11 +26,7 @@ public abstract class AbstractLogTailer {
         this.watch = watch;
     }
 
-    /**
-     * Retrieve messages that this tailer has been notified of, including tags
-     * 
-     * @return Messages we are aware of, in their original order.
-     */
+    @Override
     public List<Message> getMessages() {
         return this.getMessages(new MessageCondition() {
 
@@ -37,20 +39,14 @@ public abstract class AbstractLogTailer {
         });
     }
 
-    /**
-     * Retrieve messages that this tailer has been notified of, if a certain
-     * condition holds true for them, including tags.
-     * 
-     * @param condition
-     *            The condition.
-     * @return Every message we are aware of, for which the condition holds true.
-     */
+    @Override
     public abstract List<Message> getMessages(final MessageCondition condition);
 
     protected LogWatch getWatch() {
         return this.watch;
     }
 
+    @Override
     public boolean isTerminated() {
         return this.watch.isTerminated(this);
     }
@@ -73,63 +69,22 @@ public abstract class AbstractLogTailer {
      */
     protected abstract void notifyOfMessage(Message msg);
 
-    /**
-     * Mark the current location in the tail by a custom message. It is up to
-     * the implementors to decide whether or not a tag inserted at the same time
-     * twice is inserted twice, or the second tag overwrites the first.
-     * 
-     * @param tagLine
-     *            Text of the message.
-     */
+    @Override
     public abstract void tag(String tagLine);
 
-    /**
-     * Will block until a line appears in the log, for which the condition is
-     * true.
-     * 
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
+    @Override
     public abstract String waitFor(LineCondition condition);
 
-    /**
-     * Will block until a line appears in the log, for which the condition is
-     * true. If none appears before the timeout, it unblocks anyway.
-     * 
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
+    @Override
     public abstract String waitFor(LineCondition condition, long timeout, TimeUnit unit);
 
-    /**
-     * Will block until a message arrives, for which the condition is true.
-     * 
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
+    @Override
     public abstract Message waitFor(MessageCondition condition);
 
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     * 
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
+    @Override
     public abstract Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
-    /**
-     * Will write to a stream that which is be returned by
-     * {@link #getMessages()}.
-     * 
-     * @param stream
-     *            Target.
-     * @return True if written, false otherwise.
-     */
+    @Override
     public boolean write(final OutputStream stream) {
         return this.write(stream, new MessageCondition() {
 
@@ -142,17 +97,7 @@ public abstract class AbstractLogTailer {
         });
     }
 
-    /**
-     * Will write to a stream that which is be returned by
-     * {@link #getMessages(MessageCondition)}.
-     * 
-     * @param stream
-     *            Target.
-     * @param condition
-     *            The condition to pass to
-     *            {@link #getMessages(MessageCondition)}.
-     * @return True if written, false otherwise.
-     */
+    @Override
     public boolean write(final OutputStream stream, final MessageCondition condition) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");

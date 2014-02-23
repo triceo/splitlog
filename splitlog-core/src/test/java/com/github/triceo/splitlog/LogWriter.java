@@ -39,7 +39,7 @@ class LogWriter {
      *            Tailer to wait for the message.
      * @return The line that was written, or null otherwise.
      */
-    public String write(final String line, final AbstractLogTailer tailer) {
+    public String write(final String line, final LogTailer tailer) {
         if (!this.writeWithoutWaiting(line, tailer)) {
             return null;
         }
@@ -64,7 +64,7 @@ class LogWriter {
      *            Tailer to wait for the message.
      * @return If the message has been written.
      */
-    private boolean writeWithoutWaiting(final String line, final AbstractLogTailer tailer) {
+    private boolean writeWithoutWaiting(final String line, final LogTailer tailer) {
         final Future<Boolean> result = this.e.submit(new Callable<Boolean>() {
 
             @Override

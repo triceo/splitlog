@@ -56,7 +56,7 @@ public class NonStoringLogTailerTest {
         final String message3part1 = "test3";
         final String message3part2 = "test4";
         final LogWatch logwatch = this.builder.build();
-        final AbstractLogTailer tailer = logwatch.startTailing();
+        final LogTailer tailer = logwatch.startTailing();
         // test simple messages
         String result = this.writer.write(message1, tailer);
         Assert.assertEquals(message1, result);
@@ -87,7 +87,7 @@ public class NonStoringLogTailerTest {
         final String tag1 = "tag1";
         final String tag2 = "tag2";
         final LogWatch logwatch = this.builder.build();
-        final AbstractLogTailer tailer = logwatch.startTailing();
+        final LogTailer tailer = logwatch.startTailing();
         tailer.tag(tag0);
         String result = this.writer.write(message1, tailer);
         Assert.assertEquals(message1, result);

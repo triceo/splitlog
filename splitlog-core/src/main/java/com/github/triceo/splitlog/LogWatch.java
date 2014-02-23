@@ -14,8 +14,20 @@ import org.apache.commons.io.input.Tailer;
 
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
+/**
+ * The primary point of interaction with this tool. Allows users to start
+ * listening to changes in log files.
+ */
 public class LogWatch {
 
+    /**
+     * Used to construct a log watch for a particular log file.
+     * 
+     * @param f
+     *            File to watch.
+     * @return Builder that is used to configure the new log watch instance
+     *         before using.
+     */
     public static LogWatchBuilder forFile(final File f) {
         return new LogWatchBuilder(f);
     }
@@ -27,8 +39,8 @@ public class LogWatch {
     private final LogWatchTailerListener listener;
     // these hashmaps are weak; when a tailer is terminated and removed from
     // logwatch, we don't want to keep it anymore
-    private final Map<AbstractLogTailer, Integer> startingMessageIds = new WeakHashMap<AbstractLogTailer, Integer>(),
-            endingMessageIds = new WeakHashMap<AbstractLogTailer, Integer>();
+    private final Map<LogTailer, Integer> startingMessageIds = new WeakHashMap<LogTailer, Integer>(),
+            endingMessageIds = new WeakHashMap<LogTailer, Integer>();
 
     private final List<Message> messageQueue = new CopyOnWriteArrayList<Message>();
 
@@ -53,7 +65,7 @@ public class LogWatch {
         }
     }
 
-    protected List<Message> getAllMessages(final AbstractLogTailer tail) {
+    protected List<Message> getAllMessages(final LogTailer tail) {
         return new ArrayList<Message>(this.messageQueue.subList(this.startingMessageIds.get(tail),
                 this.getEndingId(tail)));
     }
@@ -64,11 +76,11 @@ public class LogWatch {
      * @param tail
      *            Tailer in question.
      */
-    private int getEndingId(final AbstractLogTailer tail) {
+    private int getEndingId(final LogTailer tail) {
         return this.endingMessageIds.containsKey(tail) ? this.endingMessageIds.get(tail) : this.messageQueue.size();
     }
 
-    protected Message getMessage(final AbstractLogTailer tail, final int index) {
+    protected Message getMessage(final LogTailer tail, final int index) {
         if (!this.startingMessageIds.containsKey(tail)) {
             throw new IllegalArgumentException("Unknown tailer: " + tail);
         } else if (index < 0) {
@@ -100,7 +112,7 @@ public class LogWatch {
      *            Tailer in question.
      * @return True if it has.
      */
-    public boolean isTerminated(final AbstractLogTailer tail) {
+    public boolean isTerminated(final LogTailer tail) {
         return this.tailers.contains(tail);
     }
 
@@ -109,7 +121,7 @@ public class LogWatch {
      * 
      * @return API for watching for messages.
      */
-    public AbstractLogTailer startTailing() {
+    public LogTailer startTailing() {
         final int startingMessageId = this.messageQueue.size();
         final AbstractLogTailer tail = new NonStoringLogTailer(this);
         this.tailers.add(tail);
@@ -146,7 +158,7 @@ public class LogWatch {
      *            This tailer will receive no more messages.
      * @return True if terminated as a result, false if already terminated.
      */
-    public boolean terminateTailing(final AbstractLogTailer tail) {
+    public boolean terminateTailing(final LogTailer tail) {
         this.tailers.remove(tail);
         final int endingMessageId = this.messageQueue.size();
         this.endingMessageIds.put(tail, endingMessageId);
