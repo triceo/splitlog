@@ -64,7 +64,7 @@ public class ExceptionDescriptor {
         }
         try {
             final Builder b = new Builder();
-            final Collection<ExceptionLine> parsedLines = new ExceptionParser().parse(lines);
+            final Collection<ExceptionLine> parsedLines = ExceptionParser.INSTANCE.parse(lines);
             for (final ExceptionLine line : parsedLines) {
                 b.addLine(line);
             }

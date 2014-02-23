@@ -36,8 +36,9 @@ public class ExceptionParserTest {
 
     @Test
     public void testExceptionWithCauses() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
-                .parseIntoLines(this.getClass().getResourceAsStream("exception-with-causes.txt"))));
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
+                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
+                        "exception-with-causes.txt"))));
         Assert.assertEquals(48, lines.size()); // one item per line in the file
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);
@@ -60,8 +61,9 @@ public class ExceptionParserTest {
 
     @Test
     public void testExceptionWithCauses2() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
-                .parseIntoLines(this.getClass().getResourceAsStream("exception-with-causes2.txt"))));
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
+                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
+                        "exception-with-causes2.txt"))));
         Assert.assertEquals(62, lines.size()); // one item per line in the file
         // verify random cause
         final CauseLine cause = (CauseLine) lines.get(29);
@@ -80,8 +82,9 @@ public class ExceptionParserTest {
 
     @Test
     public void testMavenProducedException() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
-                .parseIntoLines(this.getClass().getResourceAsStream("exception-maven.txt"))));
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
+                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
+                        "exception-maven.txt"))));
         Assert.assertEquals(33, lines.size()); // one item per line in the file
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);

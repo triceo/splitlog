@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-// FIXME class with only one public method?
 /**
  * A finite automaton for recognizing a Java exception stack trace spanning
  * multiple lines in a random text.
@@ -18,8 +17,11 @@ import java.util.Queue;
  * transition is not in the transition function and the parsing is terminated
  * with an exception. After the last line has been read, if the automaton is not
  * in one of the accepting states, the parsing is terminated with an exception.
+ * 
+ * This class is thread-safe. Each thread will operate on its own
+ * {@link ThreadLocal} data structures.
  */
-class ExceptionParser {
+final class ExceptionParser {
 
     /**
      * Various kinds of states for the parser automaton.
@@ -86,6 +88,8 @@ class ExceptionParser {
         }
     }
 
+    public static ExceptionParser INSTANCE = new ExceptionParser();
+
     private static String greatestCommonPrefix(final String a, final String b) {
         final int minLength = Math.min(a.length(), b.length());
         for (int i = 0; i < minLength; i++) {
@@ -135,7 +139,16 @@ class ExceptionParser {
         return result;
     }
 
-    private final Collection<ExceptionLine> parsedLines = new LinkedList<ExceptionLine>();
+    private final ThreadLocal<Collection<ExceptionLine>> parsedLines = new ThreadLocal<Collection<ExceptionLine>>() {
+        @Override
+        protected Collection<ExceptionLine> initialValue() {
+            return new LinkedList<ExceptionLine>();
+        }
+    };
+
+    private ExceptionParser() {
+
+    }
 
     /**
      * Browsers through a random log and returns first exception stack trace it
@@ -149,7 +162,7 @@ class ExceptionParser {
      *             If parsing of the log file failed.
      */
     public Collection<ExceptionLine> parse(final Collection<String> input) throws ExceptionParseException {
-        this.parsedLines.clear();
+        this.parsedLines.get().clear();
         final Queue<String> linesFromInput = ExceptionParser.removePrefix(new LinkedList<String>(input));
         LineType previousLineType = LineType.PRE_START;
         String currentLine = null;
@@ -168,9 +181,7 @@ class ExceptionParser {
         if (!previousLineType.isAcceptableAsLastLine()) {
             throw new ExceptionParseException(currentLine, "Invalid line type detected at the end: " + previousLineType);
         }
-        // FIXME make a copy of the collection, or else this will be empty when
-        // parse() is called again
-        return Collections.unmodifiableCollection(this.parsedLines);
+        return Collections.unmodifiableCollection(new LinkedList<ExceptionLine>(this.parsedLines.get()));
     }
 
     /**
@@ -226,7 +237,7 @@ class ExceptionParser {
             }
             final ExceptionLine parsedLine = possibleType.parse(line);
             if (parsedLine != null) {
-                this.parsedLines.add(parsedLine);
+                this.parsedLines.get().add(parsedLine);
                 return possibleType;
             }
         }
