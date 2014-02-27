@@ -91,7 +91,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean isTerminated(final LogTailer tail) {
-        return this.tailers.contains(tail);
+        return !this.tailers.contains(tail);
     }
 
     @Override
@@ -117,15 +117,18 @@ final class DefaultLogWatch implements LogWatch {
             }
             this.terminateTailing(chunk);
         }
-        this.isTerminated.set(false);
+        this.isTerminated.set(true);
         return true;
     }
 
     @Override
     public boolean terminateTailing(final LogTailer tail) {
-        this.tailers.remove(tail);
-        final int endingMessageId = this.messageQueue.size();
-        this.endingMessageIds.put(tail, endingMessageId);
-        return true;
+        if (this.tailers.remove(tail)) {
+            final int endingMessageId = this.messageQueue.size();
+            this.endingMessageIds.put(tail, endingMessageId);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
