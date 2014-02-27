@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -12,6 +13,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import com.github.triceo.splitlog.conditions.LineCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringLogTailerTest {
@@ -46,6 +49,32 @@ public class NonStoringLogTailerTest {
     @After
     public void destroyWriter() {
         this.writer.destroy();
+    }
+    
+    @Test
+    public void testWaitForAfterPreviousFailed() {
+        final LogWatch logwatch = this.builder.build();
+        final LogTailer tailer = logwatch.startTailing();
+        // this call will fail, since we're not writing anything
+        tailer.waitFor(new LineCondition() {
+
+            @Override
+            public boolean accept(String evaluate) {
+                return true;
+            }
+            
+        }, 1, TimeUnit.SECONDS);
+        // these calls should succeed
+        final String message = "test";
+        String result = this.writer.write(message, tailer);
+        Assert.assertEquals(message, result);
+        result = this.writer.write(message, tailer);
+        Assert.assertEquals(message, result);
+        final List<Message> messages = tailer.getMessages();
+        Assert.assertEquals(1, messages.size());
+        Assert.assertEquals(message, messages.get(0).getLines().get(0));
+        logwatch.terminateTailing(tailer);
+        logwatch.terminateTailing();
     }
 
     @Test
