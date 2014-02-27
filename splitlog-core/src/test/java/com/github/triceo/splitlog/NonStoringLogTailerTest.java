@@ -49,6 +49,23 @@ public class NonStoringLogTailerTest {
     }
 
     @Test
+    public void testTermination() {
+        LogWatch watch = this.builder.build();
+        Assert.assertFalse("Log watch terminated immediately after starting.", watch.isTerminated());
+        LogTailer tailer1 = watch.startTailing();
+        Assert.assertFalse("Tailer terminated immediately after starting.", watch.isTerminated(tailer1));
+        LogTailer tailer2 = watch.startTailing();
+        Assert.assertTrue("Wrong termination result.", watch.terminateTailing(tailer1));
+        Assert.assertFalse("Wrong termination result.", watch.terminateTailing(tailer1));
+        Assert.assertFalse("Tailer terminated without termination.", watch.isTerminated(tailer2));
+        Assert.assertTrue("Tailer not terminated after termination.", watch.isTerminated(tailer1));
+        Assert.assertTrue("Wrong termination result.", watch.terminateTailing());
+        Assert.assertFalse("Wrong termination result.", watch.terminateTailing());
+        Assert.assertTrue("Tailer not terminated after termination.", watch.isTerminated(tailer2));
+        Assert.assertTrue("Log watch not terminated after termination.", watch.isTerminated());
+    }
+
+    @Test
     public void testGetMessages() {
         final String message1 = "test";
         final String message2part1 = "test1";
