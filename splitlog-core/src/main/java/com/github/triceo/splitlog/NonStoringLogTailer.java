@@ -184,36 +184,30 @@ class NonStoringLogTailer extends AbstractLogTailer {
     private String waitForLine(final BooleanCondition<String> condition, final long timeout, final TimeUnit unit) {
         this.setLineCondition(condition);
         final boolean waitSucceeded = this.waitFor(timeout, unit);
-        if (waitSucceeded) {
-            final String result = this.receivedLine;
-            if (result == null) {
-                // should never happen; check concurrency logic if it does
-                throw new IllegalStateException("Waiting for a line has succeeded, yet the line is null.");
-            } else {
-                this.receivedLine = null;
-                this.lineBlockingCondition = null;
-                return result;
-            }
-        } else {
-            return null;
+        final String result = this.receivedLine;
+        // cleanup to allow for the next wait
+        this.receivedLine = null;
+        this.lineBlockingCondition = null;
+        // process result
+        if (waitSucceeded && (result == null)) {
+            // should never happen; check concurrency logic if it does
+            throw new IllegalStateException("Waiting for a line has succeeded, yet the line is null.");
         }
+        return result;
     }
 
     private Message waitForMessage(final BooleanCondition<Message> condition, final long timeout, final TimeUnit unit) {
         this.setMessageCondition(condition);
         final boolean waitSucceeded = this.waitFor(timeout, unit);
-        if (waitSucceeded) {
-            final Message result = this.receivedMessage;
-            if (result == null) {
-                // should never happen; check concurrency logic if it does
-                throw new IllegalStateException("Waiting for a message has succeeded, yet the message is null.");
-            } else {
-                this.receivedMessage = null;
-                this.messageBlockingCondition = null;
-                return result;
-            }
-        } else {
-            return null;
+        final Message result = this.receivedMessage;
+        // cleanup to allow for the next wait
+        this.receivedMessage = null;
+        this.messageBlockingCondition = null;
+        // process result
+        if (waitSucceeded && (result == null)) {
+            // should never happen; check concurrency logic if it does
+            throw new IllegalStateException("Waiting for a message has succeeded, yet the message is null.");
         }
+        return result;
     }
 }
