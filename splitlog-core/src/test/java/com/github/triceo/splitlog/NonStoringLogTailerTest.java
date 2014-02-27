@@ -51,6 +51,7 @@ public class NonStoringLogTailerTest {
         this.writer.destroy();
     }
     
+    // FIXME we should also test waitFor() on a MessageCondition
     @Test
     public void testWaitForAfterPreviousFailed() {
         final LogWatch logwatch = this.builder.build();
