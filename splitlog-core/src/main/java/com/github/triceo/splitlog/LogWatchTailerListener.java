@@ -38,11 +38,13 @@ class LogWatchTailerListener implements TailerListener {
     @Override
     public void handle(final String line) {
         this.watcher.addLine(line);
+        LogWatchTailerListener.LOGGER.debug("Tailer handled message: '{}'.", line);
     }
 
     @Override
     public void init(final Tailer tailer) {
         this.watchedFile = tailer.getFile();
+        LogWatchTailerListener.LOGGER.info("Tailer initialized for file: {}.", this.watchedFile);
     }
 
 }
