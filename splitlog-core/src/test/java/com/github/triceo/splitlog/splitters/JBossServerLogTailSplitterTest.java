@@ -8,9 +8,9 @@ import com.github.triceo.splitlog.Message;
 public class JBossServerLogTailSplitterTest {
 
     private static final String STDERR_META = "(http-/127.0.0.1:8080-20) java.lang.IllegalArgumentException: A RuleFlowProcess cannot have more than one start node!";
-    private static final String STDERR = "12:16:32,756 ERROR [stderr] " + JBossServerLogTailSplitterTest.STDERR_META;
+    private static final String STDERR = "22:16:32,756 ERROR [stderr] " + JBossServerLogTailSplitterTest.STDERR_META;
     private static final String LOG_META = "[org.jbpm.ruleflow.core.validation.RuleFlowProcessValidator] (http-/127.0.0.1:8080-20) Process variable data uses ObjectDataType for default type (java.lang) which could cause problems with setting variables, use dedicated type instead";
-    private static final String LOG = "12:16:32,500 WARN  " + JBossServerLogTailSplitterTest.LOG_META;
+    private static final String LOG = "02:16:32,500 WARN  " + JBossServerLogTailSplitterTest.LOG_META;
     private static final String LOG2 = "Continuation";
 
     @Test
