@@ -1,6 +1,6 @@
 package com.github.triceo.splitlog;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
  */
 public class Message {
 
-    private final List<String> lines;
+    private final String[] lines;
     private final MessageSeverity severity;
     private final MessageType type;
     private final Date date;
@@ -48,7 +48,7 @@ public class Message {
         } else if (type == null) {
             throw new IllegalArgumentException("Type must not be null.");
         }
-        this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
+        this.lines = raw.toArray(new String[raw.size()]);
         this.severity = severity;
         this.type = type;
         this.date = (Date) d.clone();
@@ -62,9 +62,7 @@ public class Message {
         if ((message == null) || (message.length() == 0)) {
             throw new IllegalArgumentException("Message must not be empty.");
         }
-        final List<String> lines = new ArrayList<String>();
-        lines.add(message);
-        this.lines = Collections.unmodifiableList(lines);
+        this.lines = new String[] { message.trim() };
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
         this.date = Calendar.getInstance().getTime();
@@ -113,8 +111,14 @@ public class Message {
         return this.exceptionDescriptor;
     }
 
+    /**
+     * This method will create a brand new unmodifiable list every time it is
+     * called. Use with caution.
+     * 
+     * @return Unmodifiable representation of lines in this message.
+     */
     public List<String> getLines() {
-        return this.lines;
+        return Collections.unmodifiableList(Arrays.asList(this.lines));
     }
 
     public MessageSeverity getSeverity() {
