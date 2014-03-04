@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog.exceptions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -76,7 +77,7 @@ public class ExceptionDescriptor {
         }
     }
 
-    private final List<StackTraceElement> stackTrace;
+    private final StackTraceElement[] stackTrace;
 
     private final String exceptionClassName, message;
     private final ExceptionDescriptor cause;
@@ -85,7 +86,7 @@ public class ExceptionDescriptor {
             final ExceptionDescriptor cause) {
         this.exceptionClassName = className;
         this.message = message;
-        this.stackTrace = Collections.unmodifiableList(elements);
+        this.stackTrace = elements.toArray(new StackTraceElement[elements.size()]);
         this.cause = cause;
     }
 
@@ -123,8 +124,14 @@ public class ExceptionDescriptor {
         return this.message;
     }
 
+    /**
+     * This method will create a brand new unmodifiable list every time it is
+     * called. Use with caution.
+     * 
+     * @return Unmodifiable representation of the stack trace.
+     */
     public List<StackTraceElement> getStackTrace() {
-        return this.stackTrace;
+        return Collections.unmodifiableList(Arrays.asList(this.stackTrace));
     }
 
     public boolean isRootCause() {

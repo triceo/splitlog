@@ -71,12 +71,6 @@ class LogWriter {
             public Boolean call() throws Exception {
                 BufferedWriter w = null;
                 try {
-                    if (!LogWriter.this.target.exists()) {
-                        LogWriter.this.target.createNewFile();
-                        // give the tailer some time to figure out that the file
-                        // already exists
-                        Thread.sleep(1000);
-                    }
                     w = new BufferedWriter(new FileWriter(LogWriter.this.target, true));
                     w.write(line);
                     w.newLine();
