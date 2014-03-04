@@ -18,7 +18,7 @@ public class Message {
     private final String[] lines;
     private final MessageSeverity severity;
     private final MessageType type;
-    private final Date date;
+    private final long millisecondsSinceJanuary1st1970;
     private final ExceptionDescriptor exceptionDescriptor;
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
@@ -51,7 +51,7 @@ public class Message {
         this.lines = raw.toArray(new String[raw.size()]);
         this.severity = severity;
         this.type = type;
-        this.date = (Date) d.clone();
+        this.millisecondsSinceJanuary1st1970 = d.getTime();
         this.exceptionDescriptor = exception;
     }
 
@@ -65,7 +65,7 @@ public class Message {
         this.lines = new String[] { message.trim() };
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
-        this.date = Calendar.getInstance().getTime();
+        this.millisecondsSinceJanuary1st1970 = Calendar.getInstance().getTime().getTime();
         this.exceptionDescriptor = null;
     }
 
@@ -98,7 +98,7 @@ public class Message {
     }
 
     public Date getDate() {
-        return (Date) this.date.clone();
+        return new Date(this.millisecondsSinceJanuary1st1970);
     }
 
     /**
@@ -146,7 +146,7 @@ public class Message {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append(this.date);
+        sb.append(this.getDate());
         sb.append(" (");
         sb.append(this.type);
         sb.append(") ");
