@@ -201,13 +201,12 @@ final class ExceptionParser {
             case PRE_START:
                 return this.parseLine(line, LineType.CAUSE, LineType.PRE_START);
             case CAUSE:
+            case SUB_CAUSE:
                 return this.parseLine(line, LineType.STACK_TRACE);
             case STACK_TRACE:
                 return this.parseLine(line, LineType.STACK_TRACE, LineType.STACK_TRACE_END, LineType.SUB_CAUSE);
             case STACK_TRACE_END:
                 return this.parseLine(line, LineType.SUB_CAUSE, LineType.POST_END);
-            case SUB_CAUSE:
-                return this.parseLine(line, LineType.STACK_TRACE);
             case POST_END:
                 return this.parseLine(line, LineType.POST_END);
             default:

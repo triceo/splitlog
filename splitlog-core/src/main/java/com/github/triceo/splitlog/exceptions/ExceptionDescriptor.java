@@ -139,11 +139,61 @@ public class ExceptionDescriptor {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((this.cause == null) ? 0 : this.cause.hashCode());
+        result = (prime * result) + ((this.exceptionClassName == null) ? 0 : this.exceptionClassName.hashCode());
+        result = (prime * result) + ((this.message == null) ? 0 : this.message.hashCode());
+        result = (prime * result) + Arrays.hashCode(this.stackTrace);
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+        final ExceptionDescriptor other = (ExceptionDescriptor) obj;
+        if (this.cause == null) {
+            if (other.cause != null) {
+                return false;
+            }
+        } else if (!this.cause.equals(other.cause)) {
+            return false;
+        }
+        if (this.exceptionClassName == null) {
+            if (other.exceptionClassName != null) {
+                return false;
+            }
+        } else if (!this.exceptionClassName.equals(other.exceptionClassName)) {
+            return false;
+        }
+        if (this.message == null) {
+            if (other.message != null) {
+                return false;
+            }
+        } else if (!this.message.equals(other.message)) {
+            return false;
+        }
+        if (!Arrays.equals(this.stackTrace, other.stackTrace)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder builder2 = new StringBuilder();
         builder2.append("ExceptionDescriptor [");
         if (this.stackTrace != null) {
-            builder2.append("stackTrace=").append(this.stackTrace).append(", ");
+            builder2.append("stackTrace=").append(Arrays.toString(this.stackTrace)).append(", ");
         }
         if (this.exceptionClassName != null) {
             builder2.append("exceptionClassName=").append(this.exceptionClassName).append(", ");
