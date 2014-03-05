@@ -34,7 +34,7 @@ final class DefaultLogWatch implements LogWatch {
     private final Map<LogTailer, Integer> startingMessageIds = new WeakHashMap<LogTailer, Integer>(),
             endingMessageIds = new WeakHashMap<LogTailer, Integer>();
 
-    private final List<Message> messageQueue = new LinkedList<Message>();
+    private final List<Message> messageQueue = Collections.synchronizedList(new LinkedList<Message>());
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final long delayBetweenReads,
             final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
@@ -44,9 +44,10 @@ final class DefaultLogWatch implements LogWatch {
                 reopenBetweenReads, bufferSize);
     }
 
-    protected synchronized void addLine(final String line) {
+    protected void addLine(final String line) {
         final Message message = this.splitter.addLine(line);
         if (message != null) {
+            // synchronized writing
             this.messageQueue.add(message);
         }
         for (final AbstractLogTailer t : this.tailers) {
@@ -68,7 +69,17 @@ final class DefaultLogWatch implements LogWatch {
     protected List<Message> getAllMessages(final LogTailer tail) {
         final int start = this.startingMessageIds.get(tail);
         final int end = this.getEndingId(tail);
-        return Collections.unmodifiableList(this.messageQueue.subList(start, end));
+        List<Message> sub;
+        // making sublist of messageQueue needs to be synchronized
+        // http://docs.oracle.com/javase/6/docs/api/java/util/Collections.html#synchronizedList%28java.util.List%29
+        synchronized (this.messageQueue) {
+            // subList() only returns a view of the original collection, whose iteration needs to be explicitely
+            // synchronized even if the collection itself is synchronized. Thus, we need a copy of messageQueue, that
+            // can be safely iterated over (independently on writing to messageQueue).
+            // On the other hand, no need to copy individual Messages as they are immutable.
+            sub = new ArrayList<Message>(this.messageQueue.subList(start, end));
+        }
+        return Collections.unmodifiableList(sub);
     }
 
     /**
@@ -92,7 +103,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized LogTailer startTailing() {
+    public LogTailer startTailing() {
         final int startingMessageId = this.messageQueue.size();
         final AbstractLogTailer tail = new NonStoringLogTailer(this);
         this.tailers.add(tail);
@@ -101,7 +112,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean terminateTailing() {
+    public boolean terminateTailing() {
         final boolean isTailing = !this.isTerminated();
         if (!isTailing) {
             return false;
@@ -119,7 +130,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean terminateTailing(final LogTailer tail) {
+    public boolean terminateTailing(final LogTailer tail) {
         if (this.tailers.remove(tail)) {
             final int endingMessageId = this.messageQueue.size();
             this.endingMessageIds.put(tail, endingMessageId);
