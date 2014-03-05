@@ -69,6 +69,10 @@ final class DefaultLogWatch implements LogWatch {
     protected List<Message> getAllMessages(final LogTailer tail) {
         final int start = this.startingMessageIds.get(tail);
         final int end = this.getEndingId(tail);
+        if (start == end) {
+            List<Message> empty = Collections.emptyList();
+            return Collections.unmodifiableList(empty);
+        }
         List<Message> sub;
         // making sublist of messageQueue needs to be synchronized
         // http://docs.oracle.com/javase/6/docs/api/java/util/Collections.html#synchronizedList%28java.util.List%29
