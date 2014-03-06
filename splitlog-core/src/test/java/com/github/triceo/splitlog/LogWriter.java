@@ -55,6 +55,10 @@ class LogWriter {
         }, 10, TimeUnit.SECONDS);
     }
 
+    public void writeWithoutWaiting(String line) {
+        write(line);
+    }
+
     /**
      * Writes a message to the log.
      * 
@@ -69,19 +73,7 @@ class LogWriter {
 
             @Override
             public Boolean call() throws Exception {
-                BufferedWriter w = null;
-                try {
-                    w = new BufferedWriter(new FileWriter(LogWriter.this.target, true));
-                    w.write(line);
-                    w.newLine();
-                    LogWriter.LOGGER.info("Written log message '{}'.", line);
-                    return true;
-                } catch (final IOException ex) {
-                    LogWriter.LOGGER.warn("Failed writing log message '{}'.", line, ex);
-                    return false;
-                } finally {
-                    IOUtils.closeQuietly(w);
-                }
+                return LogWriter.this.write(line);
             }
 
         });
@@ -93,4 +85,17 @@ class LogWriter {
         }
     }
 
+    private boolean write(String line) {
+        BufferedWriter w = null;
+        try {
+            w = new BufferedWriter(new FileWriter(LogWriter.this.target, true));
+            w.write(line);
+            w.newLine();
+            return true;
+        } catch (final IOException ex) {
+            return false;
+        } finally {
+            IOUtils.closeQuietly(w);
+        }
+    }
 }
