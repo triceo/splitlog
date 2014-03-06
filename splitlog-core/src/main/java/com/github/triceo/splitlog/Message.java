@@ -81,11 +81,7 @@ public class Message {
             return false;
         }
         final Message other = (Message) obj;
-        if (this.lines == null) {
-            if (other.lines != null) {
-                return false;
-            }
-        } else if (!this.lines.equals(other.lines)) {
+        if (!Arrays.equals(this.lines, other.lines)) {
             return false;
         }
         if (this.severity != other.severity) {
@@ -137,7 +133,7 @@ public class Message {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = (prime * result) + ((this.lines == null) ? 0 : this.lines.hashCode());
+        result = (prime * result) + Arrays.hashCode(this.lines);
         result = (prime * result) + ((this.severity == null) ? 0 : this.severity.hashCode());
         result = (prime * result) + ((this.type == null) ? 0 : this.type.hashCode());
         return result;
