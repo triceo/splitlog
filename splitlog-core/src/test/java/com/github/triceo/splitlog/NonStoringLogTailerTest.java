@@ -22,41 +22,57 @@ import com.github.triceo.splitlog.conditions.LineCondition;
 @RunWith(Parameterized.class)
 public class NonStoringLogTailerTest {
 
-    private static final File watchedFile = new File("target/", "testing.log");
+    private static File getTempFile() {
+        try {
+            return File.createTempFile("splitlog-", ".log");
+        } catch (final IOException e) {
+            throw new IllegalStateException("Cannot create temp files.", e);
+        }
+    }
 
     // will verify various configs of log watch
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile) },
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile).closingAfterReading()
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()) },
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()).closingAfterReading()
                         .ignoringPreexistingContent() },
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile).closingAfterReading() },
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.watchedFile).ignoringPreexistingContent() } });
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()).closingAfterReading() },
+                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()).ignoringPreexistingContent() } });
     }
 
     private final LogWatchBuilder builder;
-    private final LogWriter writer = new LogWriter(NonStoringLogTailerTest.watchedFile);
+    private LogWatch logwatch;
+    private LogWriter writer;
 
     public NonStoringLogTailerTest(final LogWatchBuilder builder) {
         this.builder = builder;
     }
 
     @Before
-    public void deleteLogFile() {
-        if (NonStoringLogTailerTest.watchedFile.exists()) {
-            NonStoringLogTailerTest.watchedFile.delete();
+    public void startEverything() {
+        // prepare file
+        final File toWrite = this.builder.getFileToWatch();
+        if (toWrite.exists()) {
+            toWrite.delete();
         }
         try {
-            NonStoringLogTailerTest.watchedFile.createNewFile();
+            toWrite.createNewFile();
         } catch (final IOException e) {
-            // do nothing; will be created anyway
+            throw new IllegalStateException("Cannot create temp files.", e);
         }
+        // prepare writer
+        this.writer = new LogWriter(toWrite);
+        // and start the log watch
+        this.logwatch = this.builder.build();
     }
 
     @After
-    public void destroyWriter() {
+    public void destroyEverything() {
         this.writer.destroy();
+        if (!this.logwatch.isTerminated()) {
+            this.logwatch.terminateTailing();
+        }
     }
 
     @Test
@@ -66,8 +82,7 @@ public class NonStoringLogTailerTest {
         final String message2part2 = "test2";
         final String message3part1 = "test3";
         final String message3part2 = "test4";
-        final LogWatch logwatch = this.builder.build();
-        final LogTailer tailer = logwatch.startTailing();
+        final LogTailer tailer = this.logwatch.startTailing();
         // test simple messages
         String result = this.writer.write(message1, tailer);
         Assert.assertEquals(message1, result);
@@ -85,8 +100,8 @@ public class NonStoringLogTailerTest {
         Assert.assertEquals(message2part2, messages.get(3).getLines().get(0));
         Assert.assertEquals(message3part1, messages.get(4).getLines().get(0));
         // final part of the message, message3part2, will remain unflushed
-        logwatch.terminateTailing(tailer);
-        logwatch.terminateTailing();
+        this.logwatch.terminateTailing(tailer);
+        Assert.assertTrue(tailer.isTerminated());
     }
 
     @Test
@@ -97,8 +112,7 @@ public class NonStoringLogTailerTest {
         final String tag0 = "tag1";
         final String tag1 = "tag1";
         final String tag2 = "tag2";
-        final LogWatch logwatch = this.builder.build();
-        final LogTailer tailer = logwatch.startTailing();
+        final LogTailer tailer = this.logwatch.startTailing();
         tailer.tag(tag0);
         String result = this.writer.write(message1, tailer);
         Assert.assertEquals(message1, result);
@@ -117,14 +131,12 @@ public class NonStoringLogTailerTest {
         Assert.assertEquals(tag1, messages.get(2).getLines().get(0));
         Assert.assertEquals(message2, messages.get(3).getLines().get(0));
         Assert.assertEquals(tag2, messages.get(4).getLines().get(0));
-        logwatch.terminateTailing();
     }
 
     @Test
     public void testConcurrency() {
         final String message1 = "test";
-        final LogWatch logwatch = this.builder.build();
-        final LogTailer tailer = logwatch.startTailing();
+        final LogTailer tailer = this.logwatch.startTailing();
         // make sure the messages are received
         String result = this.writer.write(message1, tailer);
         result = this.writer.write(message1, tailer);
@@ -147,7 +159,6 @@ public class NonStoringLogTailerTest {
         } catch (final FileNotFoundException e) {
             // do nothing
         }
-        logwatch.terminateTailing();
     }
 
     @Test
@@ -157,19 +168,18 @@ public class NonStoringLogTailerTest {
         final String message3 = "test3";
         final String message4 = "test4";
         final String message5 = "test5";
-        final LogWatch logwatch = this.builder.build();
-        final LogTailer tailer = logwatch.startTailing();
+        final LogTailer tailer = this.logwatch.startTailing();
         // make sure the messages are received by the first tailer
         this.writer.write(message1, tailer);
         String result = this.writer.write(message2, tailer);
         Assert.assertEquals(message2, result);
         Assert.assertEquals(1, tailer.getMessages().size());
         // start a second tailer, send some messages
-        final LogTailer nestedTailer = logwatch.startTailing();
+        final LogTailer nestedTailer = this.logwatch.startTailing();
         result = this.writer.write(message3, tailer);
         result = this.writer.write(message4, tailer);
         Assert.assertEquals(message4, result);
-        logwatch.terminateTailing(nestedTailer);
+        this.logwatch.terminateTailing(nestedTailer);
         // send another message, so the original tailer has something extra
         Assert.assertEquals(true, nestedTailer.isTerminated());
         result = this.writer.write(message5, tailer);
@@ -183,32 +193,28 @@ public class NonStoringLogTailerTest {
         Assert.assertEquals(2, nestedTailer.getMessages().size());
         Assert.assertEquals(message2, nestedTailer.getMessages().get(0).getLines().get(0));
         Assert.assertEquals(message3, nestedTailer.getMessages().get(1).getLines().get(0));
-        logwatch.terminateTailing();
-        Assert.assertEquals(true, tailer.isTerminated());
     }
 
     @Test
     public void testTermination() {
-        final LogWatch watch = this.builder.build();
-        Assert.assertFalse("Log watch terminated immediately after starting.", watch.isTerminated());
-        final LogTailer tailer1 = watch.startTailing();
-        Assert.assertFalse("Tailer terminated immediately after starting.", watch.isTerminated(tailer1));
-        final LogTailer tailer2 = watch.startTailing();
-        Assert.assertTrue("Wrong termination result.", watch.terminateTailing(tailer1));
-        Assert.assertFalse("Wrong termination result.", watch.terminateTailing(tailer1));
-        Assert.assertFalse("Tailer terminated without termination.", watch.isTerminated(tailer2));
-        Assert.assertTrue("Tailer not terminated after termination.", watch.isTerminated(tailer1));
-        Assert.assertTrue("Wrong termination result.", watch.terminateTailing());
-        Assert.assertFalse("Wrong termination result.", watch.terminateTailing());
-        Assert.assertTrue("Tailer not terminated after termination.", watch.isTerminated(tailer2));
-        Assert.assertTrue("Log watch not terminated after termination.", watch.isTerminated());
+        Assert.assertFalse("Log watch terminated immediately after starting.", this.logwatch.isTerminated());
+        final LogTailer tailer1 = this.logwatch.startTailing();
+        Assert.assertFalse("Tailer terminated immediately after starting.", this.logwatch.isTerminated(tailer1));
+        final LogTailer tailer2 = this.logwatch.startTailing();
+        Assert.assertTrue("Wrong termination result.", this.logwatch.terminateTailing(tailer1));
+        Assert.assertFalse("Wrong termination result.", this.logwatch.terminateTailing(tailer1));
+        Assert.assertFalse("Tailer terminated without termination.", this.logwatch.isTerminated(tailer2));
+        Assert.assertTrue("Tailer not terminated after termination.", this.logwatch.isTerminated(tailer1));
+        Assert.assertTrue("Wrong termination result.", this.logwatch.terminateTailing());
+        Assert.assertFalse("Wrong termination result.", this.logwatch.terminateTailing());
+        Assert.assertTrue("Tailer not terminated after termination.", this.logwatch.isTerminated(tailer2));
+        Assert.assertTrue("Log watch not terminated after termination.", this.logwatch.isTerminated());
     }
 
     // FIXME we should also test waitFor() on a MessageCondition
     @Test
     public void testWaitForAfterPreviousFailed() {
-        final LogWatch logwatch = this.builder.build();
-        final LogTailer tailer = logwatch.startTailing();
+        final LogTailer tailer = this.logwatch.startTailing();
         // this call will fail, since we're not writing anything
         tailer.waitFor(new LineCondition() {
 
@@ -227,8 +233,7 @@ public class NonStoringLogTailerTest {
         final List<Message> messages = tailer.getMessages();
         Assert.assertEquals(1, messages.size());
         Assert.assertEquals(message, messages.get(0).getLines().get(0));
-        logwatch.terminateTailing(tailer);
-        logwatch.terminateTailing();
+        this.logwatch.terminateTailing(tailer);
     }
 
 }
