@@ -66,7 +66,7 @@ class MessageStore {
             throw new IllegalArgumentException("Range end cannot be greater than the next message ID.");
         }
         /*
-         * FIXME the assumption here is that the list will never change within
+         * The assumption here is that the list will never change within
          * the range. as long as the messages are only added to the end of the
          * list, this holds true and the method has no reason to throw CMEs.
          */
