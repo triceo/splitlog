@@ -1,7 +1,7 @@
 package com.github.triceo.splitlog;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,7 +48,23 @@ class MessageStore {
     public int getNextMessageId() {
         return this.getLatestMessageId() + 1;
     }
-    
+
+    /**
+     * This is synchronized in order to mutually exclude changing the store (by
+     * the also synchronized {@link #add(Message)} method) with getting the size
+     * of the store in this method. Otherwise
+     * {@link ConcurrentModificationException} may ensue.
+     * 
+     * @param startId
+     *            Least id, inclusive.
+     * @param endId
+     *            Greatest id, exclusive.
+     * @return A copy of the sub-list provided by the message store.
+     */
+    private synchronized List<Message> actuallyGetFromRange(final int startId, final int endId) {
+        return new LinkedList<Message>(this.store.subList(startId, endId));
+    }
+
     /**
      * Return all messages with IDs in the given range.
      * 
@@ -66,11 +82,7 @@ class MessageStore {
         } else if (endId > this.getNextMessageId()) {
             throw new IllegalArgumentException("Range end cannot be greater than the next message ID.");
         }
-        List<Message> subListCopy;
-        synchronized (this) {
-            subListCopy = new ArrayList<Message>(this.store.subList(startId, endId));
-        }
-        return Collections.unmodifiableList(subListCopy);
+        return Collections.unmodifiableList(this.actuallyGetFromRange(startId, endId));
     }
 
 }
