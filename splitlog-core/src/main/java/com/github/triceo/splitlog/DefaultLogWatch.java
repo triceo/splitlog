@@ -99,6 +99,9 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized LogTailer startTailing() {
+        if (this.isTerminated()) {
+            throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
+        }
         final int startingMessageId = this.messages.getNextMessageId();
         final AbstractLogTailer tail = new NonStoringLogTailer(this);
         this.tailers.add(tail);
@@ -108,8 +111,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized boolean terminateTailing() {
-        final boolean isTailing = !this.isTerminated();
-        if (!isTailing) {
+        if (this.isTerminated()) {
             return false;
         }
         this.tailer.stop();
