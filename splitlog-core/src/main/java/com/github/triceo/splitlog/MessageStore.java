@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,12 +66,11 @@ class MessageStore {
         } else if (endId > this.getNextMessageId()) {
             throw new IllegalArgumentException("Range end cannot be greater than the next message ID.");
         }
-        /*
-         * FIXME the assumption here is that the list will never change within
-         * the range. as long as the messages are only added to the end of the
-         * list, this holds true and the method has no reason to throw CMEs.
-         */
-        return Collections.unmodifiableList(this.store.subList(startId, endId));
+        List<Message> subListCopy;
+        synchronized (this) {
+            subListCopy = new ArrayList<Message>(this.store.subList(startId, endId));
+        }
+        return Collections.unmodifiableList(subListCopy);
     }
 
 }
