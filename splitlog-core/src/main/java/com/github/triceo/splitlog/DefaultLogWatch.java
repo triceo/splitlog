@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.input.Tailer;
 
-import com.github.triceo.splitlog.conditions.BooleanCondition;
+import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
 /**
@@ -38,10 +38,10 @@ final class DefaultLogWatch implements LogWatch {
             endingMessageIds = new WeakHashMap<LogTailer, Integer>();
 
     private final MessageStore messages;
-    private final BooleanCondition<Message> acceptanceCondition;
+    private final MessageCondition acceptanceCondition;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final BooleanCondition<Message> acceptanceCondition, final long delayBetweenReads,
+            final MessageCondition acceptanceCondition, final long delayBetweenReads,
             final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
         this.acceptanceCondition = acceptanceCondition;
         this.messages = new MessageStore(capacity);
@@ -51,16 +51,53 @@ final class DefaultLogWatch implements LogWatch {
                 reopenBetweenReads, bufferSize);
     }
 
+    private MessageBuilder currentlyProcessedMessage = null;
+
     protected synchronized void addLine(final String line) {
-        final Message message = this.splitter.addLine(line);
-        final boolean messageAccepted = (message != null) && this.acceptanceCondition.accept(message);
+        final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
+        if (this.splitter.isStartingLine(line)) {
+            // new message begins
+            if (isMessageBeingProcessed) { // finish old message
+                this.handleCompleteMessage(this.currentlyProcessedMessage);
+            }
+            // prepare for new message
+            this.currentlyProcessedMessage = new MessageBuilder(line);
+        } else {
+            // continue present message
+            if (!isMessageBeingProcessed) {
+                // most likely just a garbage immediately after start
+                return;
+            }
+            this.currentlyProcessedMessage.addLine(line);
+        }
+        this.handleIncomingMessage(this.currentlyProcessedMessage);
+    }
+
+    private synchronized void handleIncomingMessage(final MessageBuilder messageBuilder) {
+        final Message message = messageBuilder.buildIntermediate(this.splitter);
+        for (final AbstractLogTailer t : this.tailers) {
+            t.notifyOfIncomingMessage(message);
+        }
+    }
+
+    private synchronized void handleUndeliveredMessage(final MessageBuilder messageBuilder) {
+        final Message message = messageBuilder.buildIntermediate(this.splitter);
+        for (final AbstractLogTailer t : this.tailers) {
+            t.notifyOfUndeliveredMessage(message);
+        }
+    }
+
+    private synchronized void handleCompleteMessage(final MessageBuilder messageBuilder) {
+        final Message message = messageBuilder.buildFinal(this.splitter);
+        final boolean messageAccepted = this.acceptanceCondition.accept(message);
         if (messageAccepted) {
             this.messages.add(message);
         }
         for (final AbstractLogTailer t : this.tailers) {
-            t.notifyOfLine(line);
             if (messageAccepted) {
-                t.notifyOfMessage(message);
+                t.notifyOfAcceptedMessage(message);
+            } else {
+                t.notifyOfRejectedMessage(message);
             }
         }
     }
@@ -149,14 +186,13 @@ final class DefaultLogWatch implements LogWatch {
             return false;
         }
         this.tailer.stop();
-        final Message message = this.splitter.forceProcessing();
+        this.isTerminated.set(true);
+        if (this.currentlyProcessedMessage != null) {
+            this.handleUndeliveredMessage(this.currentlyProcessedMessage);
+        }
         for (final AbstractLogTailer chunk : new ArrayList<AbstractLogTailer>(this.tailers)) {
-            if (message != null) {
-                chunk.notifyOfMessage(message);
-            }
             this.terminateTailing(chunk);
         }
-        this.isTerminated.set(true);
         return true;
     }
 

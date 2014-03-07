@@ -1,8 +1,5 @@
 package com.github.triceo.splitlog;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -14,7 +11,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.github.triceo.splitlog.conditions.LineCondition;
+import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringLogTailerTest extends DefaultTailerBaseTest {
@@ -93,34 +90,6 @@ public class NonStoringLogTailerTest extends DefaultTailerBaseTest {
     }
 
     @Test
-    public void testConcurrency() {
-        final String message1 = "test";
-        final LogTailer tailer = this.getLogWatch().startTailing();
-        // make sure the messages are received
-        String result = this.getWriter().write(message1, tailer);
-        result = this.getWriter().write(message1, tailer);
-        result = this.getWriter().write(message1, tailer);
-        Assert.assertEquals(message1, result);
-        // now get a list of messages
-        final List<Message> messages = tailer.getMessages();
-        // write additional message
-        result = this.getWriter().write(message1, tailer);
-        result = this.getWriter().write(message1, tailer);
-        Assert.assertEquals(message1, result);
-        // and iterate through the original list to check for CMEs
-        Assert.assertEquals(2, messages.size());
-        for (final Message msg : messages) {
-            Assert.assertEquals(message1, msg.getLines().get(0));
-        }
-        // and output the new list
-        try {
-            tailer.write(new FileOutputStream(new File("target/", "testConcurrency.log")));
-        } catch (final FileNotFoundException e) {
-            // do nothing
-        }
-    }
-
-    @Test
     public void testNesting() {
         final String message1 = "test1";
         final String message2 = "test2";
@@ -170,15 +139,14 @@ public class NonStoringLogTailerTest extends DefaultTailerBaseTest {
         Assert.assertTrue("Log watch not terminated after termination.", this.getLogWatch().isTerminated());
     }
 
-    // FIXME we should also test waitFor() on a MessageCondition
     @Test
     public void testWaitForAfterPreviousFailed() {
         final LogTailer tailer = this.getLogWatch().startTailing();
         // this call will fail, since we're not writing anything
-        tailer.waitFor(new LineCondition() {
+        tailer.waitFor(new MessageDeliveryCondition() {
 
             @Override
-            public boolean accept(final String evaluate) {
+            public boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
                 return true;
             }
 

@@ -40,13 +40,22 @@ abstract class AbstractLogTailer implements LogTailer {
     }
 
     /**
+     * Notify the tailer that it has been terminated before a message could be
+     * delivered completely.
+     * 
+     * @param msg
+     *            The message.
+     */
+    protected abstract void notifyOfUndeliveredMessage(Message msg);
+
+    /**
      * Notify the tailer of a new line in the watched log. Must never be called
      * by users, just from the library code.
      * 
-     * @param line
-     *            The line.
+     * @param msg
+     *            The message.
      */
-    protected abstract void notifyOfLine(String line);
+    protected abstract void notifyOfIncomingMessage(Message msg);
 
     /**
      * Notify the tailer of a new message in the watched log. Must never be
@@ -55,7 +64,17 @@ abstract class AbstractLogTailer implements LogTailer {
      * @param msg
      *            The message.
      */
-    protected abstract void notifyOfMessage(Message msg);
+    protected abstract void notifyOfAcceptedMessage(Message msg);
+
+    /**
+     * Notify the tailer of a new message from the log that was rejected from
+     * entering the log watch. Must never be called by users, just from the
+     * library code.
+     * 
+     * @param msg
+     *            The message.
+     */
+    protected abstract void notifyOfRejectedMessage(Message msg);
 
     @Override
     public boolean write(final OutputStream stream) {

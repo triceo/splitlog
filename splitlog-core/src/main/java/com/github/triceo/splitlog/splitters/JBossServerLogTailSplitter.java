@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.triceo.splitlog.MessageBuilder;
 import com.github.triceo.splitlog.MessageSeverity;
 import com.github.triceo.splitlog.MessageType;
 
@@ -32,13 +33,13 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
             + ")\\]\\s+(.+)\\s*");
 
     @Override
-    protected Date determineDate(final RawMessage message) {
+    public Date determineDate(final MessageBuilder message) {
         final Matcher m = this.pattern.matcher(message.getFirstLine());
         m.matches();
-        final String hours = m.group(HOURS);
-        final String minutes = m.group(MINUTES);
-        final String seconds = m.group(SECONDS);
-        final String millis = m.group(MILLIS);
+        final String hours = m.group(JBossServerLogTailSplitter.HOURS);
+        final String minutes = m.group(JBossServerLogTailSplitter.MINUTES);
+        final String seconds = m.group(JBossServerLogTailSplitter.SECONDS);
+        final String millis = m.group(JBossServerLogTailSplitter.MILLIS);
         final Calendar c = Calendar.getInstance();
         c.set(Calendar.HOUR_OF_DAY, Integer.valueOf(hours));
         c.set(Calendar.MINUTE, Integer.valueOf(minutes));
@@ -48,10 +49,10 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
     }
 
     @Override
-    protected MessageSeverity determineSeverity(final RawMessage message) {
+    public MessageSeverity determineSeverity(final MessageBuilder message) {
         final Matcher m = this.pattern.matcher(message.getFirstLine());
         m.matches();
-        final String severity = m.group(SEVERITY);
+        final String severity = m.group(JBossServerLogTailSplitter.SEVERITY);
         if (severity.equals("INFO")) {
             return MessageSeverity.INFO;
         } else if (severity.equals("DEBUG")) {
@@ -68,14 +69,14 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
     }
 
     @Override
-    protected MessageType determineType(final RawMessage message) {
+    public MessageType determineType(final MessageBuilder message) {
         return this.determineType(message.getFirstLine());
     }
 
     private MessageType determineType(final String line) {
         final Matcher m = this.pattern.matcher(line);
         m.matches();
-        final String type = m.group(TYPE);
+        final String type = m.group(JBossServerLogTailSplitter.TYPE);
         if (type.equals("stderr")) {
             return MessageType.STDERR;
         } else if (type.equals("stdout")) {
@@ -86,19 +87,20 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
     }
 
     @Override
-    protected boolean isStartingLine(final String line) {
+    public boolean isStartingLine(final String line) {
         return this.pattern.matcher(line).matches();
     }
 
     @Override
-    protected String stripOfMetadata(final String line) {
+    public String stripOfMetadata(final String line) {
         if (this.isStartingLine(line)) {
             final Matcher m = this.pattern.matcher(line);
             m.matches();
             if (this.determineType(line) == MessageType.LOG) {
-                return "[" + m.group(TYPE) + "] " + m.group(BODY).trim();
+                return "[" + m.group(JBossServerLogTailSplitter.TYPE) + "] "
+                        + m.group(JBossServerLogTailSplitter.BODY).trim();
             } else {
-                return m.group(BODY).trim();
+                return m.group(JBossServerLogTailSplitter.BODY).trim();
             }
         } else {
             return line.trim();

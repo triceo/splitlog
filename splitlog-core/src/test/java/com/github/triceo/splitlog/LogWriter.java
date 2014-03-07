@@ -14,7 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.conditions.LineCondition;
+import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
 class LogWriter {
 
@@ -44,19 +44,24 @@ class LogWriter {
             return null;
         }
         // wait until the last part of the string is finally present
-        return tailer.waitFor(new LineCondition() {
+        final Message result = tailer.waitFor(new MessageDeliveryCondition() {
 
             @Override
-            public boolean accept(final String receivedLine) {
+            public boolean accept(final Message receivedMessage, final MessageDeliveryStatus status) {
+                final String lastLine = receivedMessage.getLines().get(receivedMessage.getLines().size() - 1);
                 final String textStr[] = line.split("\\r?\\n");
-                return (textStr[textStr.length - 1].trim().equals(receivedLine.trim()));
+                return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
             }
 
         }, 10, TimeUnit.SECONDS);
+        if (result == null) {
+            return null;
+        }
+        return result.getLines().get(result.getLines().size() - 1);
     }
 
-    public void writeWithoutWaiting(String line) {
-        write(line);
+    public void writeWithoutWaiting(final String line) {
+        this.write(line);
     }
 
     /**
@@ -85,7 +90,7 @@ class LogWriter {
         }
     }
 
-    private boolean write(String line) {
+    private boolean write(final String line) {
         BufferedWriter w = null;
         try {
             w = new BufferedWriter(new FileWriter(LogWriter.this.target, true));

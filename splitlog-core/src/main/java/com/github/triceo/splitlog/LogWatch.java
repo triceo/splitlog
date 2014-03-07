@@ -15,8 +15,8 @@ public interface LogWatch {
     boolean isTerminated();
 
     /**
-     * Whether or not {@link #terminateTailing(LogTailer)} has been
-     * called for this tailer.
+     * Whether or not {@link #terminateTailing(LogTailer)} has been called for
+     * this tailer.
      * 
      * @param tail
      *            Tailer in question.

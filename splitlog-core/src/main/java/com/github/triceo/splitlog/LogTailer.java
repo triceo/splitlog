@@ -4,8 +4,8 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.github.triceo.splitlog.conditions.LineCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
+import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
 /**
  * Tailer's primary function is to allow users to work with their portion of the
@@ -47,33 +47,13 @@ public interface LogTailer {
     Message tag(String tagLine);
 
     /**
-     * Will block until a line appears in the log, for which the condition is
-     * true.
-     * 
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
-    String waitFor(LineCondition condition);
-
-    /**
-     * Will block until a line appears in the log, for which the condition is
-     * true. If none appears before the timeout, it unblocks anyway.
-     * 
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
-    String waitFor(LineCondition condition, long timeout, TimeUnit unit);
-
-    /**
      * Will block until a message arrives, for which the condition is true.
      * 
      * @param condition
      *            Condition that needs to be true for the method to unblock.
      * @return Null if the method unblocked due to some other reason.
      */
-    Message waitFor(MessageCondition condition);
+    Message waitFor(MessageDeliveryCondition condition);
 
     /**
      * Will block until a message arrives, for which the condition is true. If
@@ -83,7 +63,7 @@ public interface LogTailer {
      *            Condition that needs to be true for the method to unblock.
      * @return Null if the method unblocked due to some other reason.
      */
-    Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
+    Message waitFor(MessageDeliveryCondition condition, long timeout, TimeUnit unit);
 
     /**
      * Will write to a stream that which is be returned by

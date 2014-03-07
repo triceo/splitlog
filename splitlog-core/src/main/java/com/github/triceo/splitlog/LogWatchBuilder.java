@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
-import com.github.triceo.splitlog.conditions.BooleanCondition;
+import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
@@ -54,7 +54,7 @@ public class LogWatchBuilder {
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
     // will accept all messages
-    private BooleanCondition<Message> messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
+    private MessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
 
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
@@ -76,19 +76,19 @@ public class LogWatchBuilder {
      * 
      * @return The condition.
      */
-    public BooleanCondition<Message> getMessageAcceptanceCondition() {
+    public MessageCondition getMessageAcceptanceCondition() {
         return this.messageAcceptanceCondition;
     }
 
     /**
-     * Only the messages for which {@link BooleanCondition#accept(Object)} is
+     * Only the messages for which {@link MessageCondition#accept(Object)} is
      * true will be registered by the future log watch.
      * 
      * @param condition
      *            The condition.
      * @return This.
      */
-    public LogWatchBuilder withMessageAcceptanceCondition(final BooleanCondition<Message> condition) {
+    public LogWatchBuilder withMessageAcceptanceCondition(final MessageCondition condition) {
         if (condition == null) {
             throw new IllegalArgumentException("Message acceptance condition must not be null.");
         }
