@@ -68,7 +68,7 @@ class MessageStore {
      * 
      * @return -1 if no messages yet.
      */
-    public int getLatestMessageId() {
+    public synchronized int getLatestMessageId() {
         return this.lastMessageId;
     }
 
@@ -79,7 +79,7 @@ class MessageStore {
      * @return -1 if no messages yet. 0 if no messages have been discarded. Add
      *         one for every discarded message.
      */
-    public int getFirstMessageId() {
+    public synchronized int getFirstMessageId() {
         if (this.getNextMessageId() == MessageStore.INITIAL_MESSAGE_ID) {
             return -1;
         } else {
