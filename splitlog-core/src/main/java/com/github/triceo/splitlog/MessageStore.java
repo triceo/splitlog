@@ -130,7 +130,8 @@ class MessageStore {
         if ((startId < 0) || (endId < 0)) {
             throw new IllegalArgumentException("Message ID cannot be negative.");
         } else if ((firstMessageId >= 0) && (startId < firstMessageId)) {
-            throw new IllegalArgumentException("Message with this ID had already been discarded.");
+            throw new IllegalArgumentException("Message with ID " + startId
+                    + " had already been discarded. First available message has ID " + firstMessageId + ".");
         } else if (endId <= startId) {
             throw new IllegalArgumentException("Ending message ID must me larger than starting message ID.");
         } else if (endId > this.getNextMessageId()) {
