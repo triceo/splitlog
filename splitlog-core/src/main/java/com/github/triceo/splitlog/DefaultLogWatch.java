@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.input.Tailer;
 
+import com.github.triceo.splitlog.conditions.BooleanCondition;
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
 /**
@@ -37,10 +38,12 @@ final class DefaultLogWatch implements LogWatch {
             endingMessageIds = new WeakHashMap<LogTailer, Integer>();
 
     private final MessageStore messages;
+    private final BooleanCondition<Message> acceptanceCondition;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final long delayBetweenReads, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-            final int bufferSize) {
+            final BooleanCondition<Message> acceptanceCondition, final long delayBetweenReads,
+            final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
+        this.acceptanceCondition = acceptanceCondition;
         this.messages = new MessageStore(capacity);
         this.listener = new LogWatchTailerListener(this);
         this.splitter = splitter;
@@ -50,12 +53,13 @@ final class DefaultLogWatch implements LogWatch {
 
     protected synchronized void addLine(final String line) {
         final Message message = this.splitter.addLine(line);
-        if (message != null) {
+        final boolean messageAccepted = (message != null) && this.acceptanceCondition.accept(message);
+        if (messageAccepted) {
             this.messages.add(message);
         }
         for (final AbstractLogTailer t : this.tailers) {
             t.notifyOfLine(line);
-            if (message != null) {
+            if (messageAccepted) {
                 t.notifyOfMessage(message);
             }
         }

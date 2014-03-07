@@ -3,6 +3,7 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import com.github.triceo.splitlog.conditions.BooleanCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
@@ -25,6 +26,8 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
  * <dd>{@link Integer#MAX_VALUE}, the maximum possible. See {@link MessageStore}
  * for details.</dd>
  * </dl>
+ * 
+ * By default, the instance will allow every message through.
  */
 public class LogWatchBuilder {
 
@@ -49,6 +52,15 @@ public class LogWatchBuilder {
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
+    // will accept all messages
+    private BooleanCondition<Message> messageAcceptanceCondition = new BooleanCondition<Message>() {
+
+        @Override
+        public boolean accept(final Message evaluate) {
+            return true;
+        }
+
+    };
 
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
@@ -65,6 +77,32 @@ public class LogWatchBuilder {
     }
 
     /**
+     * The condition that will be used for accepting messages into the log
+     * watch.
+     * 
+     * @return The condition.
+     */
+    public BooleanCondition<Message> getMessageAcceptanceCondition() {
+        return this.messageAcceptanceCondition;
+    }
+
+    /**
+     * Only the messages for which {@link BooleanCondition#accept(Object)} is
+     * true will be registered by the future log watch.
+     * 
+     * @param condition
+     *            The condition.
+     * @return This.
+     */
+    public LogWatchBuilder withMessageAcceptanceCondition(final BooleanCondition<Message> condition) {
+        if (condition == null) {
+            throw new IllegalArgumentException("Message acceptance condition must not be null.");
+        }
+        this.messageAcceptanceCondition = condition;
+        return this;
+    }
+
+    /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden.
      * 
@@ -77,8 +115,8 @@ public class LogWatchBuilder {
         if (splitter == null) {
             throw new IllegalArgumentException("A splitter must be provided.");
         }
-        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.delayBetweenReads,
-                !this.readingFromBeginning, this.closingBetweenReads, this.bufferSize);
+        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.messageAcceptanceCondition,
+                this.delayBetweenReads, !this.readingFromBeginning, this.closingBetweenReads, this.bufferSize);
     }
 
     /**
@@ -118,6 +156,16 @@ public class LogWatchBuilder {
                 return false;
             }
         } else if (!this.fileToWatch.equals(other.fileToWatch)) {
+            return false;
+        }
+        if (this.limitCapacityTo != other.limitCapacityTo) {
+            return false;
+        }
+        if (this.messageAcceptanceCondition == null) {
+            if (other.messageAcceptanceCondition != null) {
+                return false;
+            }
+        } else if (!this.messageAcceptanceCondition.equals(other.messageAcceptanceCondition)) {
             return false;
         }
         if (this.readingFromBeginning != other.readingFromBeginning) {
@@ -183,6 +231,9 @@ public class LogWatchBuilder {
         result = (prime * result) + (this.closingBetweenReads ? 1231 : 1237);
         result = (prime * result) + (int) (this.delayBetweenReads ^ (this.delayBetweenReads >>> 32));
         result = (prime * result) + ((this.fileToWatch == null) ? 0 : this.fileToWatch.hashCode());
+        result = (prime * result) + this.limitCapacityTo;
+        result = (prime * result)
+                + ((this.messageAcceptanceCondition == null) ? 0 : this.messageAcceptanceCondition.hashCode());
         result = (prime * result) + (this.readingFromBeginning ? 1231 : 1237);
         return result;
     }
@@ -216,9 +267,20 @@ public class LogWatchBuilder {
 
     @Override
     public String toString() {
-        return "LogWatchBuilder [file=" + this.fileToWatch + ", delay=" + this.delayBetweenReads + ", fromBeginning="
-                + this.readingFromBeginning + ", closing=" + this.closingBetweenReads + ", bufferSize="
-                + this.bufferSize + "]";
+        final StringBuilder builder = new StringBuilder();
+        builder.append("LogWatchBuilder [");
+        if (this.fileToWatch != null) {
+            builder.append("fileToWatch=").append(this.fileToWatch).append(", ");
+        }
+        builder.append("limitCapacityTo=").append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+                .append(", ");
+        if (this.messageAcceptanceCondition != null) {
+            builder.append("messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+        }
+        builder.append("]");
+        return builder.toString();
     }
 
     /**
