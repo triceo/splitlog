@@ -21,6 +21,9 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
  * <dd>See {@link #DEFAULT_READ_BUFFER_SIZE_IN_BYTES}.</dd>
  * <dt>Default tail splitter</dt>
  * <dd>See {@link SimpleTailSplitter}</dd>
+ * <dt>Default message capacity</dt>
+ * <dd>{@link Integer#MAX_VALUE}, the maximum possible. See {@link MessageStore}
+ * for details.</dd>
  * </dl>
  */
 public class LogWatchBuilder {
@@ -42,6 +45,7 @@ public class LogWatchBuilder {
     }
 
     private final File fileToWatch;
+    private int limitCapacityTo = Integer.MAX_VALUE;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
@@ -73,8 +77,8 @@ public class LogWatchBuilder {
         if (splitter == null) {
             throw new IllegalArgumentException("A splitter must be provided.");
         }
-        return new DefaultLogWatch(this.fileToWatch, splitter, this.delayBetweenReads, !this.readingFromBeginning,
-                this.closingBetweenReads, this.bufferSize);
+        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.delayBetweenReads,
+                !this.readingFromBeginning, this.closingBetweenReads, this.bufferSize);
     }
 
     /**
@@ -120,6 +124,30 @@ public class LogWatchBuilder {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Get the capacity of the future log watch.
+     * 
+     * @return Maximum capacity in messages.
+     */
+    public int getCapacityLimit() {
+        return this.limitCapacityTo;
+    }
+
+    /**
+     * Limit capacity of the log watch to a given amount of messages.
+     * 
+     * @param size
+     *            Maximum amount of messages to store.
+     * @return This.
+     */
+    public LogWatchBuilder limitCapacityTo(final int size) {
+        if (size <= 0) {
+            throw new IllegalArgumentException("Size of the memory store must be larger than zero.");
+        }
+        this.limitCapacityTo = size;
+        return this;
     }
 
     /**

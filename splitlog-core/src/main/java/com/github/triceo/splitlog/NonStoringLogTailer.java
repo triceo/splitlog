@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +34,6 @@ class NonStoringLogTailer extends AbstractLogTailer {
     private BooleanCondition<String> lineBlockingCondition = null;
     // FIXME this assumes that only the tail thread and user thread are present
     private final Semaphore blocker = new Semaphore(1);
-
     private final Map<Integer, Message> tags = new TreeMap<Integer, Message>();
 
     public NonStoringLogTailer(final DefaultLogWatch watch) {
@@ -49,8 +49,16 @@ class NonStoringLogTailer extends AbstractLogTailer {
     @Override
     public List<Message> getMessages(final MessageCondition condition) {
         final List<Message> messages = new LinkedList<Message>();
-        int messageId = 0;
-        for (final Message msg : this.getWatch().getAllMessages(this)) {
+        /*
+         * get the last message ID; done as close as possible to retrieving the
+         * list of messages, so that it would be unlikely the list would be
+         * modified inbetween, therefore causing the ID to no longer be valid.
+         */
+        int maxMessageId = 0;
+        // and now add the tags for which we still have the messages
+        for (final SortedMap.Entry<Integer, Message> entry : this.getWatch().getAllMessages(this).entrySet()) {
+            final int messageId = entry.getKey();
+            final Message msg = entry.getValue();
             // insert a tag if there is one for this particular spot
             if (this.tags.containsKey(messageId)) {
                 messages.add(this.tags.get(messageId));
@@ -59,11 +67,11 @@ class NonStoringLogTailer extends AbstractLogTailer {
             if (condition.accept(msg)) {
                 messages.add(msg);
             }
-            messageId++;
+            maxMessageId = messageId + 1;
         }
         // if there is a tag after the last message, this will catch it
-        if (this.tags.containsKey(messageId)) {
-            messages.add(this.tags.get(messageId));
+        if (this.tags.containsKey(maxMessageId)) {
+            messages.add(this.tags.get(maxMessageId));
         }
         return Collections.unmodifiableList(messages);
     }
@@ -119,10 +127,11 @@ class NonStoringLogTailer extends AbstractLogTailer {
      * locations will overwrite each other.
      */
     @Override
-    public void tag(final String tagLine) {
-        final int messageId = this.getWatch().getAllMessages(this).size();
+    public synchronized Message tag(final String tagLine) {
+        final int messageId = this.getWatch().getEndingMessageId(this) + 1;
         final Message message = new Message(tagLine);
         this.tags.put(messageId, message);
+        return message;
     }
 
     /**

@@ -4,9 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,7 +27,7 @@ final class DefaultLogWatch implements LogWatch {
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final Set<AbstractLogTailer> tailers = new LinkedHashSet<AbstractLogTailer>();
     private final LogWatchTailerListener listener;
-    /*
+    /**
      * These maps are weak; when a tailer stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
      * tailer is being used, we want to keep the IDs since the tailer may still
@@ -35,10 +36,12 @@ final class DefaultLogWatch implements LogWatch {
     private final Map<LogTailer, Integer> startingMessageIds = new WeakHashMap<LogTailer, Integer>(),
             endingMessageIds = new WeakHashMap<LogTailer, Integer>();
 
-    private final MessageStore messages = new MessageStore();
+    private final MessageStore messages;
 
-    protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final long delayBetweenReads,
-            final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
+    protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
+            final long delayBetweenReads, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+            final int bufferSize) {
+        this.messages = new MessageStore(capacity);
         this.listener = new LogWatchTailerListener(this);
         this.splitter = splitter;
         this.tailer = Tailer.create(watchedFile, this.listener, delayBetweenReads, ignoreExistingContent,
@@ -64,15 +67,31 @@ final class DefaultLogWatch implements LogWatch {
      * 
      * @param tail
      *            The tailer in question.
-     * @return Unmodifiable list of all the received messages.
+     * @return Unmodifiable map of all the received messages, with keys being
+     *         IDs of those messages.
      */
-    protected List<Message> getAllMessages(final LogTailer tail) {
-        final int start = this.startingMessageIds.get(tail);
-        final int end = this.getEndingId(tail);
-        if (start > end) { // just in case
-            return Collections.unmodifiableList(Collections.<Message> emptyList());
+    protected SortedMap<Integer, Message> getAllMessages(final LogTailer tail) {
+        final int start = this.getStartingMessageId(tail);
+        // get the expected ending message ID
+        final int end = this.getEndingMessageId(tail);
+        if (start > end) {
+            /*
+             * in case some messages have been discarded, the actual start may
+             * get ahead of the expected end. this would have caused an
+             * exception within the message store, and so we handle it here and
+             * return an empty list. this is exactly correct, as if the end is
+             * before the first message in the store, there really is nothing to
+             * return.
+             */
+            return Collections.unmodifiableSortedMap(new TreeMap<Integer, Message>());
         } else {
-            return this.messages.getFromRange(start, end + 1);
+            final SortedMap<Integer, Message> messages = new TreeMap<Integer, Message>();
+            int id = start;
+            for (final Message msg : this.messages.getFromRange(start, end + 1)) {
+                messages.put(id, msg);
+                id++;
+            }
+            return Collections.unmodifiableSortedMap(messages);
         }
     }
 
@@ -82,9 +101,20 @@ final class DefaultLogWatch implements LogWatch {
      * @param tail
      *            Tailer in question.
      */
-    private int getEndingId(final LogTailer tail) {
+    protected int getEndingMessageId(final LogTailer tail) {
         return this.endingMessageIds.containsKey(tail) ? this.endingMessageIds.get(tail) : this.messages
                 .getLatestMessageId();
+    }
+
+    /**
+     * If messages have been discarded, the original starting message ID will no
+     * longer be valid. therefore, we check for the actual starting ID.
+     * 
+     * @param tail
+     *            Tailer in question.
+     */
+    protected int getStartingMessageId(final LogTailer tail) {
+        return Math.max(this.messages.getFirstMessageId(), this.startingMessageIds.get(tail));
     }
 
     @Override

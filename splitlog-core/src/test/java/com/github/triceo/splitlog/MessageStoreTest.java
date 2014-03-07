@@ -93,4 +93,32 @@ public class MessageStoreTest {
         store.getFromRange(-1, 0);
     }
 
+    @Test
+    public void testDiscarding() {
+        final int NO_MESSAGE_ID = -1;
+        final int MESSAGE_ID_1 = NO_MESSAGE_ID + 1;
+        final int MESSAGE_ID_2 = MESSAGE_ID_1 + 1;
+        final int MESSAGE_ID_3 = MESSAGE_ID_2 + 1;
+        // single-message capacity for easy testing
+        final MessageStore store = new MessageStore(1);
+        Assert.assertEquals(NO_MESSAGE_ID, store.getFirstMessageId());
+        final Message msg1 = new Message("test");
+        store.add(msg1);
+        Assert.assertEquals(MESSAGE_ID_1, store.getFirstMessageId());
+        // discarding the first message
+        final Message msg2 = new Message("test2");
+        store.add(msg2);
+        Assert.assertEquals(MESSAGE_ID_2, store.getFirstMessageId());
+        List<Message> postDiscard = store.getFrom(MESSAGE_ID_2);
+        Assert.assertEquals(1, postDiscard.size());
+        Assert.assertSame(msg2, postDiscard.get(0));
+        // discarding the second message
+        final Message msg3 = new Message("test3");
+        store.add(msg3);
+        Assert.assertEquals(MESSAGE_ID_3, store.getFirstMessageId());
+        postDiscard = store.getFrom(MESSAGE_ID_3);
+        Assert.assertEquals(1, postDiscard.size());
+        Assert.assertSame(msg3, postDiscard.get(0));
+    }
+
 }

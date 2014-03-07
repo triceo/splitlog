@@ -21,7 +21,11 @@ public abstract class DefaultTailerBaseTest {
     private LogWriter writer;
 
     public DefaultTailerBaseTest() {
-        this.builder = LogWatchBuilder.forFile(getTempFile());
+        this(LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()));
+    }
+
+    public DefaultTailerBaseTest(final LogWatchBuilder builder) {
+        this.builder = builder;
     }
 
     protected LogWatchBuilder getBuilder() {

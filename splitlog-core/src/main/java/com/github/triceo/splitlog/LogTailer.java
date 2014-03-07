@@ -42,8 +42,9 @@ public interface LogTailer {
      * 
      * @param tagLine
      *            Text of the message.
+     * @return The tag message that was recorded.
      */
-    void tag(String tagLine);
+    Message tag(String tagLine);
 
     /**
      * Will block until a line appears in the log, for which the condition is

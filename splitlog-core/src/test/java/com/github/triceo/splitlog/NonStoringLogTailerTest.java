@@ -23,22 +23,15 @@ public class NonStoringLogTailerTest extends DefaultTailerBaseTest {
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()) },
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()).closingAfterReading()
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()) },
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading()
                         .ignoringPreexistingContent() },
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()).closingAfterReading() },
-                { LogWatchBuilder.forFile(NonStoringLogTailerTest.getTempFile()).ignoringPreexistingContent() } });
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading() },
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).ignoringPreexistingContent() } });
     }
-
-    private final LogWatchBuilder builder;
 
     public NonStoringLogTailerTest(final LogWatchBuilder builder) {
-        this.builder = builder;
-    }
-
-    @Override
-    protected LogWatchBuilder getBuilder() {
-        return this.builder;
+        super(builder);
     }
 
     @Test

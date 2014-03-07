@@ -5,11 +5,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 
-import com.github.triceo.splitlog.conditions.LineCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 
 /**
@@ -39,9 +37,6 @@ abstract class AbstractLogTailer implements LogTailer {
         return this.getMessages(new AllAcceptingMessageCondition());
     }
 
-    @Override
-    public abstract List<Message> getMessages(final MessageCondition condition);
-
     protected DefaultLogWatch getWatch() {
         return this.watch;
     }
@@ -68,21 +63,6 @@ abstract class AbstractLogTailer implements LogTailer {
      *            The message.
      */
     protected abstract void notifyOfMessage(Message msg);
-
-    @Override
-    public abstract void tag(String tagLine);
-
-    @Override
-    public abstract String waitFor(LineCondition condition);
-
-    @Override
-    public abstract String waitFor(LineCondition condition, long timeout, TimeUnit unit);
-
-    @Override
-    public abstract Message waitFor(MessageCondition condition);
-
-    @Override
-    public abstract Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
     @Override
     public boolean write(final OutputStream stream) {
