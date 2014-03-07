@@ -3,6 +3,7 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.BooleanCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 import com.github.triceo.splitlog.splitters.TailSplitter;
@@ -53,14 +54,7 @@ public class LogWatchBuilder {
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
     // will accept all messages
-    private BooleanCondition<Message> messageAcceptanceCondition = new BooleanCondition<Message>() {
-
-        @Override
-        public boolean accept(final Message evaluate) {
-            return true;
-        }
-
-    };
+    private BooleanCondition<Message> messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
 
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 

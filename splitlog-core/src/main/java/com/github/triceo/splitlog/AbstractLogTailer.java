@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
+import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 
 /**
@@ -18,14 +19,6 @@ import com.github.triceo.splitlog.conditions.MessageCondition;
  */
 abstract class AbstractLogTailer implements LogTailer {
 
-    private static final class AllAcceptingMessageCondition implements MessageCondition {
-        @Override
-        public boolean accept(final Message evaluate) {
-            // accept every message
-            return true;
-        }
-    }
-
     private final DefaultLogWatch watch;
 
     protected AbstractLogTailer(final DefaultLogWatch watch) {
@@ -34,7 +27,7 @@ abstract class AbstractLogTailer implements LogTailer {
 
     @Override
     public List<Message> getMessages() {
-        return this.getMessages(new AllAcceptingMessageCondition());
+        return this.getMessages(AllMessagesAcceptingCondition.INSTANCE);
     }
 
     protected DefaultLogWatch getWatch() {
@@ -66,7 +59,7 @@ abstract class AbstractLogTailer implements LogTailer {
 
     @Override
     public boolean write(final OutputStream stream) {
-        return this.write(stream, new AllAcceptingMessageCondition());
+        return this.write(stream, AllMessagesAcceptingCondition.INSTANCE);
     }
 
     @Override
