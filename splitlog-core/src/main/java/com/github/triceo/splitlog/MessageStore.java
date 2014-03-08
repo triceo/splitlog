@@ -68,7 +68,7 @@ class MessageStore {
      * 
      * @return -1 if no messages yet.
      */
-    public synchronized int getLatestMessageId() {
+    public int getLatestMessageId() {
         return this.lastMessageId;
     }
 
@@ -123,7 +123,7 @@ class MessageStore {
      *            Greatest id, exclusive.
      * @return Unmodifiable list containing those messages.
      */
-    public List<Message> getFromRange(final int startId, final int endId) {
+    public synchronized List<Message> getFromRange(final int startId, final int endId) {
         // cache this here, so all parts of the method operate on the same data
         final int firstMessageId = this.getFirstMessageId();
         // input validation
@@ -149,7 +149,7 @@ class MessageStore {
      *            Least id, inclusive.
      * @return Unmodifiable list containing those messages.
      */
-    public List<Message> getFrom(final int startId) {
+    public synchronized List<Message> getFrom(final int startId) {
         return this.getFromRange(startId, this.getNextMessageId());
     }
 
