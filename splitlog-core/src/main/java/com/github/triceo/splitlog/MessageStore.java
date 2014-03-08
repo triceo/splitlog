@@ -133,7 +133,7 @@ class MessageStore {
             throw new IllegalArgumentException("Message with ID " + startId
                     + " had already been discarded. First available message has ID " + firstMessageId + ".");
         } else if (endId <= startId) {
-            throw new IllegalArgumentException("Ending message ID must me larger than starting message ID.");
+            throw new IllegalArgumentException("Ending message ID must be larger than starting message ID.");
         } else if (endId > this.getNextMessageId()) {
             throw new IllegalArgumentException("Range end cannot be greater than the next message ID.");
         }

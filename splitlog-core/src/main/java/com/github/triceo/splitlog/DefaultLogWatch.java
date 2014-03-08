@@ -106,12 +106,17 @@ final class DefaultLogWatch implements LogWatch {
      * Return all messages that have been sent to the tailer, from its start
      * until either its termination or to this moment, whichever is relevant.
      * 
+     * This method is synchronized so that the modification of the underlying
+     * message store in {@link #addLine(String)} and the reading of this store
+     * is mutually excluded. Otherwise, there is a possibility of message ID
+     * mess in the discarding case.
+     * 
      * @param tail
      *            The tailer in question.
      * @return Unmodifiable map of all the received messages, with keys being
      *         IDs of those messages.
      */
-    protected SortedMap<Integer, Message> getAllMessages(final LogTailer tail) {
+    protected synchronized SortedMap<Integer, Message> getAllMessages(final LogTailer tail) {
         final int start = this.getStartingMessageId(tail);
         // get the expected ending message ID
         final int end = this.getEndingMessageId(tail);
