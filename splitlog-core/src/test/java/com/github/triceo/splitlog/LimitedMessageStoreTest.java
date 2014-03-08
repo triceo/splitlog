@@ -45,7 +45,7 @@ public class LimitedMessageStoreTest extends DefaultTailerBaseTest {
         this.es.execute(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (!Thread.interrupted()) {
                     LimitedMessageStoreTest.this.getWriter().writeWithoutWaiting(UUID.randomUUID().toString());
                 }
             }

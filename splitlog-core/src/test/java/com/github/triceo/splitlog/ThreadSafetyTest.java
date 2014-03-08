@@ -5,27 +5,45 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ThreadSafetyTest extends DefaultTailerBaseTest {
 
-    public static final long TIMEOUT_MILLIS = 1000 * 10;
+    private static final long TIMEOUT_MILLIS = 10000;
+    private ExecutorService es;
+
+    @Before
+    public void setUp() {
+        this.es = Executors.newFixedThreadPool(2);
+    }
+
+    @After
+    public void tearDown() {
+        this.es.shutdownNow();
+        try {
+            this.es.awaitTermination(2, TimeUnit.SECONDS);
+        } catch (final InterruptedException ex) {
+            System.err.println("Executor service failed to terminate.");
+        }
+    }
 
     @Test(timeout = TIMEOUT_MILLIS)
     public void testThreadSafety() throws InterruptedException, ExecutionException {
-        ExecutorService e = Executors.newFixedThreadPool(2);
-        e.execute(new Runnable() {
+        this.es.execute(new Runnable() {
 
             @Override
             public void run() {
-                while (true) {
+                while (!Thread.interrupted()) {
                     ThreadSafetyTest.this.getWriter().writeWithoutWaiting(UUID.randomUUID().toString());
                 }
             }
         });
         final LogTailer tailer = this.getLogWatch().startTailing();
-        Future<?> reader = e.submit(new Runnable() {
+        Future<?> reader = this.es.submit(new Runnable() {
 
             @Override
             public void run() {
