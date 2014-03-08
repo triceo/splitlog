@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -10,6 +11,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * To demonstrate the problem referenced here: {@link https
+ * ://github.com/triceo/splitlog/pull/15}.
+ * 
+ */
 public class LimitedMessageStoreTest extends DefaultTailerBaseTest {
 
     private static final int CAPACITY = 1;
@@ -23,36 +29,36 @@ public class LimitedMessageStoreTest extends DefaultTailerBaseTest {
 
     @After
     public void tearDown() {
-        es.shutdownNow();
+        this.es.shutdownNow();
         try {
-            es.awaitTermination(2, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
+            this.es.awaitTermination(2, TimeUnit.SECONDS);
+        } catch (final InterruptedException ex) {
             System.err.println("Executor service failed to terminate.");
         }
     }
 
     @Override
     protected LogWatchBuilder getBuilder() {
-        return super.getBuilder().limitCapacityTo(CAPACITY);
+        return super.getBuilder().limitCapacityTo(LimitedMessageStoreTest.CAPACITY);
     }
 
-    @Test(timeout = TIMEOUT_MILLIS)
+    @Test(timeout = LimitedMessageStoreTest.TIMEOUT_MILLIS)
     public void testLimitedMessageStore() throws InterruptedException, ExecutionException {
-        es.execute(new Runnable() {
+        this.es.execute(new Runnable() {
             @Override
             public void run() {
                 while (true) {
-                    getWriter().writeWithoutWaiting("test");
+                    LimitedMessageStoreTest.this.getWriter().writeWithoutWaiting(UUID.randomUUID().toString());
                 }
             }
         });
-        final LogTailer tailer = getLogWatch().startTailing();
-        Future<?> reader = es.submit(new Runnable() {
+        final LogTailer tailer = this.getLogWatch().startTailing();
+        final Future<?> reader = this.es.submit(new Runnable() {
             @Override
             public void run() {
-                long maxMillis = TIMEOUT_MILLIS / 2;
-                long start = System.currentTimeMillis();
-                while (System.currentTimeMillis() - start < maxMillis) {
+                final long maxMillis = LimitedMessageStoreTest.TIMEOUT_MILLIS / 2;
+                final long start = System.currentTimeMillis();
+                while ((System.currentTimeMillis() - start) < maxMillis) {
                     tailer.getMessages();
                 }
             }
