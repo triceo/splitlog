@@ -124,7 +124,7 @@ public class Message {
         this.lines = new String[] { message.trim() };
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
-        this.millisecondsSinceJanuary1st1970 = Calendar.getInstance().getTime().getTime();
+        this.millisecondsSinceJanuary1st1970 = System.currentTimeMillis();
         this.exceptionDescriptor = null;
     }
 
