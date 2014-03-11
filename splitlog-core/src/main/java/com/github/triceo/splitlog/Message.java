@@ -23,24 +23,80 @@ public class Message {
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-    public Message(final Collection<String> raw) {
+    /**
+     * {@link #Message(Collection, Date, MessageType)} with the current time and
+     * {@link MessageType#LOG}.
+     * 
+     * @param raw
+     *            Message lines.
+     */
+    protected Message(final Collection<String> raw) {
         this(raw, Calendar.getInstance().getTime(), MessageType.LOG);
     }
 
-    public Message(final Collection<String> raw, final Date d, final MessageSeverity severity) {
+    /**
+     * {@link #Message(Collection, Date, MessageType, MessageSeverity)} with
+     * {@link MessageType#LOG}.
+     * 
+     * @param raw
+     *            Message lines.
+     * @param d
+     *            Timestamp of the message.
+     * @param severity
+     *            Message severity.
+     */
+    protected Message(final Collection<String> raw, final Date d, final MessageSeverity severity) {
         this(raw, d, MessageType.LOG, severity);
     }
 
-    public Message(final Collection<String> raw, final Date d, final MessageType type) {
+    /**
+     * {@link #Message(Collection, Date, MessageType, MessageSeverity)} with
+     * {@link MessageSeverity#UNKNOWN}.
+     * 
+     * @param raw
+     *            Message lines.
+     * @param d
+     *            Timestamp of the message.
+     * @param type
+     *            Message type
+     */
+    protected Message(final Collection<String> raw, final Date d, final MessageType type) {
         this(raw, d, type, MessageSeverity.UNKNOWN);
     }
 
-    public Message(final Collection<String> raw, final Date d, final MessageType type, final MessageSeverity severity) {
+/**
+     * {@link #Message(Collection, Date, MessageType, MessageSeverity, ExceptionDescriptor) with null exception descriptor.
+     * 
+     * @param raw
+     *            Message lines.
+     * @param d
+     *            Timestamp of the message.
+     * @param type
+     *            Message type
+     * @param severity
+     *            Message severity.
+     */
+    protected Message(final Collection<String> raw, final Date d, final MessageType type, final MessageSeverity severity) {
         this(raw, d, type, severity, null);
     }
 
-    public Message(final Collection<String> raw, final Date d, final MessageType type, final MessageSeverity severity,
-            final ExceptionDescriptor exception) {
+    /**
+     * Form a new message with the given properties.
+     * 
+     * @param raw
+     *            Message lines, a non-empty collection.
+     * @param d
+     *            Timestamp of the message, must not be null.
+     * @param type
+     *            Message type, must not be null.
+     * @param severity
+     *            Message severity, must not be null.
+     * @param exception
+     *            Exception descriptor, or null if message is to contain no
+     *            exception data.
+     */
+    protected Message(final Collection<String> raw, final Date d, final MessageType type,
+            final MessageSeverity severity, final ExceptionDescriptor exception) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
         } else if (severity == null) {
@@ -57,8 +113,11 @@ public class Message {
 
     /**
      * Creates a one-line message of type {@link MessageType#TAG}.
+     * 
+     * @param message
+     *            The only line in the message.
      */
-    public Message(final String message) {
+    protected Message(final String message) {
         if ((message == null) || (message.length() == 0)) {
             throw new IllegalArgumentException("Message must not be empty.");
         }

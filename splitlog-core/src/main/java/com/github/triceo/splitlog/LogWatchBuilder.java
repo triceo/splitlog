@@ -81,7 +81,7 @@ public class LogWatchBuilder {
     }
 
     /**
-     * Only the messages for which {@link MessageCondition#accept(Object)} is
+     * Only the messages for which {@link MessageCondition#accept(Message)} is
      * true will be registered by the future log watch.
      * 
      * @param condition

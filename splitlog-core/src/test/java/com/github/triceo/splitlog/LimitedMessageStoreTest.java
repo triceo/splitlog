@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @see <a href="https://github.com/triceo/splitlog/pull/15">Splitlog Pull Request #15</a>.
+ * See <a href="https://github.com/triceo/splitlog/pull/15">Splitlog Pull Request 15</a>.
  */
 public class LimitedMessageStoreTest extends DefaultTailerBaseTest {
 

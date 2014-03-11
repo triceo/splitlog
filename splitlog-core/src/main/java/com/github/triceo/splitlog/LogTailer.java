@@ -66,8 +66,8 @@ public interface LogTailer {
     Message waitFor(MessageDeliveryCondition condition, long timeout, TimeUnit unit);
 
     /**
-     * Will write to a stream that which is be returned by
-     * {@link #getMessages()}.
+     * Will write to a stream the result of {@link #getMessages()}. Will close
+     * the stream.
      * 
      * @param stream
      *            Target.
@@ -76,8 +76,8 @@ public interface LogTailer {
     boolean write(final OutputStream stream);
 
     /**
-     * Will write to a stream that which is be returned by
-     * {@link #getMessages(MessageCondition)}.
+     * Will write to a stream the result of
+     * {@link #getMessages(MessageCondition)}. Will close the stream.
      * 
      * @param stream
      *            Target.
