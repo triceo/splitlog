@@ -7,6 +7,11 @@ import org.junit.Test;
 
 public class MessageStoreTest {
 
+    private static final int NO_MESSAGE_ID = -1;
+    private static final int MESSAGE_ID_1 = MessageStoreTest.NO_MESSAGE_ID + 1;
+    private static final int MESSAGE_ID_2 = MessageStoreTest.MESSAGE_ID_1 + 1;
+    private static final int MESSAGE_ID_3 = MessageStoreTest.MESSAGE_ID_2 + 1;
+
     @Test
     public void testAdditions() {
         final MessageStore store = new MessageStore();
@@ -94,31 +99,85 @@ public class MessageStoreTest {
     }
 
     @Test
-    public void testDiscarding() {
-        final int NO_MESSAGE_ID = -1;
-        final int MESSAGE_ID_1 = NO_MESSAGE_ID + 1;
-        final int MESSAGE_ID_2 = MESSAGE_ID_1 + 1;
-        final int MESSAGE_ID_3 = MESSAGE_ID_2 + 1;
+    public void testAutomatedDiscarding() {
         // single-message capacity for easy testing
         final MessageStore store = new MessageStore(1);
-        Assert.assertEquals(NO_MESSAGE_ID, store.getFirstMessageId());
+        Assert.assertEquals(MessageStoreTest.NO_MESSAGE_ID, store.getFirstMessageId());
         final Message msg1 = new Message("test");
         store.add(msg1);
-        Assert.assertEquals(MESSAGE_ID_1, store.getFirstMessageId());
+        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_1, store.getFirstMessageId());
         // discarding the first message
         final Message msg2 = new Message("test2");
         store.add(msg2);
-        Assert.assertEquals(MESSAGE_ID_2, store.getFirstMessageId());
-        List<Message> postDiscard = store.getFrom(MESSAGE_ID_2);
+        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_2, store.getFirstMessageId());
+        List<Message> postDiscard = store.getFrom(MessageStoreTest.MESSAGE_ID_2);
         Assert.assertEquals(1, postDiscard.size());
         Assert.assertSame(msg2, postDiscard.get(0));
         // discarding the second message
         final Message msg3 = new Message("test3");
         store.add(msg3);
-        Assert.assertEquals(MESSAGE_ID_3, store.getFirstMessageId());
-        postDiscard = store.getFrom(MESSAGE_ID_3);
+        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_3, store.getFirstMessageId());
+        postDiscard = store.getFrom(MessageStoreTest.MESSAGE_ID_3);
         Assert.assertEquals(1, postDiscard.size());
         Assert.assertSame(msg3, postDiscard.get(0));
     }
 
+    @Test
+    public void testManualDiscarding() {
+        // unlimited capacity
+        final MessageStore store = new MessageStore();
+        Assert.assertEquals(MessageStoreTest.NO_MESSAGE_ID, store.getFirstMessageId());
+        final Message msg1 = new Message("test");
+        store.add(msg1);
+        final Message msg2 = new Message("test2");
+        store.add(msg2);
+        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_1, store.getFirstMessageId());
+        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_2, store.getLatestMessageId());
+        // send third, discard first two
+        final Message msg3 = new Message("test3");
+        store.add(msg3);
+        Assert.assertEquals(2, store.deleteBefore(MessageStoreTest.MESSAGE_ID_3));
+        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_3, store.getFirstMessageId());
+        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_3, store.getLatestMessageId());
+        final List<Message> postDiscard = store.getFrom(MessageStoreTest.MESSAGE_ID_3);
+        Assert.assertEquals(1, postDiscard.size());
+        Assert.assertSame(msg3, postDiscard.get(0));
+    }
+
+    @Test
+    public void testManualDiscardingOutsideLimits() {
+        // unlimited capacity
+        final MessageStore store = new MessageStore();
+        Assert.assertEquals(MessageStoreTest.NO_MESSAGE_ID, store.getFirstMessageId());
+        // ensure proper behavior on empty store
+        Assert.assertEquals(0, store.deleteBefore(0)); 
+        Assert.assertEquals(0, store.deleteBefore(MESSAGE_ID_1));
+        final Message msg1 = new Message("test");
+        store.add(msg1);
+        final Message msg2 = new Message("test2");
+        store.add(msg2);
+        // ensure proper behavior when out of bounds
+        Assert.assertEquals(0, store.deleteBefore(0));
+        Assert.assertEquals(2, store.getAll().size());
+        Assert.assertEquals(0, store.deleteBefore(-1));
+        Assert.assertEquals(2, store.getAll().size());
+        Assert.assertEquals(2, store.deleteBefore(MESSAGE_ID_3));
+        Assert.assertEquals(0, store.getAll().size());
+        Assert.assertEquals(0, store.deleteBefore(0));
+        Assert.assertEquals(0, store.getAll().size());
+        Assert.assertEquals(0, store.deleteBefore(-1));
+        Assert.assertEquals(0, store.getAll().size());
+        Assert.assertEquals(0, store.deleteBefore(1000));
+        Assert.assertEquals(0, store.getAll().size());
+        // and ensure it still works after we add another
+        final Message msg3 = new Message("test3");
+        store.add(msg3);
+        Assert.assertEquals(1, store.getAll().size());
+        Assert.assertEquals(0, store.deleteBefore(0));
+        Assert.assertEquals(1, store.getAll().size());
+        Assert.assertEquals(0, store.deleteBefore(-1));
+        Assert.assertEquals(1, store.getAll().size());
+        Assert.assertEquals(1, store.deleteBefore(1000));
+        Assert.assertEquals(0, store.getAll().size());
+    }
 }

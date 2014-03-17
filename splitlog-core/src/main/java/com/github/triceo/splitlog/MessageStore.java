@@ -47,6 +47,36 @@ class MessageStore {
     }
 
     /**
+     * Remove messages from the queue that are older than the given ID. If the
+     * ID is larger than {@link #getLatestMessageId()}, all messages will be
+     * discarded while marking no future messages for discarding.
+     * 
+     * @param id
+     *            ID of the first message to be kept.
+     * @return Number of messages actually discarded.
+     */
+    public synchronized int deleteBefore(final int id) {
+        final int firstMessageId = this.getFirstMessageId();
+        /*
+         * make sure the messages to discard never include: 1/ messages that
+         * have been discarded already. 2/ messages that have not yet been
+         * added.
+         */
+        int firstIndexToNotDiscard = Math.min((this.getLatestMessageId() - firstMessageId) + 1, id - firstMessageId);
+        if (firstIndexToNotDiscard < 1) {
+            return 0;
+        } else if (firstIndexToNotDiscard > this.store.size()) {
+            // prevent IOOBE
+            firstIndexToNotDiscard--;
+        }
+        // and now actually discard
+        System.out.println("Discarding between " + 0 + " and " + firstIndexToNotDiscard);
+        this.store.subList(0, firstIndexToNotDiscard).clear();
+        this.numOfDiscardedMessages += firstIndexToNotDiscard;
+        return firstIndexToNotDiscard;
+    }
+
+    /**
      * Add message to the storage.
      * 
      * @param msg
@@ -153,4 +183,12 @@ class MessageStore {
         return this.getFromRange(startId, this.getNextMessageId());
     }
 
+    /**
+     * Return all messages currently present.
+     * 
+     * @return Unmodifiable list containing those messages.
+     */
+    public synchronized List<Message> getAll() {
+        return Collections.unmodifiableList(new LinkedList<Message>(this.store));
+    }
 }
