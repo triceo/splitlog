@@ -10,8 +10,11 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.input.Tailer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.splitters.TailSplitter;
@@ -23,6 +26,9 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
  */
 final class DefaultLogWatch implements LogWatch {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
+
+    private final AtomicInteger numberOfActiveTailers = new AtomicInteger(0);
     private final Tailer tailer;
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
@@ -53,6 +59,10 @@ final class DefaultLogWatch implements LogWatch {
 
     private MessageBuilder currentlyProcessedMessage = null;
 
+    private int getNumberOfActiveTailers() {
+        return this.numberOfActiveTailers.get();
+    }
+
     protected synchronized void addLine(final String line) {
         final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
         if (this.splitter.isStartingLine(line)) {
@@ -75,6 +85,9 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized void handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
+        if (this.getNumberOfActiveTailers() == 0) {
+            return;
+        }
         for (final AbstractLogTailer t : this.tailers) {
             t.notifyOfIncomingMessage(message);
         }
@@ -82,6 +95,9 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized void handleUndeliveredMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
+        if (this.getNumberOfActiveTailers() == 0) {
+            return;
+        }
         for (final AbstractLogTailer t : this.tailers) {
             t.notifyOfUndeliveredMessage(message);
         }
@@ -89,9 +105,18 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized void handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
+        final boolean areActiveTailers = this.getNumberOfActiveTailers() > 0;
         final boolean messageAccepted = this.acceptanceCondition.accept(message);
-        if (messageAccepted) {
-            this.messages.add(message);
+        if (areActiveTailers) {
+            if (messageAccepted) {
+                this.messages.add(message);
+            } else {
+                DefaultLogWatch.LOGGER.info("Filter rejected message '{}' from file {}.", message, this.tailer.getFile());
+            }
+        } else {
+            DefaultLogWatch.LOGGER.info("No tailers waiting for message '{}' from file {}, not storing.", message,
+                    this.tailer.getFile());
+            return;
         }
         for (final AbstractLogTailer t : this.tailers) {
             if (messageAccepted) {
@@ -182,6 +207,7 @@ final class DefaultLogWatch implements LogWatch {
         final AbstractLogTailer tail = new NonStoringLogTailer(this);
         this.tailers.add(tail);
         this.startingMessageIds.put(tail, startingMessageId);
+        this.numberOfActiveTailers.incrementAndGet();
         return tail;
     }
 
@@ -206,6 +232,7 @@ final class DefaultLogWatch implements LogWatch {
         if (this.tailers.remove(tail)) {
             final int endingMessageId = this.messages.getLatestMessageId();
             this.endingMessageIds.put(tail, endingMessageId);
+            this.numberOfActiveTailers.decrementAndGet();
             return true;
         } else {
             return false;
