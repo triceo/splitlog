@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,11 +31,12 @@ final class DefaultLogWatch implements LogWatch {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
 
     private final AtomicInteger numberOfActiveTailers = new AtomicInteger(0);
-    private final Tailer tailer;
+    private Tailer tailer;
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final Set<AbstractLogTailer> tailers = new LinkedHashSet<AbstractLogTailer>();
     private final LogWatchTailerListener listener;
+    private final File watchedFile;
     /**
      * These maps are weak; when a tailer stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
@@ -45,16 +48,23 @@ final class DefaultLogWatch implements LogWatch {
 
     private final MessageStore messages;
     private final MessageCondition acceptanceCondition;
+    private final long delayBetweenReads;
+    private final int bufferSize;
+    private final boolean reopenBetweenReads, ignoreExistingContent;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
             final MessageCondition acceptanceCondition, final long delayBetweenReads,
             final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
         this.acceptanceCondition = acceptanceCondition;
         this.messages = new MessageStore(capacity);
-        this.listener = new LogWatchTailerListener(this);
         this.splitter = splitter;
-        this.tailer = Tailer.create(watchedFile, this.listener, delayBetweenReads, ignoreExistingContent,
-                reopenBetweenReads, bufferSize);
+        // for the tailer
+        this.bufferSize = bufferSize;
+        this.delayBetweenReads = delayBetweenReads;
+        this.reopenBetweenReads = reopenBetweenReads;
+        this.ignoreExistingContent = ignoreExistingContent;
+        this.watchedFile = watchedFile;
+        this.listener = new LogWatchTailerListener(this);
     }
 
     private MessageBuilder currentlyProcessedMessage = null;
@@ -85,9 +95,6 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized void handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        if (this.getNumberOfActiveTailers() == 0) {
-            return;
-        }
         for (final AbstractLogTailer t : this.tailers) {
             t.notifyOfIncomingMessage(message);
         }
@@ -95,9 +102,6 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized void handleUndeliveredMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        if (this.getNumberOfActiveTailers() == 0) {
-            return;
-        }
         for (final AbstractLogTailer t : this.tailers) {
             t.notifyOfUndeliveredMessage(message);
         }
@@ -105,18 +109,11 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized void handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
-        final boolean areActiveTailers = this.getNumberOfActiveTailers() > 0;
         final boolean messageAccepted = this.acceptanceCondition.accept(message);
-        if (areActiveTailers) {
-            if (messageAccepted) {
-                this.messages.add(message);
-            } else {
-                DefaultLogWatch.LOGGER.info("Filter rejected message '{}' from file {}.", message, this.tailer.getFile());
-            }
+        if (messageAccepted) {
+            this.messages.add(message);
         } else {
-            DefaultLogWatch.LOGGER.info("No tailers waiting for message '{}' from file {}, not storing.", message,
-                    this.tailer.getFile());
-            return;
+            DefaultLogWatch.LOGGER.info("Filter rejected message '{}' from file {}.", message, this.watchedFile);
         }
         for (final AbstractLogTailer t : this.tailers) {
             if (messageAccepted) {
@@ -203,6 +200,9 @@ final class DefaultLogWatch implements LogWatch {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
+        if (this.getNumberOfActiveTailers() < 1) {
+            this.startTailer();
+        }
         final int startingMessageId = this.messages.getNextMessageId();
         final AbstractLogTailer tail = new NonStoringLogTailer(this);
         this.tailers.add(tail);
@@ -216,7 +216,6 @@ final class DefaultLogWatch implements LogWatch {
         if (this.isTerminated()) {
             return false;
         }
-        this.tailer.stop();
         this.isTerminated.set(true);
         if (this.currentlyProcessedMessage != null) {
             this.handleUndeliveredMessage(this.currentlyProcessedMessage);
@@ -227,12 +226,34 @@ final class DefaultLogWatch implements LogWatch {
         return true;
     }
 
+    private final ExecutorService e = Executors.newSingleThreadExecutor();
+
+    private final boolean startTailer() {
+        this.tailer = new Tailer(this.watchedFile, this.listener, this.delayBetweenReads, this.ignoreExistingContent,
+                this.reopenBetweenReads, this.bufferSize);
+        this.e.execute(this.tailer);
+        DefaultLogWatch.LOGGER.debug("Started log watch for file '{}'", this.watchedFile);
+        return true;
+    }
+
+    private final boolean terminateTailer() {
+        this.tailer.stop();
+        this.tailer = null;
+        DefaultLogWatch.LOGGER.debug(
+                "Terminated log watch for file '{}' as the last known LogTailer has just been terminated.",
+                this.watchedFile);
+        return true;
+    }
+
     @Override
     public synchronized boolean terminateTailing(final LogTailer tail) {
         if (this.tailers.remove(tail)) {
             final int endingMessageId = this.messages.getLatestMessageId();
             this.endingMessageIds.put(tail, endingMessageId);
             this.numberOfActiveTailers.decrementAndGet();
+            if (this.getNumberOfActiveTailers() == 0) {
+                this.terminateTailer();
+            }
             return true;
         } else {
             return false;
