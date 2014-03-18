@@ -6,9 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Data storage for a particular {@link LogWatch}. Currently it is only a
- * synchronization layer on top of a list, but in the future it may abstract
- * away features like off-memory storage etc.
+ * Data storage for a particular {@link LogWatch}.
  * 
  * This class is thread-safe.
  */
@@ -78,6 +76,11 @@ class MessageStore {
 
     /**
      * Add message to the storage.
+     * 
+     * Evey call will change values returned by {@link #getNextMessageId()} and
+     * {@link #getLatestMessageId()}. Any call may change value returned by
+     * {@link #getFirstMessageId()}, which will happen if a message is discarded
+     * due to hitting the message store capacity.
      * 
      * @param msg
      *            Message in question.
