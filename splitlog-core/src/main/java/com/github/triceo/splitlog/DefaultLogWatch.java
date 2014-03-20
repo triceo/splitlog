@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -73,6 +74,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     private MessageBuilder currentlyProcessedMessage = null;
+    private WeakReference<Message> previousAcceptedMessage;
 
     private int getNumberOfActiveFollowers() {
         return this.numberOfActiveFollowers.get();
@@ -83,10 +85,14 @@ final class DefaultLogWatch implements LogWatch {
         if (this.splitter.isStartingLine(line)) {
             // new message begins
             if (isMessageBeingProcessed) { // finish old message
-                this.handleCompleteMessage(this.currentlyProcessedMessage);
+                final Message completeMessage = this.handleCompleteMessage(this.currentlyProcessedMessage);
+                if (completeMessage != null) {
+                    this.previousAcceptedMessage = new WeakReference<Message>(completeMessage);
+                }
             }
             // prepare for new message
-            this.currentlyProcessedMessage = new MessageBuilder(line);
+            this.currentlyProcessedMessage = (this.previousAcceptedMessage == null) ? new MessageBuilder(line)
+                    : new MessageBuilder(line, this.previousAcceptedMessage.get());
         } else {
             // continue present message
             if (!isMessageBeingProcessed) {
@@ -98,21 +104,49 @@ final class DefaultLogWatch implements LogWatch {
         this.handleIncomingMessage(this.currentlyProcessedMessage);
     }
 
-    private synchronized void handleIncomingMessage(final MessageBuilder messageBuilder) {
+    /**
+     * Notify {@link Follower}s of a message that is
+     * {@link MessageDeliveryStatus#INCOMING}.
+     * 
+     * @param messageBuilder
+     *            Builder to use to construct the message.
+     * @return The message that was the subject of notifications.
+     */
+    private synchronized Message handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         for (final AbstractFollower f : this.followers) {
             f.notifyOfIncomingMessage(message);
         }
+        return message;
     }
 
-    private synchronized void handleUndeliveredMessage(final MessageBuilder messageBuilder) {
+    /**
+     * Notify {@link Follower}s of a message that is
+     * {@link MessageDeliveryStatus#UNDELIVERED}.
+     * 
+     * @param messageBuilder
+     *            Builder to use to construct the message.
+     * @return The message that was the subject of notifications.
+     */
+    private synchronized Message handleUndeliveredMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         for (final AbstractFollower f : this.followers) {
             f.notifyOfUndeliveredMessage(message);
         }
+        return message;
     }
 
-    private synchronized void handleCompleteMessage(final MessageBuilder messageBuilder) {
+    /**
+     * Notify {@link Follower}s of a message that is either
+     * {@link MessageDeliveryStatus#ACCEPTED} or
+     * {@link MessageDeliveryStatus#REJECTED}.
+     * 
+     * @param messageBuilder
+     *            Builder to use to construct the message.
+     * @return The message that was the subject of notifications; null if
+     *         rejected.
+     */
+    private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
         final boolean messageAccepted = this.acceptanceCondition.accept(message);
         if (messageAccepted) {
@@ -126,6 +160,11 @@ final class DefaultLogWatch implements LogWatch {
             } else {
                 f.notifyOfRejectedMessage(message);
             }
+        }
+        if (messageAccepted) {
+            return message;
+        } else {
+            return null;
         }
     }
 
@@ -303,7 +342,10 @@ final class DefaultLogWatch implements LogWatch {
             this.unfollow(chunk);
         }
         this.currentlyRunningSweeper.cancel(false);
+        // remove references to stuff that is no longer useful
         this.currentlyRunningSweeper = null;
+        this.currentlyProcessedMessage = null;
+        this.previousAcceptedMessage = null;
         return true;
     }
 

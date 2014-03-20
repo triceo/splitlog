@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,18 +24,33 @@ final public class Message {
     private final List<String> lines;
     private final MessageSeverity severity;
     private final MessageType type;
+    private final WeakReference<Message> previousMessage;
     private final long millisecondsSinceJanuary1st1970;
     private final ExceptionDescriptor exceptionDescriptor;
 
     /**
      * Form a new message and infer its metadata using
-     * {@value #DEFAULT_SPLITTER}.
+     * {@value #DEFAULT_SPLITTER}. The message will point to no previous
+     * message.
      * 
      * @param raw
      *            Message lines, expected without any pre-processing.
      */
     protected Message(final Collection<String> raw) {
         this(raw, Message.DEFAULT_SPLITTER);
+    }
+
+    /**
+     * Form a new message and infer its metadata using a given splitter. The
+     * message will point to no previous message.
+     * 
+     * @param raw
+     *            Message lines, expected without any pre-processing.
+     * @param splitter
+     *            Used to extract metadata out of the raw lines.
+     */
+    protected Message(final Collection<String> raw, final TailSplitter splitter) {
+        this(raw, splitter, null);
     }
 
     /**
@@ -45,11 +61,16 @@ final public class Message {
      * @param splitter
      *            Used to extract metadata out of the raw lines.
      */
-    protected Message(final Collection<String> raw, final TailSplitter splitter) {
+    protected Message(final Collection<String> raw, final TailSplitter splitter, final Message previousMessage) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
         } else if (splitter == null) {
             throw new IllegalArgumentException("Message requires a TailSplitter.");
+        }
+        if (previousMessage == null) {
+            this.previousMessage = null;
+        } else {
+            this.previousMessage = new WeakReference<Message>(previousMessage);
         }
         this.splitter = splitter;
         this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
@@ -60,7 +81,21 @@ final public class Message {
     }
 
     /**
-     * Creates a one-line message of type {@link MessageType#TAG}.
+     * Return a message that preceded this one in the same log stream.
+     * 
+     * @return Null if there was no such message, the message already got GC'd,
+     *         or <code>{@link #getType()} == {@link MessageType#TAG}</code>.
+     */
+    public Message getPreviousMessage() {
+        if (this.previousMessage == null) {
+            return null;
+        }
+        return this.previousMessage.get();
+    }
+
+    /**
+     * Creates a one-line message of type {@link MessageType#TAG}. The message
+     * will point to no previous message.
      * 
      * @param message
      *            The only line in the message.
@@ -69,6 +104,7 @@ final public class Message {
         if ((message == null) || (message.length() == 0)) {
             throw new IllegalArgumentException("Message must not be empty.");
         }
+        this.previousMessage = null;
         this.splitter = null;
         this.lines = Collections.singletonList(message.trim());
         this.severity = MessageSeverity.UNKNOWN;
