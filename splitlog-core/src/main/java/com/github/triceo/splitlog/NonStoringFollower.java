@@ -115,14 +115,6 @@ final class NonStoringFollower extends AbstractFollower {
         return message;
     }
 
-    private Message waitFor(final long timeout, final TimeUnit unit) throws InterruptedException, TimeoutException {
-        if (timeout < 0) {
-            return this.messageExchanger.exchange(null);
-        } else {
-            return this.messageExchanger.exchange(null, timeout, unit);
-        }
-    }
-
     /**
      * Will throw an exception if any other thread tries to specify a wait on
      * the instance while another thread is already waiting.
@@ -153,8 +145,14 @@ final class NonStoringFollower extends AbstractFollower {
         final TimeUnit unit) {
         this.messageBlockingCondition = condition;
         try {
-            return this.waitFor(timeout, unit);
-        } catch (final Exception e) {
+            if (timeout < 0) {
+                return this.messageExchanger.exchange(null);
+            } else {
+                return this.messageExchanger.exchange(null, timeout, unit);
+            }
+        } catch (final TimeoutException e) {
+            return null;
+        } catch (final InterruptedException e) {
             return null;
         } finally { // just in case
             this.messageBlockingCondition = null;
