@@ -1,6 +1,6 @@
 package com.github.triceo.splitlog;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
  */
 final public class Message {
 
-    private final String[] lines;
+    private final List<String> lines;
     private final MessageSeverity severity;
     private final MessageType type;
     private final long millisecondsSinceJanuary1st1970;
@@ -104,7 +104,7 @@ final public class Message {
         } else if (type == null) {
             throw new IllegalArgumentException("Type must not be null.");
         }
-        this.lines = raw.toArray(new String[raw.size()]);
+        this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
         this.severity = severity;
         this.type = type;
         this.millisecondsSinceJanuary1st1970 = d.getTime();
@@ -121,7 +121,7 @@ final public class Message {
         if ((message == null) || (message.length() == 0)) {
             throw new IllegalArgumentException("Message must not be empty.");
         }
-        this.lines = new String[] { message.trim() };
+        this.lines = Collections.singletonList(message.trim());
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
         this.millisecondsSinceJanuary1st1970 = System.currentTimeMillis();
@@ -140,7 +140,11 @@ final public class Message {
             return false;
         }
         final Message other = (Message) obj;
-        if (!Arrays.equals(this.lines, other.lines)) {
+        if (this.lines == null) {
+            if (other.lines != null) {
+                return false;
+            }
+        } else if (!this.lines.equals(other.lines)) {
             return false;
         }
         if (this.severity != other.severity) {
@@ -152,6 +156,12 @@ final public class Message {
         return true;
     }
 
+    /**
+     * Get the date that this message was logged on.
+     * 
+     * @return Newly constructed instance of {@link Date} with the message log
+     *         timestamp.
+     */
     public Date getDate() {
         return new Date(this.millisecondsSinceJanuary1st1970);
     }
@@ -167,13 +177,12 @@ final public class Message {
     }
 
     /**
-     * This method will create a brand new unmodifiable list every time it is
-     * called. Use with caution.
+     * Get each line of the message.
      * 
      * @return Unmodifiable representation of lines in this message.
      */
     public List<String> getLines() {
-        return Collections.unmodifiableList(Arrays.asList(this.lines));
+        return this.lines;
     }
 
     public MessageSeverity getSeverity() {
@@ -192,7 +201,7 @@ final public class Message {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = (prime * result) + Arrays.hashCode(this.lines);
+        result = (prime * result) + ((this.lines == null) ? 0 : this.lines.hashCode());
         result = (prime * result) + ((this.severity == null) ? 0 : this.severity.hashCode());
         result = (prime * result) + ((this.type == null) ? 0 : this.type.hashCode());
         return result;
