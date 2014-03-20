@@ -43,7 +43,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assert.assertEquals(message3part1, messages.get(4).getLines().get(0));
         // final part of the message, message3part2, will remain unflushed
         this.getLogWatch().unfollow(follower);
-        Assert.assertTrue(follower.isTerminated());
+        Assert.assertTrue(follower.isFollowing());
     }
 
     @Test
@@ -95,7 +95,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assert.assertEquals(message4, result);
         this.getLogWatch().unfollow(nestedTailer);
         // send another message, so the original follower has something extra
-        Assert.assertEquals(true, nestedTailer.isTerminated());
+        Assert.assertEquals(true, nestedTailer.isFollowing());
         result = this.getWriter().write(message5, follower);
         // and make sure that the original follower has all messages
         Assert.assertEquals(4, follower.getMessages().size());

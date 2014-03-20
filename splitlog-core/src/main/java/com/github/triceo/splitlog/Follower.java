@@ -33,7 +33,17 @@ public interface Follower {
      */
     List<Message> getMessages(final MessageCondition condition);
 
-    boolean isTerminated();
+    /**
+     * Whether or not this follower is still actively following its
+     * {@link LogWatch}. It is suggested that the reference to this follower be
+     * thrown away immediately after the user has processed the results of
+     * {@link #getMessages()} or {@link #getMessages(MessageCondition)}.
+     * {@link LogWatch} may then be able to free the memory occupied by those
+     * messages.
+     * 
+     * @return True if following.
+     */
+    boolean isFollowing();
 
     /**
      * Mark the current location in the tail by a custom message. It is up to

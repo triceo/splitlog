@@ -35,7 +35,7 @@ abstract class AbstractFollower implements Follower {
     }
 
     @Override
-    public boolean isTerminated() {
+    public boolean isFollowing() {
         return this.watch.isFollowing(this);
     }
 
