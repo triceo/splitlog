@@ -39,10 +39,6 @@ final class MessageStore {
     public MessageStore(final int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("The message storage cannot have 0 or less capacity.");
-        } else if (size > Integer.MAX_VALUE) {
-            // the map's size() is int
-            throw new IllegalArgumentException(
-                    "The message storage cannot handle a capacity larger than Integer.MAX_VALUE.");
         } else {
             this.messageLimit = size;
         }
