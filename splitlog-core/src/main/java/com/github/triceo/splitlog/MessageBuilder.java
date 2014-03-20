@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
-public class MessageBuilder {
+final public class MessageBuilder {
 
     private final List<String> lines = new LinkedList<String>();
 

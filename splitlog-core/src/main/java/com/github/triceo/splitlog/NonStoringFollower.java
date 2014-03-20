@@ -24,7 +24,7 @@ import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
  * use it. Never use one instance of this class from two or more user threads.
  * Otherwise, unpredictable behavior from waitFor() methods is possible.
  */
-class NonStoringFollower extends AbstractFollower {
+final class NonStoringFollower extends AbstractFollower {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 

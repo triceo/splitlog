@@ -310,7 +310,7 @@ final class DefaultLogWatch implements LogWatch {
     private final ExecutorService e = Executors.newSingleThreadExecutor();
     private ScheduledFuture<?> currentlyRunningSweeper = null;
 
-    private final boolean startTailer() {
+    private boolean startTailer() {
         this.tailer = new Tailer(this.watchedFile, this.listener, this.delayBetweenReads, this.ignoreExistingContent,
                 this.reopenBetweenReads, this.bufferSize);
         this.e.execute(this.tailer);
@@ -318,7 +318,7 @@ final class DefaultLogWatch implements LogWatch {
         return true;
     }
 
-    private final boolean terminateTailer() {
+    private boolean terminateTailer() {
         this.tailer.stop();
         this.tailer = null;
         DefaultLogWatch.LOGGER.debug(

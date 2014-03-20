@@ -7,7 +7,7 @@ import org.apache.commons.io.input.TailerListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class LogWatchTailerListener implements TailerListener {
+final class LogWatchTailerListener implements TailerListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchTailerListener.class);
 

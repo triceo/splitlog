@@ -31,7 +31,7 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
  * 
  * By default, the instance will allow every message through.
  */
-public class LogWatchBuilder {
+final public class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
     public static final int DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;

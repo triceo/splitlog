@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * This class is intended to be run periodically by
  * {@link ScheduledExecutorService}.
  */
-class LogWatchMessageSweeper implements Runnable {
+final class LogWatchMessageSweeper implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchMessageSweeper.class);
     /**

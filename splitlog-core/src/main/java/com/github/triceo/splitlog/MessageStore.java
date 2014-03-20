@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * 
  * This class is thread-safe.
  */
-class MessageStore {
+final class MessageStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageStore.class);
     private static final int INITIAL_MESSAGE_ID = 0;
