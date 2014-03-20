@@ -1,5 +1,7 @@
 package com.github.triceo.splitlog;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,7 +11,7 @@ import org.junit.runners.Parameterized;
 public class ReferenceBasedDiscardingTest extends DefaultTailerBaseTest {
 
     public ReferenceBasedDiscardingTest(final LogWatchBuilder builder) {
-        super(builder);
+        super(builder.withDelayBetweenSweeps(1, TimeUnit.SECONDS));
     }
 
     @Test

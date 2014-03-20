@@ -34,7 +34,7 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 public class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
-    public static final int DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 1000;
+    public static final int DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
 
     /**
@@ -51,7 +51,7 @@ public class LogWatchBuilder {
 
     private final File fileToWatch;
     private int limitCapacityTo = Integer.MAX_VALUE;
-    private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
+    private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
