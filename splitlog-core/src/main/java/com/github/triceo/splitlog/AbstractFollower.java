@@ -10,15 +10,22 @@ import org.apache.commons.io.IOUtils;
 
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
+import com.github.triceo.splitlog.formatters.MessageFormatter;
+import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
 
 /**
  * Internal API for a log follower that, on top of the public API, provides ways
  * for {@link LogWatch} of notifying the follower of new messages. Every
  * follower implementation, such as {@link NonStoringFollower}, needs to extend
  * this class.
+ * 
+ * Will use {@value #DEFAULT_FORMATTER} as default when using
+ * {@link #write(OutputStream)} and
+ * {@link #write(OutputStream, MessageCondition)}.
  */
 abstract class AbstractFollower implements Follower {
 
+    private static final MessageFormatter DEFAULT_FORMATTER = NoopMessageFormatter.INSTANCE;
     private final DefaultLogWatch watch;
 
     protected AbstractFollower(final DefaultLogWatch watch) {
@@ -79,11 +86,21 @@ abstract class AbstractFollower implements Follower {
 
     @Override
     public boolean write(final OutputStream stream) {
-        return this.write(stream, AllMessagesAcceptingCondition.INSTANCE);
+        return this.write(stream, AbstractFollower.DEFAULT_FORMATTER);
     }
 
     @Override
     public boolean write(final OutputStream stream, final MessageCondition condition) {
+        return this.write(stream, condition, AbstractFollower.DEFAULT_FORMATTER);
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final MessageFormatter formatter) {
+        return this.write(stream, AllMessagesAcceptingCondition.INSTANCE, formatter);
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");
         } else if (condition == null) {
@@ -93,7 +110,7 @@ abstract class AbstractFollower implements Follower {
         try {
             w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
             for (final Message msg : this.getMessages(condition)) {
-                w.write(msg.toString().trim());
+                w.write(formatter.format(msg));
                 w.newLine();
             }
             return true;
@@ -103,5 +120,4 @@ abstract class AbstractFollower implements Follower {
             IOUtils.closeQuietly(w);
         }
     }
-
 }

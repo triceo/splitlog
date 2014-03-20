@@ -1,6 +1,5 @@
 package com.github.triceo.splitlog;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,6 +9,11 @@ final public class MessageBuilder {
 
     private final List<String> lines = new LinkedList<String>();
 
+    /**
+     * 
+     * @param firstLine
+     *            Untreated, unprocessed first line retrieved from the log.
+     */
     public MessageBuilder(final String firstLine) {
         if (firstLine == null) {
             throw new IllegalArgumentException("First line may not be null.");
@@ -17,32 +21,36 @@ final public class MessageBuilder {
         this.lines.add(firstLine);
     }
 
-    private static Collection<String> stripLines(final List<String> lines, final TailSplitter splitter) {
-        final Collection<String> stripped = new LinkedList<String>();
-        for (final String line : lines) {
-            stripped.add(splitter.stripOfMetadata(line));
-        }
-        return stripped;
-    }
-
     public Message buildIntermediate(final TailSplitter splitter) {
-        return new Message(MessageBuilder.stripLines(this.lines, splitter), splitter.determineDate(this),
-                splitter.determineType(this), splitter.determineSeverity(this), splitter.determineException(this));
+        return new Message(this.lines, splitter);
     }
 
     public Message buildFinal(final TailSplitter splitter) {
-        return new Message(MessageBuilder.stripLines(this.lines, splitter), splitter.determineDate(this),
-                splitter.determineType(this), splitter.determineSeverity(this), splitter.determineException(this));
+        return new Message(this.lines, splitter);
     }
 
+    /**
+     * Add another line that will become part of the message when built.
+     * 
+     * @param line
+     *            Add an untreated, unprocessed line retrieved from the log.
+     */
     public void addLine(final String line) {
         this.lines.add(line);
     }
 
+    /**
+     * 
+     * @return First line from the server log, no pre-processing.
+     */
     public String getFirstLine() {
         return this.getLines().get(0);
     }
 
+    /**
+     * 
+     * @return Raw lines from the server log that have had no pre-processing.
+     */
     public List<String> getLines() {
         return this.lines;
     }

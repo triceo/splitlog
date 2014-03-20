@@ -2,25 +2,25 @@ package com.github.triceo.splitlog.splitters;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
-import com.github.triceo.splitlog.MessageBuilder;
 import com.github.triceo.splitlog.MessageSeverity;
 import com.github.triceo.splitlog.MessageType;
 
 final public class SimpleTailSplitter extends AbstractTailSplitter {
 
     @Override
-    public Date determineDate(final MessageBuilder message) {
+    public Date determineDate(final List<String> raw) {
         return Calendar.getInstance().getTime();
     }
 
     @Override
-    public MessageSeverity determineSeverity(final MessageBuilder message) {
+    public MessageSeverity determineSeverity(final List<String> raw) {
         return MessageSeverity.UNKNOWN;
     }
 
     @Override
-    public MessageType determineType(final MessageBuilder message) {
+    public MessageType determineType(final List<String> raw) {
         return MessageType.LOG;
     }
 

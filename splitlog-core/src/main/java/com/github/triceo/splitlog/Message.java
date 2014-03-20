@@ -1,13 +1,15 @@
 package com.github.triceo.splitlog;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
+import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
+import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
+import com.github.triceo.splitlog.splitters.TailSplitter;
 
 /**
  * A set of lines from the watched file, that is likely to constitute a single
@@ -15,100 +17,46 @@ import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
  */
 final public class Message {
 
+    private static final TailSplitter DEFAULT_SPLITTER = new SimpleTailSplitter();
+
+    private final TailSplitter splitter;
     private final List<String> lines;
     private final MessageSeverity severity;
     private final MessageType type;
     private final long millisecondsSinceJanuary1st1970;
     private final ExceptionDescriptor exceptionDescriptor;
 
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-
     /**
-     * {@link #Message(Collection, Date, MessageType)} with the current time and
-     * {@link MessageType#LOG}.
+     * Form a new message and infer its metadata using
+     * {@value #DEFAULT_SPLITTER}.
      * 
      * @param raw
-     *            Message lines.
+     *            Message lines, expected without any pre-processing.
      */
     protected Message(final Collection<String> raw) {
-        this(raw, Calendar.getInstance().getTime(), MessageType.LOG);
+        this(raw, Message.DEFAULT_SPLITTER);
     }
 
     /**
-     * {@link #Message(Collection, Date, MessageType, MessageSeverity)} with
-     * {@link MessageType#LOG}.
+     * Form a new message and infer its metadata using a given splitter.
      * 
      * @param raw
-     *            Message lines.
-     * @param d
-     *            Timestamp of the message.
-     * @param severity
-     *            Message severity.
+     *            Message lines, expected without any pre-processing.
+     * @param splitter
+     *            Used to extract metadata out of the raw lines.
      */
-    protected Message(final Collection<String> raw, final Date d, final MessageSeverity severity) {
-        this(raw, d, MessageType.LOG, severity);
-    }
-
-    /**
-     * {@link #Message(Collection, Date, MessageType, MessageSeverity)} with
-     * {@link MessageSeverity#UNKNOWN}.
-     * 
-     * @param raw
-     *            Message lines.
-     * @param d
-     *            Timestamp of the message.
-     * @param type
-     *            Message type
-     */
-    protected Message(final Collection<String> raw, final Date d, final MessageType type) {
-        this(raw, d, type, MessageSeverity.UNKNOWN);
-    }
-
-/**
-     * {@link #Message(Collection, Date, MessageType, MessageSeverity, ExceptionDescriptor) with null exception descriptor.
-     * 
-     * @param raw
-     *            Message lines.
-     * @param d
-     *            Timestamp of the message.
-     * @param type
-     *            Message type
-     * @param severity
-     *            Message severity.
-     */
-    protected Message(final Collection<String> raw, final Date d, final MessageType type, final MessageSeverity severity) {
-        this(raw, d, type, severity, null);
-    }
-
-    /**
-     * Form a new message with the given properties.
-     * 
-     * @param raw
-     *            Message lines, a non-empty collection.
-     * @param d
-     *            Timestamp of the message, must not be null.
-     * @param type
-     *            Message type, must not be null.
-     * @param severity
-     *            Message severity, must not be null.
-     * @param exception
-     *            Exception descriptor, or null if message is to contain no
-     *            exception data.
-     */
-    protected Message(final Collection<String> raw, final Date d, final MessageType type,
-            final MessageSeverity severity, final ExceptionDescriptor exception) {
+    protected Message(final Collection<String> raw, final TailSplitter splitter) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
-        } else if (severity == null) {
-            throw new IllegalArgumentException("Severity must not be null.");
-        } else if (type == null) {
-            throw new IllegalArgumentException("Type must not be null.");
+        } else if (splitter == null) {
+            throw new IllegalArgumentException("Message requires a TailSplitter.");
         }
+        this.splitter = splitter;
         this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
-        this.severity = severity;
-        this.type = type;
-        this.millisecondsSinceJanuary1st1970 = d.getTime();
-        this.exceptionDescriptor = exception;
+        this.severity = splitter.determineSeverity(this.lines);
+        this.type = splitter.determineType(this.lines);
+        this.millisecondsSinceJanuary1st1970 = splitter.determineDate(this.lines).getTime();
+        this.exceptionDescriptor = splitter.determineException(this.lines);
     }
 
     /**
@@ -121,6 +69,7 @@ final public class Message {
         if ((message == null) || (message.length() == 0)) {
             throw new IllegalArgumentException("Message must not be empty.");
         }
+        this.splitter = null;
         this.lines = Collections.singletonList(message.trim());
         this.severity = MessageSeverity.UNKNOWN;
         this.type = MessageType.TAG;
@@ -145,12 +94,6 @@ final public class Message {
                 return false;
             }
         } else if (!this.lines.equals(other.lines)) {
-            return false;
-        }
-        if (this.severity != other.severity) {
-            return false;
-        }
-        if (this.type != other.type) {
             return false;
         }
         return true;
@@ -179,10 +122,28 @@ final public class Message {
     /**
      * Get each line of the message.
      * 
-     * @return Unmodifiable representation of lines in this message.
+     * @return Unmodifiable representation of lines in this message, exactly as
+     *         were received.
      */
     public List<String> getLines() {
         return this.lines;
+    }
+
+    /**
+     * Get each line of the message, with metadata stripped out.
+     * 
+     * @return Unmodifiable representation of text of the message.
+     */
+    public List<String> getLinesWithoutMetadata() {
+        if (this.type == MessageType.TAG) {
+            // nothing to split for tags
+            return this.lines;
+        }
+        final List<String> stripped = new ArrayList<String>();
+        for (final String line : this.lines) {
+            stripped.add(this.splitter.stripOfMetadata(line));
+        }
+        return Collections.unmodifiableList(stripped);
     }
 
     public MessageSeverity getSeverity() {
@@ -202,25 +163,12 @@ final public class Message {
         final int prime = 31;
         int result = 1;
         result = (prime * result) + ((this.lines == null) ? 0 : this.lines.hashCode());
-        result = (prime * result) + ((this.severity == null) ? 0 : this.severity.hashCode());
-        result = (prime * result) + ((this.type == null) ? 0 : this.type.hashCode());
         return result;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(this.getDate());
-        sb.append(" (");
-        sb.append(this.type);
-        sb.append(") ");
-        sb.append(this.severity);
-        sb.append(" ");
-        for (final String line : this.lines) {
-            sb.append(line);
-            sb.append(Message.LINE_SEPARATOR);
-        }
-        return sb.toString();
+        return UnifyingMessageFormatter.INSTANCE.format(this);
     }
 
 }

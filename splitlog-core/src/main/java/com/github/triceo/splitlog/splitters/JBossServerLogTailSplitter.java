@@ -2,10 +2,10 @@ package com.github.triceo.splitlog.splitters;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.github.triceo.splitlog.MessageBuilder;
 import com.github.triceo.splitlog.MessageSeverity;
 import com.github.triceo.splitlog.MessageType;
 
@@ -33,8 +33,8 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
             + ")\\]\\s+(.+)\\s*");
 
     @Override
-    public Date determineDate(final MessageBuilder message) {
-        final Matcher m = this.pattern.matcher(message.getFirstLine());
+    public Date determineDate(final List<String> raw) {
+        final Matcher m = this.pattern.matcher(raw.get(0));
         m.matches();
         final String hours = m.group(JBossServerLogTailSplitter.HOURS);
         final String minutes = m.group(JBossServerLogTailSplitter.MINUTES);
@@ -49,8 +49,8 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
     }
 
     @Override
-    public MessageSeverity determineSeverity(final MessageBuilder message) {
-        final Matcher m = this.pattern.matcher(message.getFirstLine());
+    public MessageSeverity determineSeverity(final List<String> raw) {
+        final Matcher m = this.pattern.matcher(raw.get(0));
         m.matches();
         final String severity = m.group(JBossServerLogTailSplitter.SEVERITY);
         if (severity.equals("INFO")) {
@@ -69,8 +69,8 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
     }
 
     @Override
-    public MessageType determineType(final MessageBuilder message) {
-        return this.determineType(message.getFirstLine());
+    public MessageType determineType(final List<String> raw) {
+        return this.determineType(raw.get(0));
     }
 
     private MessageType determineType(final String line) {

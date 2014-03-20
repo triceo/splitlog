@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
+import com.github.triceo.splitlog.formatters.MessageFormatter;
 
 /**
  * Follower's primary function is to allow users to work with their portion of
@@ -76,7 +77,8 @@ public interface Follower {
     Message waitFor(MessageDeliveryCondition condition, long timeout, TimeUnit unit);
 
     /**
-     * Will write to a stream the result of {@link #getMessages()}. Will close
+     * Will write to a stream the result of {@link #getMessages()}, using a
+     * {@link MessageFormatter} implementation of its own choosing. Will close
      * the stream.
      * 
      * @param stream
@@ -86,8 +88,21 @@ public interface Follower {
     boolean write(final OutputStream stream);
 
     /**
+     * Will write to a stream the result of {@link #getMessages()}, using given
+     * {@link MessageFormatter}. Will close the stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final MessageFormatter formatter);
+
+    /**
      * Will write to a stream the result of
-     * {@link #getMessages(MessageCondition)}. Will close the stream.
+     * {@link #getMessages(MessageCondition)}, using a {@link MessageFormatter}
+     * implementation of its own choosing. Will close the stream.
      * 
      * @param stream
      *            Target.
@@ -97,4 +112,20 @@ public interface Follower {
      * @return True if written, false otherwise.
      */
     boolean write(final OutputStream stream, final MessageCondition condition);
+
+    /**
+     * Will write to a stream the result of
+     * {@link #getMessages(MessageCondition)}, using given
+     * {@link MessageFormatter}. Will close the stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(MessageCondition)}.
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter);
 }

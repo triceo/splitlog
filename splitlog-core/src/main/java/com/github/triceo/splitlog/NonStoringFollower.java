@@ -158,4 +158,5 @@ final class NonStoringFollower extends AbstractFollower {
             this.messageBlockingCondition = null;
         }
     }
+
 }
