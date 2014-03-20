@@ -34,21 +34,21 @@ final class DefaultLogWatch implements LogWatch {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
     private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
 
-    private final AtomicInteger numberOfActiveTailers = new AtomicInteger(0);
+    private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
     private Tailer tailer;
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
-    private final Set<AbstractLogTailer> tailers = new LinkedHashSet<AbstractLogTailer>();
+    private final Set<AbstractFollower> followers = new LinkedHashSet<AbstractFollower>();
     private final LogWatchTailerListener listener;
     final File watchedFile;
     /**
-     * These maps are weak; when a tailer stops being used by user code, we do
+     * These maps are weak; when a follower stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
-     * tailer is being used, we want to keep the IDs since the tailer may still
-     * ask for the messages.
+     * follower is being used, we want to keep the IDs since the follower may
+     * still ask for the messages.
      */
-    private final Map<LogTailer, Integer> startingMessageIds = new WeakHashMap<LogTailer, Integer>(),
-            endingMessageIds = new WeakHashMap<LogTailer, Integer>();
+    private final Map<Follower, Integer> startingMessageIds = new WeakHashMap<Follower, Integer>(),
+            endingMessageIds = new WeakHashMap<Follower, Integer>();
 
     private final MessageStore messages;
     private final MessageCondition acceptanceCondition;
@@ -74,8 +74,8 @@ final class DefaultLogWatch implements LogWatch {
 
     private MessageBuilder currentlyProcessedMessage = null;
 
-    private int getNumberOfActiveTailers() {
-        return this.numberOfActiveTailers.get();
+    private int getNumberOfActiveFollowers() {
+        return this.numberOfActiveFollowers.get();
     }
 
     synchronized void addLine(final String line) {
@@ -100,15 +100,15 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized void handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        for (final AbstractLogTailer t : this.tailers) {
-            t.notifyOfIncomingMessage(message);
+        for (final AbstractFollower f : this.followers) {
+            f.notifyOfIncomingMessage(message);
         }
     }
 
     private synchronized void handleUndeliveredMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        for (final AbstractLogTailer t : this.tailers) {
-            t.notifyOfUndeliveredMessage(message);
+        for (final AbstractFollower f : this.followers) {
+            f.notifyOfUndeliveredMessage(message);
         }
     }
 
@@ -120,17 +120,17 @@ final class DefaultLogWatch implements LogWatch {
         } else {
             DefaultLogWatch.LOGGER.info("Filter rejected message '{}' from file {}.", message, this.watchedFile);
         }
-        for (final AbstractLogTailer t : this.tailers) {
+        for (final AbstractFollower f : this.followers) {
             if (messageAccepted) {
-                t.notifyOfAcceptedMessage(message);
+                f.notifyOfAcceptedMessage(message);
             } else {
-                t.notifyOfRejectedMessage(message);
+                f.notifyOfRejectedMessage(message);
             }
         }
     }
 
     /**
-     * Return all messages that have been sent to the tailer, from its start
+     * Return all messages that have been sent to the follower, from its start
      * until either its termination or to this moment, whichever is relevant.
      * 
      * This method is synchronized so that the modification of the underlying
@@ -138,15 +138,15 @@ final class DefaultLogWatch implements LogWatch {
      * is mutually excluded. Otherwise, there is a possibility of message ID
      * mess in the discarding case.
      * 
-     * @param tail
-     *            The tailer in question.
+     * @param follower
+     *            The follower in question.
      * @return Unmodifiable map of all the received messages, with keys being
      *         IDs of those messages.
      */
-    protected synchronized SortedMap<Integer, Message> getAllMessages(final LogTailer tail) {
-        final int start = this.getStartingMessageId(tail);
+    protected synchronized SortedMap<Integer, Message> getAllMessages(final Follower follower) {
+        final int start = this.getStartingMessageId(follower);
         // get the expected ending message ID
-        final int end = this.getEndingMessageId(tail);
+        final int end = this.getEndingMessageId(follower);
         if (start > end) {
             /*
              * in case some messages have been discarded, the actual start may
@@ -169,13 +169,13 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     /**
-     * Get index of the last plus one message that the tailer has access to.
+     * Get index of the last plus one message that the follower has access to.
      * 
-     * @param tail
+     * @param follower
      *            Tailer in question.
      */
-    protected int getEndingMessageId(final LogTailer tail) {
-        return this.endingMessageIds.containsKey(tail) ? this.endingMessageIds.get(tail) : this.messages
+    protected int getEndingMessageId(final Follower follower) {
+        return this.endingMessageIds.containsKey(follower) ? this.endingMessageIds.get(follower) : this.messages
                 .getLatestMessageId();
     }
 
@@ -183,11 +183,11 @@ final class DefaultLogWatch implements LogWatch {
      * If messages have been discarded, the original starting message ID will no
      * longer be valid. therefore, we check for the actual starting ID.
      * 
-     * @param tail
+     * @param follower
      *            Tailer in question.
      */
-    protected int getStartingMessageId(final LogTailer tail) {
-        return Math.max(this.messages.getFirstMessageId(), this.startingMessageIds.get(tail));
+    protected int getStartingMessageId(final Follower follower) {
+        return Math.max(this.messages.getFirstMessageId(), this.startingMessageIds.get(follower));
     }
 
     /**
@@ -209,7 +209,7 @@ final class DefaultLogWatch implements LogWatch {
      * This method is only intended to be used from within
      * {@link LogWatchMessageSweeper}.
      * 
-     * @return ID of the very first message that is reachable by any tailer in
+     * @return ID of the very first message that is reachable by any follower in
      *         this watch. -1 when there are no reachable messages.
      */
     synchronized int getFirstReachableMessageId() {
@@ -243,8 +243,8 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean isTerminated(final LogTailer tail) {
-        return !this.tailers.contains(tail);
+    public boolean isFollowing(final Follower follower) {
+        return !this.followers.contains(follower);
     }
 
     public long getDelayBetweenReads() {
@@ -261,11 +261,11 @@ final class DefaultLogWatch implements LogWatch {
      * unreachable messages.
      */
     @Override
-    public synchronized LogTailer startTailing() {
+    public synchronized Follower follow() {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
-        if (this.getNumberOfActiveTailers() < 1) {
+        if (this.getNumberOfActiveFollowers() < 1) {
             this.startTailer();
         }
         if (this.currentlyRunningSweeper == null) {
@@ -277,11 +277,11 @@ final class DefaultLogWatch implements LogWatch {
                             this.watchedFile, delay);
         }
         final int startingMessageId = this.messages.getNextMessageId();
-        final AbstractLogTailer tail = new NonStoringLogTailer(this);
-        this.tailers.add(tail);
-        this.startingMessageIds.put(tail, startingMessageId);
-        this.numberOfActiveTailers.incrementAndGet();
-        return tail;
+        final AbstractFollower follower = new NonStoringFollower(this);
+        this.followers.add(follower);
+        this.startingMessageIds.put(follower, startingMessageId);
+        this.numberOfActiveFollowers.incrementAndGet();
+        return follower;
     }
 
     /**
@@ -291,7 +291,7 @@ final class DefaultLogWatch implements LogWatch {
      * removed from memory.
      */
     @Override
-    public synchronized boolean terminateTailing() {
+    public synchronized boolean terminate() {
         if (this.isTerminated()) {
             return false;
         }
@@ -299,8 +299,8 @@ final class DefaultLogWatch implements LogWatch {
         if (this.currentlyProcessedMessage != null) {
             this.handleUndeliveredMessage(this.currentlyProcessedMessage);
         }
-        for (final AbstractLogTailer chunk : new ArrayList<AbstractLogTailer>(this.tailers)) {
-            this.terminateTailing(chunk);
+        for (final AbstractFollower chunk : new ArrayList<AbstractFollower>(this.followers)) {
+            this.unfollow(chunk);
         }
         this.currentlyRunningSweeper.cancel(false);
         this.currentlyRunningSweeper = null;
@@ -314,7 +314,7 @@ final class DefaultLogWatch implements LogWatch {
         this.tailer = new Tailer(this.watchedFile, this.listener, this.delayBetweenReads, this.ignoreExistingContent,
                 this.reopenBetweenReads, this.bufferSize);
         this.e.execute(this.tailer);
-        DefaultLogWatch.LOGGER.debug("Started log watch for file '{}'", this.watchedFile);
+        DefaultLogWatch.LOGGER.debug("Started log tailer for file '{}'", this.watchedFile);
         return true;
     }
 
@@ -322,18 +322,18 @@ final class DefaultLogWatch implements LogWatch {
         this.tailer.stop();
         this.tailer = null;
         DefaultLogWatch.LOGGER.debug(
-                "Terminated log watch for file '{}' as the last known LogTailer has just been terminated.",
+                "Terminated log tailer for file '{}' as the last known Follower has just been terminated.",
                 this.watchedFile);
         return true;
     }
 
     @Override
-    public synchronized boolean terminateTailing(final LogTailer tail) {
-        if (this.tailers.remove(tail)) {
+    public synchronized boolean unfollow(final Follower follower) {
+        if (this.followers.remove(follower)) {
             final int endingMessageId = this.messages.getLatestMessageId();
-            this.endingMessageIds.put(tail, endingMessageId);
-            this.numberOfActiveTailers.decrementAndGet();
-            if (this.getNumberOfActiveTailers() == 0) {
+            this.endingMessageIds.put(follower, endingMessageId);
+            this.numberOfActiveFollowers.decrementAndGet();
+            if (this.getNumberOfActiveFollowers() == 0) {
                 this.terminateTailer();
             }
             return true;

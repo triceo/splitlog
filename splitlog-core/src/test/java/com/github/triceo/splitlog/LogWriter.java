@@ -31,20 +31,20 @@ class LogWriter {
     }
 
     /**
-     * Writes a line to the log and waits until the tailer receives it.
+     * Writes a line to the log and waits until the follower receives it.
      * 
      * @param line
      *            Message to write.
-     * @param tailer
+     * @param follower
      *            Tailer to wait for the message.
      * @return The line that was written, or null otherwise.
      */
-    public String write(final String line, final LogTailer tailer) {
-        if (!this.writeWithoutWaiting(line, tailer)) {
+    public String write(final String line, final Follower follower) {
+        if (!this.writeWithoutWaiting(line, follower)) {
             return null;
         }
         // wait until the last part of the string is finally present
-        final Message result = tailer.waitFor(new MessageDeliveryCondition() {
+        final Message result = follower.waitFor(new MessageDeliveryCondition() {
 
             @Override
             public boolean accept(final Message receivedMessage, final MessageDeliveryStatus status) {
@@ -69,11 +69,11 @@ class LogWriter {
      * 
      * @param line
      *            Message to write.
-     * @param tailer
+     * @param follower
      *            Tailer to wait for the message.
      * @return If the message has been written.
      */
-    private boolean writeWithoutWaiting(final String line, final LogTailer tailer) {
+    private boolean writeWithoutWaiting(final String line, final Follower follower) {
         final Future<Boolean> result = this.e.submit(new Callable<Boolean>() {
 
             @Override

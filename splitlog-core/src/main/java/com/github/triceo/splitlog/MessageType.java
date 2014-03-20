@@ -10,7 +10,7 @@ public enum MessageType {
      */
     LOG,
     /**
-     * A line added by {@link LogTailer#tag(String)}.
+     * A line added by {@link Follower#tag(String)}.
      */
     TAG,
     /**

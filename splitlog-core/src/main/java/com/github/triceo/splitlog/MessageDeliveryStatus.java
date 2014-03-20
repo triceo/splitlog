@@ -22,7 +22,7 @@ public enum MessageDeliveryStatus {
      */
     REJECTED,
     /**
-     * {@link LogTailer} terminated before this message could be read fully.
+     * {@link Follower} terminated before this message could be read fully.
      */
     UNDELIVERED;
 

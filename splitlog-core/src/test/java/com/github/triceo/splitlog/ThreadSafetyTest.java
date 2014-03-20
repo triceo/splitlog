@@ -11,7 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ThreadSafetyTest extends DefaultTailerBaseTest {
+public class ThreadSafetyTest extends DefaultFollowerBaseTest {
 
     private static final long TIMEOUT_MILLIS = 10000;
     private ExecutorService es;
@@ -31,7 +31,7 @@ public class ThreadSafetyTest extends DefaultTailerBaseTest {
         }
     }
 
-    @Test(timeout = TIMEOUT_MILLIS)
+    @Test(timeout = ThreadSafetyTest.TIMEOUT_MILLIS)
     public void testThreadSafety() throws InterruptedException, ExecutionException {
         this.es.execute(new Runnable() {
 
@@ -42,20 +42,20 @@ public class ThreadSafetyTest extends DefaultTailerBaseTest {
                 }
             }
         });
-        final LogTailer tailer = this.getLogWatch().startTailing();
-        Future<?> reader = this.es.submit(new Runnable() {
+        final Follower follower = this.getLogWatch().follow();
+        final Future<?> reader = this.es.submit(new Runnable() {
 
             @Override
             public void run() {
                 int size = 0;
-                long maxMillis = TIMEOUT_MILLIS / 2;
-                long start = System.currentTimeMillis();
-                while (size < 1000 && System.currentTimeMillis() - start < maxMillis) {
-                    size = tailer.getMessages().size();
+                final long maxMillis = ThreadSafetyTest.TIMEOUT_MILLIS / 2;
+                final long start = System.currentTimeMillis();
+                while ((size < 1000) && ((System.currentTimeMillis() - start) < maxMillis)) {
+                    size = follower.getMessages().size();
                     System.out.println("Messages: " + size);
                     try {
                         Thread.sleep(10);
-                    } catch (InterruptedException ex) {
+                    } catch (final InterruptedException ex) {
                         System.err.println("Interrupted.");
                     }
                 }

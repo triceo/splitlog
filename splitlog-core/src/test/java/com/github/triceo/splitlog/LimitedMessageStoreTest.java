@@ -12,9 +12,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * See <a href="https://github.com/triceo/splitlog/pull/15">Splitlog Pull Request 15</a>.
+ * See <a href="https://github.com/triceo/splitlog/pull/15">Splitlog Pull
+ * Request 15</a>.
  */
-public class LimitedMessageStoreTest extends DefaultTailerBaseTest {
+public class LimitedMessageStoreTest extends DefaultFollowerBaseTest {
 
     private static final int CAPACITY = 1;
     private static final int TIMEOUT_MILLIS = 10000;
@@ -50,14 +51,14 @@ public class LimitedMessageStoreTest extends DefaultTailerBaseTest {
                 }
             }
         });
-        final LogTailer tailer = this.getLogWatch().startTailing();
+        final Follower follower = this.getLogWatch().follow();
         final Future<?> reader = this.es.submit(new Runnable() {
             @Override
             public void run() {
                 final long maxMillis = LimitedMessageStoreTest.TIMEOUT_MILLIS / 2;
                 final long start = System.currentTimeMillis();
                 while ((System.currentTimeMillis() - start) < maxMillis) {
-                    tailer.getMessages();
+                    follower.getMessages();
                 }
             }
         });

@@ -11,17 +11,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runners.Parameterized.Parameters;
 
-public abstract class DefaultTailerBaseTest {
+public abstract class DefaultFollowerBaseTest {
 
     // will verify various configs of log watch
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()) },
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading()
+                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()) },
+                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()).closingAfterReading()
                         .ignoringPreexistingContent() },
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading() },
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).ignoringPreexistingContent() } });
+                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()).closingAfterReading() },
+                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()).ignoringPreexistingContent() } });
     }
 
     protected static File getTempFile() {
@@ -37,7 +37,7 @@ public abstract class DefaultTailerBaseTest {
      * and are present in the exact same order.
      * 
      * @param messages
-     *            Messages from some {@link LogTailer}.
+     *            Messages from some {@link Follower}.
      * @param expectedMessages
      *            Either {@link Message} to compare messages, or a string if we
      *            want to compare against a tag.
@@ -59,11 +59,11 @@ public abstract class DefaultTailerBaseTest {
     private LogWatch logwatch;
     private LogWriter writer;
 
-    public DefaultTailerBaseTest() {
-        this(LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()));
+    public DefaultFollowerBaseTest() {
+        this(LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()));
     }
 
-    public DefaultTailerBaseTest(final LogWatchBuilder builder) {
+    public DefaultFollowerBaseTest(final LogWatchBuilder builder) {
         this.builder = builder;
     }
 
@@ -101,7 +101,7 @@ public abstract class DefaultTailerBaseTest {
     public void destroyEverything() {
         this.writer.destroy();
         if (!this.logwatch.isTerminated()) {
-            this.logwatch.terminateTailing();
+            this.logwatch.terminate();
         }
     }
 }

@@ -17,22 +17,22 @@ import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
 /**
- * This is a log tailer that holds no message data, just the tags. For message
+ * This is a log follower that holds no message data, just the tags. For message
  * data, it will always turn to the underlying {@link LogWatch}.
  * 
  * This class assumes that LogWatch and user code are the only two threads that
  * use it. Never use one instance of this class from two or more user threads.
  * Otherwise, unpredictable behavior from waitFor() methods is possible.
  */
-class NonStoringLogTailer extends AbstractLogTailer {
+class NonStoringFollower extends AbstractFollower {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringLogTailer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private MessageDeliveryCondition messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
     private final Map<Integer, Message> tags = new TreeMap<Integer, Message>();
 
-    public NonStoringLogTailer(final DefaultLogWatch watch) {
+    public NonStoringFollower(final DefaultLogWatch watch) {
         super(watch);
     }
 
@@ -88,8 +88,8 @@ class NonStoringLogTailer extends AbstractLogTailer {
         try {
             this.messageExchanger.exchange(msg);
         } catch (final InterruptedException e) {
-            NonStoringLogTailer.LOGGER.warn("Notifying tailer {} of message {} in state {} failed.", this, msg, status,
-                    e);
+            NonStoringFollower.LOGGER.warn("Notifying follower {} of message {} in state {} failed.", this, msg,
+                    status, e);
         }
     }
 
@@ -104,7 +104,7 @@ class NonStoringLogTailer extends AbstractLogTailer {
     }
 
     /**
-     * See {@link AbstractLogTailer#tag(String)}. Subsequent tags at the same
+     * See {@link AbstractFollower#tag(String)}. Subsequent tags at the same
      * locations will overwrite each other.
      */
     @Override

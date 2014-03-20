@@ -5,7 +5,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class CapacityBasedDiscardingTest extends DefaultTailerBaseTest {
+public class CapacityBasedDiscardingTest extends DefaultFollowerBaseTest {
 
     public CapacityBasedDiscardingTest(final LogWatchBuilder builder) {
         super(builder.limitCapacityTo(1));
@@ -15,25 +15,25 @@ public class CapacityBasedDiscardingTest extends DefaultTailerBaseTest {
 
     @Test
     public void test() {
-        final LogTailer tail = this.getLogWatch().startTailing();
+        final Follower follower = this.getLogWatch().follow();
         // tag before any messages
-        final Message firstTag = tail.tag("test");
-        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), firstTag);
+        final Message firstTag = follower.tag("test");
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag);
         final String firstMessage = "check";
-        this.getWriter().write(firstMessage, tail);
+        this.getWriter().write(firstMessage, follower);
         // receive first message, check presence of tag
         final String secondMessage = "check2";
-        this.getWriter().write(secondMessage, tail);
-        final Message secondTag = tail.tag("test2");
-        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), firstTag, firstMessage, secondTag);
+        this.getWriter().write(secondMessage, follower);
+        final Message secondTag = follower.tag("test2");
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, firstMessage, secondTag);
         // receive second message, discarding first message and the tag
         final String thirdMessage = "check3";
-        this.getWriter().write(thirdMessage, tail);
-        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), secondTag, secondMessage);
+        this.getWriter().write(thirdMessage, follower);
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), secondTag, secondMessage);
         // receive third message, discarding second message and the tag
         final String fourthMessage = "check4";
-        this.getWriter().write(fourthMessage, tail);
-        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), thirdMessage);
+        this.getWriter().write(fourthMessage, follower);
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), thirdMessage);
     }
 
 }

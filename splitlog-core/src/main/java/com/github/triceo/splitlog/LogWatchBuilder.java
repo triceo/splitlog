@@ -112,7 +112,8 @@ public class LogWatchBuilder {
             throw new IllegalArgumentException("A splitter must be provided.");
         }
         return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.messageAcceptanceCondition,
-                this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning, this.closingBetweenReads, this.bufferSize);
+                this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning, this.closingBetweenReads,
+                this.bufferSize);
     }
 
     /**

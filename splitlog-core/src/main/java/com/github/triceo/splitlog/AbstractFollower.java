@@ -12,16 +12,16 @@ import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 
 /**
- * Internal API for a log tailer that, on top of the public API, provides ways
- * of notifying the tailer of new messages. Every tailer, such as
- * {@link NonStoringLogTailer}, needs to extend this class.
- * 
+ * Internal API for a log follower that, on top of the public API, provides ways
+ * for {@link LogWatch} of notifying the follower of new messages. Every
+ * follower implementation, such as {@link NonStoringFollower}, needs to extend
+ * this class.
  */
-abstract class AbstractLogTailer implements LogTailer {
+abstract class AbstractFollower implements Follower {
 
     private final DefaultLogWatch watch;
 
-    protected AbstractLogTailer(final DefaultLogWatch watch) {
+    protected AbstractFollower(final DefaultLogWatch watch) {
         this.watch = watch;
     }
 
@@ -36,12 +36,13 @@ abstract class AbstractLogTailer implements LogTailer {
 
     @Override
     public boolean isTerminated() {
-        return this.watch.isTerminated(this);
+        return this.watch.isFollowing(this);
     }
 
     /**
-     * Notify the tailer that it has been terminated before a message could be
-     * delivered completely.
+     * Notify the follower that it has been terminated before a message could be
+     * delivered completely. Must never be called by users, just from the
+     * library code.
      * 
      * @param msg
      *            The message.
@@ -49,8 +50,8 @@ abstract class AbstractLogTailer implements LogTailer {
     protected abstract void notifyOfUndeliveredMessage(Message msg);
 
     /**
-     * Notify the tailer of a new line in the watched log. Must never be called
-     * by users, just from the library code.
+     * Notify the follower of a new line in the watched log. Must never be
+     * called by users, just from the library code.
      * 
      * @param msg
      *            The message.
@@ -58,7 +59,7 @@ abstract class AbstractLogTailer implements LogTailer {
     protected abstract void notifyOfIncomingMessage(Message msg);
 
     /**
-     * Notify the tailer of a new message in the watched log. Must never be
+     * Notify the follower of a new message in the watched log. Must never be
      * called by users, just from the library code.
      * 
      * @param msg
@@ -67,7 +68,7 @@ abstract class AbstractLogTailer implements LogTailer {
     protected abstract void notifyOfAcceptedMessage(Message msg);
 
     /**
-     * Notify the tailer of a new message from the log that was rejected from
+     * Notify the follower of a new message from the log that was rejected from
      * entering the log watch. Must never be called by users, just from the
      * library code.
      * 

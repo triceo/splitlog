@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class ReferenceBasedDiscardingTest extends DefaultTailerBaseTest {
+public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
 
     public ReferenceBasedDiscardingTest(final LogWatchBuilder builder) {
         super(builder.withDelayBetweenSweeps(1, TimeUnit.SECONDS));
@@ -17,29 +17,29 @@ public class ReferenceBasedDiscardingTest extends DefaultTailerBaseTest {
     @Test
     public void test() {
         final DefaultLogWatch w = (DefaultLogWatch) this.getLogWatch();
-        LogTailer tail = w.startTailing();
+        Follower follower = w.follow();
         // tag before any messages
-        final Message firstTag = tail.tag("test");
-        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), firstTag);
+        final Message firstTag = follower.tag("test");
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag);
         final String firstMessage = "check";
-        this.getWriter().write(firstMessage, tail);
+        this.getWriter().write(firstMessage, follower);
         // receive first message, check presence of tag
         final String secondMessage = "check2";
-        this.getWriter().write(secondMessage, tail);
-        final Message secondTag = tail.tag("test2");
-        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), firstTag, firstMessage, secondTag);
-        // start second tailer; this one will only track second+ messages
-        LogTailer tail2 = w.startTailing();
+        this.getWriter().write(secondMessage, follower);
+        final Message secondTag = follower.tag("test2");
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, firstMessage, secondTag);
+        // start second follower; this one will only track second+ messages
+        Follower follower2 = w.follow();
         // send third message, receive second
         final String thirdMessage = "check3";
-        this.getWriter().write(thirdMessage, tail2);
+        this.getWriter().write(thirdMessage, follower2);
         Assert.assertEquals(2, w.countMessagesInStorage());
         /*
-         * remove all references to the first tailer; the first message now has
-         * no tailers available and can be GC'd
+         * remove all references to the first follower; the first message now
+         * has no followers available and can be GC'd
          */
-        w.terminateTailing(tail);
-        tail = null;
+        w.unfollow(follower);
+        follower = null;
         System.gc();
         final long delay = w.getDelayBetweenSweeps() + 500;
         try {
@@ -49,13 +49,13 @@ public class ReferenceBasedDiscardingTest extends DefaultTailerBaseTest {
         }
         Assert.assertEquals(1, w.countMessagesInStorage());
         /*
-         * make sure the second tailer has what it's supposed to; the second
+         * make sure the second follower has what it's supposed to; the second
          * message
          */
-        DefaultTailerBaseTest.assertProperOrder(tail2.getMessages(), secondMessage);
-        // terminate tailing, make sure all the messages are cleared
-        w.terminateTailing(tail2);
-        tail2 = null;
+        DefaultFollowerBaseTest.assertProperOrder(follower2.getMessages(), secondMessage);
+        // terminate following, make sure all the messages are cleared
+        w.unfollow(follower2);
+        follower2 = null;
         System.gc();
         try {
             Thread.sleep(delay);

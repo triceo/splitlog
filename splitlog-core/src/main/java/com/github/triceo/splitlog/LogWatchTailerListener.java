@@ -15,8 +15,8 @@ class LogWatchTailerListener implements TailerListener {
     private File watchedFile;
 
     /*
-     *  TODO ideally this would accept AbstractLogWatch instead, to enable
-     *  different impls.
+     * TODO ideally this would accept AbstractLogWatch instead, to enable
+     * different impls.
      */
     public LogWatchTailerListener(final DefaultLogWatch watcher) {
         this.watcher = watcher;

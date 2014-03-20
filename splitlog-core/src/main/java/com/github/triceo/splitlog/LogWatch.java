@@ -8,42 +8,42 @@ package com.github.triceo.splitlog;
 public interface LogWatch {
 
     /**
-     * Whether or not {@link #terminateTailing()} has been called.
+     * Whether or not {@link #terminate()} has been called.
      * 
      * @return True if it has.
      */
     boolean isTerminated();
 
     /**
-     * Whether or not {@link #terminateTailing(LogTailer)} has been called for a
-     * given tailer.
+     * Whether or not {@link #unfollow(Follower)} has been called for a given
+     * follower.
      * 
-     * @param tail
+     * @param follower
      *            Tailer in question.
      * @return True if it has.
      */
-    boolean isTerminated(final LogTailer tail);
+    boolean isFollowing(final Follower follower);
 
     /**
      * Begin watching for new messages from this point in time.
      * 
      * @return API for watching for messages.
      */
-    LogTailer startTailing();
+    Follower follow();
 
     /**
-     * Stop tailing for all tailers and free resources.
+     * Stop all followers from following and free resources.
      * 
      * @return True if terminated as a result, false if already terminated.
      */
-    boolean terminateTailing();
+    boolean terminate();
 
     /**
-     * Terminate a particular tailer.
+     * Stop particular follower from following.
      * 
-     * @param tail
-     *            This tailer will receive no more messages.
+     * @param follower
+     *            This follower will receive no more messages.
      * @return True if terminated as a result, false if already terminated.
      */
-    boolean terminateTailing(final LogTailer tail);
+    boolean unfollow(final Follower follower);
 }

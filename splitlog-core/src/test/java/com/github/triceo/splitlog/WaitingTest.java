@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
-public class WaitingTest extends DefaultTailerBaseTest {
+public class WaitingTest extends DefaultFollowerBaseTest {
 
     private static final int TIMEOUT_MILLIS = 10000;
     private static final int TOTAL_MESSAGES = 10;
@@ -40,32 +40,33 @@ public class WaitingTest extends DefaultTailerBaseTest {
 
     @Test(timeout = WaitingTest.TIMEOUT_MILLIS)
     public void testConcurrentWaitingForMessages() throws InterruptedException, ExecutionException {
-        HashMap<Future<Message>, String> tasks = new HashMap<Future<Message>, String>(THREADS);
-        Random random = new Random();
-        for (int i = 0; i < THREADS; i++) {
-            // First thread always waits for the last message, the rest is random.
-            final String expectedValue = "<" + ((i == 0)
-                    ? String.valueOf(TOTAL_MESSAGES - 1)
-                    : String.valueOf(random.nextInt(TOTAL_MESSAGES))) + ">";
-            Future<Message> task = this.es.submit(new Callable<Message>() {
+        final HashMap<Future<Message>, String> tasks = new HashMap<Future<Message>, String>(WaitingTest.THREADS);
+        final Random random = new Random();
+        for (int i = 0; i < WaitingTest.THREADS; i++) {
+            // First thread always waits for the last message, the rest is
+            // random.
+            final String expectedValue = "<"
+                    + ((i == 0) ? String.valueOf(WaitingTest.TOTAL_MESSAGES - 1) : String.valueOf(random
+                            .nextInt(WaitingTest.TOTAL_MESSAGES))) + ">";
+            final Future<Message> task = this.es.submit(new Callable<Message>() {
                 @Override
                 public Message call() {
-                    final LogTailer tailer = WaitingTest.this.getLogWatch().startTailing();
-                    return tailer.waitFor(new MessageDeliveryCondition() {
+                    final Follower follower = WaitingTest.this.getLogWatch().follow();
+                    return follower.waitFor(new MessageDeliveryCondition() {
                         @Override
-                        public boolean accept(Message evaluate, MessageDeliveryStatus status) {
+                        public boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
                             return evaluate.toString().trim().endsWith(expectedValue);
                         }
-                    }, TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);
+                    }, WaitingTest.TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);
                 }
             });
             tasks.put(task, expectedValue);
         }
-        for (int i = 0; i < TOTAL_MESSAGES; i++) {
+        for (int i = 0; i < WaitingTest.TOTAL_MESSAGES; i++) {
             this.getWriter().writeWithoutWaiting("<" + String.valueOf(i) + ">");
         }
-        for (Future<Message> task : tasks.keySet()) {
-            Message accepted = task.get();
+        for (final Future<Message> task : tasks.keySet()) {
+            final Message accepted = task.get();
             Assert.assertNotNull("Failed to accept message #" + tasks.get(task), accepted);
         }
         System.out.println("All messages collected.");

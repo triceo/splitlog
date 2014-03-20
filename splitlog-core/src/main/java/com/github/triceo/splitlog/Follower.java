@@ -8,22 +8,22 @@ import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
 /**
- * Tailer's primary function is to allow users to work with their portion of the
- * tailed log file. It provides means for a blocking wait for particular chunks,
- * and can also send these chunks to output.
+ * Follower's primary function is to allow users to work with their portion of
+ * the tailed log file. It provides means for a blocking wait for particular
+ * chunks, and can also send these chunks to output.
  * 
  */
-public interface LogTailer {
+public interface Follower {
 
     /**
-     * Retrieve messages that this tailer has been notified of, including tags
+     * Retrieve messages that this follower has been notified of, including tags
      * 
      * @return Messages we are aware of, in their original order.
      */
     List<Message> getMessages();
 
     /**
-     * Retrieve messages that this tailer has been notified of, if a certain
+     * Retrieve messages that this follower has been notified of, if a certain
      * condition holds true for them, including tags.
      * 
      * @param condition

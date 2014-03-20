@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * As tailers are terminated via {@link #terminateTailing(LogTailer)} and then
- * discarded by GC, some messages will become unreachable. (No tailers point to
- * them any longer.)
+ * As followers are terminated via {@link #unfollow(Follower)} and then
+ * discarded by GC, some messages will become unreachable. (No followers point
+ * to them any longer.)
  * 
  * The point of this class is to review the situation and discard whatever
  * messages are no longer reachable. Otherwise they'd be uselessly occupying
