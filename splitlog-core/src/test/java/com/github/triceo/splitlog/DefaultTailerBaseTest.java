@@ -2,13 +2,27 @@ package com.github.triceo.splitlog;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.runners.Parameterized.Parameters;
 
 public abstract class DefaultTailerBaseTest {
+
+    // will verify various configs of log watch
+    @Parameters(name = "{index}: {0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()) },
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading()
+                        .ignoringPreexistingContent() },
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading() },
+                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).ignoringPreexistingContent() } });
+    }
 
     protected static File getTempFile() {
         try {

@@ -1,27 +1,11 @@
 package com.github.triceo.splitlog;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class CapacityBasedDiscardingTest extends DefaultTailerBaseTest {
-
-    // will verify various configs of log watch
-    // FIXME share
-    @Parameters(name = "{index}: {0}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()) },
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading()
-                        .ignoringPreexistingContent() },
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).closingAfterReading() },
-                { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).ignoringPreexistingContent() } });
-    }
 
     public CapacityBasedDiscardingTest(final LogWatchBuilder builder) {
         super(builder.limitCapacityTo(1));
