@@ -2,7 +2,7 @@ package com.github.triceo.splitlog;
 
 /**
  * Various states that a {@link Message} can be in while within the system. Only
- * messages with status {@value #ACCEPTED} will be stored in
+ * messages with status {@link MessageDeliveryStatus#ACCEPTED} will be stored in
  * {@link MessageStore} and will be available for output
  */
 public enum MessageDeliveryStatus {

@@ -31,7 +31,7 @@ public interface TailSplitter {
     /**
      * Read the message and find the date when the message was submitted.
      * 
-     * @param lines
+     * @param raw
      *            Raw, untreated lines of the message.
      * @return Date from the message, or the current date if not found.
      */
@@ -40,7 +40,7 @@ public interface TailSplitter {
     /**
      * Read the message and try to identify an exception stack trace within.
      * 
-     * @param lines
+     * @param raw
      *            Raw, untreated lines of the message.
      * @return Exception data if found, null otherwise.
      */
@@ -49,7 +49,7 @@ public interface TailSplitter {
     /**
      * Read the message and try to find its severity.
      * 
-     * @param lines
+     * @param raw
      *            Raw, untreated lines of the message.
      * @return Severity included in the message, {@link MessageSeverity#UNKNOWN}
      *         otherwise.
@@ -59,7 +59,7 @@ public interface TailSplitter {
     /**
      * Read the message and try to find its type.
      * 
-     * @param lines
+     * @param raw
      *            Raw, untreated lines of the message.
      * @return Type guessed from the message, {@link MessageType#LOG} if
      *         undetermined.
