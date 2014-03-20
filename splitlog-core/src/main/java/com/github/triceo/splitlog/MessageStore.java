@@ -1,9 +1,13 @@
 package com.github.triceo.splitlog;
 
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data storage for a particular {@link LogWatch}.
@@ -12,12 +16,12 @@ import java.util.List;
  */
 class MessageStore {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageStore.class);
     private static final int INITIAL_MESSAGE_ID = 0;
 
-    private final List<Message> store = new LinkedList<Message>();
-    private int lastMessageId = MessageStore.INITIAL_MESSAGE_ID - 1;
-    private int numOfDiscardedMessages = MessageStore.INITIAL_MESSAGE_ID;
+    private final SortedMap<Integer, Message> store = new TreeMap<Integer, Message>();
     private final int messageLimit;
+    private int nextMessageId = MessageStore.INITIAL_MESSAGE_ID;
 
     /**
      * Create a message store with a maximum capacity of
@@ -36,7 +40,7 @@ class MessageStore {
         if (size <= 0) {
             throw new IllegalArgumentException("The message storage cannot have 0 or less capacity.");
         } else if (size > Integer.MAX_VALUE) {
-            // LinkedList.size() is int; just in case
+            // the map's size() is int
             throw new IllegalArgumentException(
                     "The message storage cannot handle a capacity larger than Integer.MAX_VALUE.");
         } else {
@@ -49,35 +53,37 @@ class MessageStore {
      * ID is larger than {@link #getLatestMessageId()}, all messages will be
      * discarded while marking no future messages for discarding.
      * 
-     * @param id
+     * @param firstKeyNotToDiscard
      *            ID of the first message to be kept.
      * @return Number of messages actually discarded.
      */
-    public synchronized int deleteBefore(final int id) {
+    public synchronized int discardBefore(final int firstKeyNotToDiscard) {
         final int firstMessageId = this.getFirstMessageId();
-        /*
-         * make sure the messages to discard never include: 1/ messages that
-         * have been discarded already. 2/ messages that have not yet been
-         * added.
-         */
-        int firstIndexToNotDiscard = Math.min((this.getLatestMessageId() - firstMessageId) + 1, id - firstMessageId);
-        if (firstIndexToNotDiscard < 1) {
+        if (this.getNextMessageId() == MessageStore.INITIAL_MESSAGE_ID) {
+            MessageStore.LOGGER.info("Not discarding any messages, as there haven't been any messages yet.");
             return 0;
-        } else if (firstIndexToNotDiscard > this.store.size()) {
-            // prevent IOOBE
-            firstIndexToNotDiscard--;
+        } else if ((firstKeyNotToDiscard < MessageStore.INITIAL_MESSAGE_ID) || (firstKeyNotToDiscard <= firstMessageId)) {
+            MessageStore.LOGGER.info("Not discarding any messages, as there are no messages with ID lower than {}.",
+                    firstKeyNotToDiscard);
+            return 0;
+        } else if (firstKeyNotToDiscard > this.getLatestMessageId()) {
+            MessageStore.LOGGER.info("Discarding all messages, as all have IDs lower than {}.", firstKeyNotToDiscard);
+            final int size = this.store.size();
+            this.store.clear();
+            return size;
         }
         // and now actually discard
-        System.out.println("Discarding between " + 0 + " and " + firstIndexToNotDiscard);
-        this.store.subList(0, firstIndexToNotDiscard).clear();
-        this.numOfDiscardedMessages += firstIndexToNotDiscard;
-        return firstIndexToNotDiscard;
+        MessageStore.LOGGER.info("Discarding messages in range <{},{}).", firstMessageId, firstKeyNotToDiscard);
+        final SortedMap<Integer, Message> toDiscard = this.store.headMap(firstKeyNotToDiscard);
+        final int size = toDiscard.size();
+        toDiscard.clear();
+        return size;
     }
 
     /**
      * Add message to the storage.
      * 
-     * Evey call will change values returned by {@link #getNextMessageId()} and
+     * Every call will change values returned by {@link #getNextMessageId()} and
      * {@link #getLatestMessageId()}. Any call may change value returned by
      * {@link #getFirstMessageId()}, which will happen if a message is discarded
      * due to hitting the message store capacity.
@@ -87,13 +93,14 @@ class MessageStore {
      * @return ID of the message.
      */
     public synchronized int add(final Message msg) {
-        this.store.add(msg);
+        final int nextKey = this.getNextMessageId();
+        this.store.put(nextKey, msg);
+        this.nextMessageId++;
         if (this.store.size() > this.messageLimit) {
             // discard first message if we're over limit
-            this.store.remove(0);
-            this.numOfDiscardedMessages++;
+            this.store.remove(this.store.firstKey());
         }
-        return this.lastMessageId++;
+        return nextKey;
     }
 
     /**
@@ -101,22 +108,21 @@ class MessageStore {
      * 
      * @return -1 if no messages yet.
      */
-    public int getLatestMessageId() {
-        return this.lastMessageId;
+    public synchronized int getLatestMessageId() {
+        return (this.store.isEmpty()) ? this.nextMessageId - 1 : this.store.lastKey();
     }
 
     /**
-     * ID of the message that comes first in this store. This number will
-     * increase as messages are discarded due to storage capacity.
+     * ID of the message that comes first in this store.
      * 
      * @return -1 if no messages yet. 0 if no messages have been discarded. Add
      *         one for every discarded message.
      */
     public synchronized int getFirstMessageId() {
-        if (this.getNextMessageId() == MessageStore.INITIAL_MESSAGE_ID) {
-            return -1;
+        if (this.store.isEmpty()) {
+            return MessageStore.INITIAL_MESSAGE_ID - 1;
         } else {
-            return this.numOfDiscardedMessages + MessageStore.INITIAL_MESSAGE_ID;
+            return this.store.firstKey();
         }
     }
 
@@ -124,27 +130,10 @@ class MessageStore {
      * The ID that will be given out to the message that goes through the very
      * next {@link #add(Message)} call.
      * 
-     * @return 0 if no messages yet.
+     * @return 0 if no messages have been inserted yet.
      */
-    public int getNextMessageId() {
-        return this.getLatestMessageId() + 1;
-    }
-
-    /**
-     * This is synchronized in order to mutually exclude changing the store (by
-     * the also synchronized {@link #add(Message)} method) with getting the size
-     * of the store in this method. Otherwise
-     * {@link ConcurrentModificationException} may ensue.
-     * 
-     * @param startId
-     *            Left-most position in the message store. (Not the message ID.)
-     * @param endId
-     *            Right-most position plus one in the message-store. (Not the
-     *            message ID.)
-     * @return A copy of the sub-list provided by the message store.
-     */
-    private synchronized List<Message> actuallyGetFromRange(final int startId, final int endId) {
-        return new LinkedList<Message>(this.store.subList(startId, endId));
+    public synchronized int getNextMessageId() {
+        return this.nextMessageId;
     }
 
     /**
@@ -160,9 +149,9 @@ class MessageStore {
         // cache this here, so all parts of the method operate on the same data
         final int firstMessageId = this.getFirstMessageId();
         // input validation
-        if ((startId < 0) || (endId < 0)) {
+        if ((startId < MessageStore.INITIAL_MESSAGE_ID) || (endId < MessageStore.INITIAL_MESSAGE_ID)) {
             throw new IllegalArgumentException("Message ID cannot be negative.");
-        } else if ((firstMessageId >= 0) && (startId < firstMessageId)) {
+        } else if ((firstMessageId >= MessageStore.INITIAL_MESSAGE_ID) && (startId < firstMessageId)) {
             throw new IllegalArgumentException("Message with ID " + startId
                     + " had already been discarded. First available message has ID " + firstMessageId + ".");
         } else if (endId <= startId) {
@@ -171,8 +160,7 @@ class MessageStore {
             throw new IllegalArgumentException("Range end cannot be greater than the next message ID.");
         }
         // and properly synchronized range retrieval
-        return Collections
-                .unmodifiableList(this.actuallyGetFromRange(startId - firstMessageId, endId - firstMessageId));
+        return Collections.unmodifiableList(new LinkedList<Message>(this.store.subMap(startId, endId).values()));
     }
 
     /**
@@ -192,6 +180,46 @@ class MessageStore {
      * @return Unmodifiable list containing those messages.
      */
     public synchronized List<Message> getAll() {
-        return Collections.unmodifiableList(new LinkedList<Message>(this.store));
+        final int firstMessageId = this.getFirstMessageId();
+        if (firstMessageId < MessageStore.INITIAL_MESSAGE_ID) {
+            return Collections.unmodifiableList(Collections.<Message> emptyList());
+        }
+        return this.getFrom(firstMessageId);
     }
+
+    /**
+     * Whether or not this message store currently holds any messages.
+     * 
+     * @return True if so, false if not. Will be false even if there were some
+     *         messages before that got discarded and now there are none.
+     */
+    public synchronized boolean isEmpty() {
+        return this.store.isEmpty();
+    }
+
+    /**
+     * How many messages are currently stored here.
+     * 
+     * It is the number of messages that went through {@link #add(Message)} and
+     * that have not been discarded since, either through
+     * {@link #discardBefore(int)} or automatically due to capacity.
+     * 
+     * @return
+     */
+    public synchronized int size() {
+        return this.store.size();
+    }
+
+    /**
+     * The maximum number of messages that will be held by this store at a time.
+     * When a message is added that pushes the store over the limit, first
+     * inserted message will be removed.
+     * 
+     * @return Maximum possible amount of messages this store can hold before it
+     *         starts discarding messages.
+     */
+    public int capacity() {
+        return this.messageLimit;
+    }
+
 }

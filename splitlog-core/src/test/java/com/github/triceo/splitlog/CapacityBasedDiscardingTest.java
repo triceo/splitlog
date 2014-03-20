@@ -11,9 +11,10 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class DiscardingTest extends DefaultTailerBaseTest {
+public class CapacityBasedDiscardingTest extends DefaultTailerBaseTest {
 
     // will verify various configs of log watch
+    // FIXME share
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
@@ -24,10 +25,11 @@ public class DiscardingTest extends DefaultTailerBaseTest {
                 { LogWatchBuilder.forFile(DefaultTailerBaseTest.getTempFile()).ignoringPreexistingContent() } });
     }
 
-    public DiscardingTest(final LogWatchBuilder builder) {
+    public CapacityBasedDiscardingTest(final LogWatchBuilder builder) {
         super(builder.limitCapacityTo(1));
     }
 
+    // FIXME share
     private void assertProperOrder(final List<Message> messages, final Object... expectedMessages) {
         Assert.assertEquals(expectedMessages.length, messages.size());
         for (int i = 0; i < expectedMessages.length; i++) {

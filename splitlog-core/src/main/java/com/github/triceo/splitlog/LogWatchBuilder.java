@@ -25,7 +25,8 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
  * <dd>See {@link SimpleTailSplitter}</dd>
  * <dt>Default message capacity</dt>
  * <dd>{@link Integer#MAX_VALUE}, the maximum possible. See {@link MessageStore}
- * for details.</dd>
+ * <dt>Interval between two sweeps for unreachable messages.</dt>
+ * <dd>See {@link #DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS}.</dd>
  * </dl>
  * 
  * By default, the instance will allow every message through.
@@ -33,7 +34,7 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 public class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
-
+    public static final int DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 1000;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
 
     /**
@@ -50,6 +51,7 @@ public class LogWatchBuilder {
 
     private final File fileToWatch;
     private int limitCapacityTo = Integer.MAX_VALUE;
+    private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
@@ -110,7 +112,7 @@ public class LogWatchBuilder {
             throw new IllegalArgumentException("A splitter must be provided.");
         }
         return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.messageAcceptanceCondition,
-                this.delayBetweenReads, !this.readingFromBeginning, this.closingBetweenReads, this.bufferSize);
+                this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning, this.closingBetweenReads, this.bufferSize);
     }
 
     /**
@@ -193,7 +195,16 @@ public class LogWatchBuilder {
     }
 
     /**
-     * Change the delay between attempts to read from the watched file.
+     * Get the delay between attempts to sweep unreachable messages from memory.
+     * 
+     * @return In milliseconds.
+     */
+    public long getDelayBetweenSweeps() {
+        return this.delayBetweenSweeps;
+    }
+
+    /**
+     * Get the delay between attempts to read from the watched file.
      * 
      * @return In milliseconds.
      */
@@ -277,6 +288,27 @@ public class LogWatchBuilder {
         return builder.toString();
     }
 
+    private static long getDelay(final int length, final TimeUnit unit) {
+        if (length < 1) {
+            throw new IllegalArgumentException("The length of time must be at least 1.");
+        }
+        switch (unit) {
+            case NANOSECONDS:
+                if (length < (1000 * 1000)) {
+                    throw new IllegalArgumentException("The length of time must amount to at least 1 ms.");
+                }
+                break;
+            case MICROSECONDS:
+                if (length < 1000) {
+                    throw new IllegalArgumentException("The length of time must amount to at least 1 ms.");
+                }
+                break;
+            default:
+                // every other unit is more than 1 ms by default
+        }
+        return unit.toMillis(length);
+    }
+
     /**
      * Specify the delay between attempts to read the file.
      * 
@@ -287,24 +319,22 @@ public class LogWatchBuilder {
      * @return This.
      */
     public LogWatchBuilder withDelayBetweenReads(final int length, final TimeUnit unit) {
-        if (length < 1) {
-            throw new IllegalArgumentException("The length of time between reads must be at least 1.");
-        }
-        switch (unit) {
-            case NANOSECONDS:
-                if (length < (1000 * 1000)) {
-                    throw new IllegalArgumentException("The length of time between reads must amount to at least 1 ms.");
-                }
-                break;
-            case MICROSECONDS:
-                if (length < 1000) {
-                    throw new IllegalArgumentException("The length of time between reads must amount to at least 1 ms.");
-                }
-                break;
-            default:
-                // every other unit is more than 1 ms by default
-        }
-        this.delayBetweenReads = unit.toMillis(length);
+        this.delayBetweenReads = LogWatchBuilder.getDelay(length, unit);
+        return this;
+    }
+
+    /**
+     * Specify the delay between attempts to sweep the log watch from
+     * unreachable messages.
+     * 
+     * @param length
+     *            Length of time.
+     * @param unit
+     *            Unit of that length.
+     * @return This.
+     */
+    public LogWatchBuilder withDelayBetweenSweeps(final int length, final TimeUnit unit) {
+        this.delayBetweenSweeps = LogWatchBuilder.getDelay(length, unit);
         return this;
     }
 

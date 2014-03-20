@@ -11,6 +11,9 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +32,7 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 final class DefaultLogWatch implements LogWatch {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
+    private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
 
     private final AtomicInteger numberOfActiveTailers = new AtomicInteger(0);
     private Tailer tailer;
@@ -36,7 +40,7 @@ final class DefaultLogWatch implements LogWatch {
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final Set<AbstractLogTailer> tailers = new LinkedHashSet<AbstractLogTailer>();
     private final LogWatchTailerListener listener;
-    private final File watchedFile;
+    final File watchedFile;
     /**
      * These maps are weak; when a tailer stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
@@ -48,18 +52,19 @@ final class DefaultLogWatch implements LogWatch {
 
     private final MessageStore messages;
     private final MessageCondition acceptanceCondition;
-    private final long delayBetweenReads;
+    private final long delayBetweenReads, delayBetweenSweeps;
     private final int bufferSize;
     private final boolean reopenBetweenReads, ignoreExistingContent;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final MessageCondition acceptanceCondition, final long delayBetweenReads,
+            final MessageCondition acceptanceCondition, final long delayBetweenReads, final long delayBetweenSweeps,
             final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
         this.acceptanceCondition = acceptanceCondition;
         this.messages = new MessageStore(capacity);
         this.splitter = splitter;
         // for the tailer
         this.bufferSize = bufferSize;
+        this.delayBetweenSweeps = delayBetweenSweeps;
         this.delayBetweenReads = delayBetweenReads;
         this.reopenBetweenReads = reopenBetweenReads;
         this.ignoreExistingContent = ignoreExistingContent;
@@ -73,7 +78,7 @@ final class DefaultLogWatch implements LogWatch {
         return this.numberOfActiveTailers.get();
     }
 
-    protected synchronized void addLine(final String line) {
+    synchronized void addLine(final String line) {
         final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
         if (this.splitter.isStartingLine(line)) {
             // new message begins
@@ -185,6 +190,53 @@ final class DefaultLogWatch implements LogWatch {
         return Math.max(this.messages.getFirstMessageId(), this.startingMessageIds.get(tail));
     }
 
+    /**
+     * Get access to the underlying message store.
+     * 
+     * This method is only intended to be used from within
+     * {@link LogWatchMessageSweeper}.
+     * 
+     * @return Message store used by this class.
+     */
+    MessageStore getMessageStore() {
+        return this.messages;
+    }
+
+    /**
+     * Will crawl the weak hash maps and make sure we always have the latest
+     * information on the availability of messages.
+     * 
+     * This method is only intended to be used from within
+     * {@link LogWatchMessageSweeper}.
+     * 
+     * @return ID of the very first message that is reachable by any tailer in
+     *         this watch. -1 when there are no reachable messages.
+     */
+    synchronized int getFirstReachableMessageId() {
+        int minId = Integer.MAX_VALUE;
+        int valueCount = 0;
+        for (final Integer id : this.startingMessageIds.values()) {
+            minId = Math.min(minId, id);
+            valueCount++;
+        }
+        if (valueCount == 0) {
+            return -1;
+        } else {
+            return minId;
+        }
+    }
+
+    /**
+     * <strong>This is not part of the public API.</strong> Purely for purposes
+     * of testing the automated message sweep.
+     * 
+     * @return How many messages there currently are in the internal message
+     *         store.
+     */
+    synchronized int countMessagesInStorage() {
+        return this.messages.size();
+    }
+
     @Override
     public boolean isTerminated() {
         return this.isTerminated.get();
@@ -195,6 +247,19 @@ final class DefaultLogWatch implements LogWatch {
         return !this.tailers.contains(tail);
     }
 
+    public long getDelayBetweenReads() {
+        return this.delayBetweenReads;
+    }
+
+    public long getDelayBetweenSweeps() {
+        return this.delayBetweenSweeps;
+    }
+
+    /**
+     * First invocation of the method on an instance will trigger
+     * {@link LogWatchMessageSweeper} to be scheduled for periodical sweeping of
+     * unreachable messages.
+     */
     @Override
     public synchronized LogTailer startTailing() {
         if (this.isTerminated()) {
@@ -202,6 +267,14 @@ final class DefaultLogWatch implements LogWatch {
         }
         if (this.getNumberOfActiveTailers() < 1) {
             this.startTailer();
+        }
+        if (this.currentlyRunningSweeper == null) {
+            final long delay = this.delayBetweenSweeps;
+            this.currentlyRunningSweeper = DefaultLogWatch.TIMER.scheduleWithFixedDelay(
+                    new LogWatchMessageSweeper(this), delay, delay, TimeUnit.MILLISECONDS);
+            DefaultLogWatch.LOGGER
+                    .debug("Scheduled automated unreachable message sweep in log watch for file '{}' to run every {} millisecond(s).",
+                            this.watchedFile, delay);
         }
         final int startingMessageId = this.messages.getNextMessageId();
         final AbstractLogTailer tail = new NonStoringLogTailer(this);
@@ -211,6 +284,12 @@ final class DefaultLogWatch implements LogWatch {
         return tail;
     }
 
+    /**
+     * Invoking this method will cause the running
+     * {@link LogWatchMessageSweeper} to be de-scheduled. Any currently present
+     * messages will only be removed from memory when this watch instance is
+     * removed from memory.
+     */
     @Override
     public synchronized boolean terminateTailing() {
         if (this.isTerminated()) {
@@ -223,10 +302,13 @@ final class DefaultLogWatch implements LogWatch {
         for (final AbstractLogTailer chunk : new ArrayList<AbstractLogTailer>(this.tailers)) {
             this.terminateTailing(chunk);
         }
+        this.currentlyRunningSweeper.cancel(false);
+        this.currentlyRunningSweeper = null;
         return true;
     }
 
     private final ExecutorService e = Executors.newSingleThreadExecutor();
+    private ScheduledFuture<?> currentlyRunningSweeper = null;
 
     private final boolean startTailer() {
         this.tailer = new Tailer(this.watchedFile, this.listener, this.delayBetweenReads, this.ignoreExistingContent,
