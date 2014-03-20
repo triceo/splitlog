@@ -243,7 +243,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean isFollowing(final Follower follower) {
+    public boolean isFollowedBy(final Follower follower) {
         return !this.followers.contains(follower);
     }
 

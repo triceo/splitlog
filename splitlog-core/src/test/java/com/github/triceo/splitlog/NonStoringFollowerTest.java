@@ -113,15 +113,15 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     public void testTermination() {
         Assert.assertFalse("Log watch terminated immediately after starting.", this.getLogWatch().isTerminated());
         final Follower follower1 = this.getLogWatch().follow();
-        Assert.assertFalse("Tailer terminated immediately after starting.", this.getLogWatch().isFollowing(follower1));
+        Assert.assertFalse("Tailer terminated immediately after starting.", this.getLogWatch().isFollowedBy(follower1));
         final Follower follower2 = this.getLogWatch().follow();
         Assert.assertTrue("Wrong termination result.", this.getLogWatch().unfollow(follower1));
         Assert.assertFalse("Wrong termination result.", this.getLogWatch().unfollow(follower1));
-        Assert.assertFalse("Tailer terminated without termination.", this.getLogWatch().isFollowing(follower2));
-        Assert.assertTrue("Tailer not terminated after termination.", this.getLogWatch().isFollowing(follower1));
+        Assert.assertFalse("Tailer terminated without termination.", this.getLogWatch().isFollowedBy(follower2));
+        Assert.assertTrue("Tailer not terminated after termination.", this.getLogWatch().isFollowedBy(follower1));
         Assert.assertTrue("Wrong termination result.", this.getLogWatch().terminate());
         Assert.assertFalse("Wrong termination result.", this.getLogWatch().terminate());
-        Assert.assertTrue("Tailer not terminated after termination.", this.getLogWatch().isFollowing(follower2));
+        Assert.assertTrue("Tailer not terminated after termination.", this.getLogWatch().isFollowedBy(follower2));
         Assert.assertTrue("Log watch not terminated after termination.", this.getLogWatch().isTerminated());
     }
 

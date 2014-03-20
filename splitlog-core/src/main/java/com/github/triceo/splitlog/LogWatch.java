@@ -22,7 +22,7 @@ public interface LogWatch {
      *            Tailer in question.
      * @return True if it has.
      */
-    boolean isFollowing(final Follower follower);
+    boolean isFollowedBy(final Follower follower);
 
     /**
      * Begin watching for new messages from this point in time.
