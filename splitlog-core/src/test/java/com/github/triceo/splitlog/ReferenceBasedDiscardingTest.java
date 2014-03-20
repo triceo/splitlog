@@ -2,7 +2,6 @@ package com.github.triceo.splitlog;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,33 +27,20 @@ public class ReferenceBasedDiscardingTest extends DefaultTailerBaseTest {
         super(builder);
     }
 
-    private void assertProperOrder(final List<Message> messages, final Object... expectedMessages) {
-        Assert.assertEquals(expectedMessages.length, messages.size());
-        for (int i = 0; i < expectedMessages.length; i++) {
-            final Object expected = expectedMessages[i];
-            final Message actual = messages.get(i);
-            if (expected instanceof Message) {
-                Assert.assertEquals(expected, actual);
-            } else {
-                Assert.assertEquals(expected, actual.getLines().get(0));
-            }
-        }
-    }
-
     @Test
     public void test() {
         final DefaultLogWatch w = (DefaultLogWatch) this.getLogWatch();
         LogTailer tail = w.startTailing();
         // tag before any messages
         final Message firstTag = tail.tag("test");
-        this.assertProperOrder(tail.getMessages(), firstTag);
+        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), firstTag);
         final String firstMessage = "check";
         this.getWriter().write(firstMessage, tail);
         // receive first message, check presence of tag
         final String secondMessage = "check2";
         this.getWriter().write(secondMessage, tail);
         final Message secondTag = tail.tag("test2");
-        this.assertProperOrder(tail.getMessages(), firstTag, firstMessage, secondTag);
+        DefaultTailerBaseTest.assertProperOrder(tail.getMessages(), firstTag, firstMessage, secondTag);
         // start second tailer; this one will only track second+ messages
         LogTailer tail2 = w.startTailing();
         // send third message, receive second
@@ -79,7 +65,7 @@ public class ReferenceBasedDiscardingTest extends DefaultTailerBaseTest {
          * make sure the second tailer has what it's supposed to; the second
          * message
          */
-        this.assertProperOrder(tail2.getMessages(), secondMessage);
+        DefaultTailerBaseTest.assertProperOrder(tail2.getMessages(), secondMessage);
         // terminate tailing, make sure all the messages are cleared
         w.terminateTailing(tail2);
         tail2 = null;
