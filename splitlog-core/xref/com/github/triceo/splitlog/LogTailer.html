@@ -76,8 +76,8 @@
 <a class="jxr_linenumber" name="66" href="#66">66</a>      <a href="../../../../com/github/triceo/splitlog/Message.html">Message</a> waitFor(<a href="../../../../com/github/triceo/splitlog/conditions/MessageDeliveryCondition.html">MessageDeliveryCondition</a> condition, <strong class="jxr_keyword">long</strong> timeout, TimeUnit unit);
 <a class="jxr_linenumber" name="67" href="#67">67</a>  
 <a class="jxr_linenumber" name="68" href="#68">68</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="69" href="#69">69</a>  <em class="jxr_javadoccomment">     * Will write to a stream that which is be returned by</em>
-<a class="jxr_linenumber" name="70" href="#70">70</a>  <em class="jxr_javadoccomment">     * {@link #getMessages()}.</em>
+<a class="jxr_linenumber" name="69" href="#69">69</a>  <em class="jxr_javadoccomment">     * Will write to a stream the result of {@link #getMessages()}. Will close</em>
+<a class="jxr_linenumber" name="70" href="#70">70</a>  <em class="jxr_javadoccomment">     * the stream.</em>
 <a class="jxr_linenumber" name="71" href="#71">71</a>  <em class="jxr_javadoccomment">     * </em>
 <a class="jxr_linenumber" name="72" href="#72">72</a>  <em class="jxr_javadoccomment">     * @param stream</em>
 <a class="jxr_linenumber" name="73" href="#73">73</a>  <em class="jxr_javadoccomment">     *            Target.</em>
@@ -86,8 +86,8 @@
 <a class="jxr_linenumber" name="76" href="#76">76</a>      <strong class="jxr_keyword">boolean</strong> write(<strong class="jxr_keyword">final</strong> OutputStream stream);
 <a class="jxr_linenumber" name="77" href="#77">77</a>  
 <a class="jxr_linenumber" name="78" href="#78">78</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="79" href="#79">79</a>  <em class="jxr_javadoccomment">     * Will write to a stream that which is be returned by</em>
-<a class="jxr_linenumber" name="80" href="#80">80</a>  <em class="jxr_javadoccomment">     * {@link #getMessages(MessageCondition)}.</em>
+<a class="jxr_linenumber" name="79" href="#79">79</a>  <em class="jxr_javadoccomment">     * Will write to a stream the result of</em>
+<a class="jxr_linenumber" name="80" href="#80">80</a>  <em class="jxr_javadoccomment">     * {@link #getMessages(MessageCondition)}. Will close the stream.</em>
 <a class="jxr_linenumber" name="81" href="#81">81</a>  <em class="jxr_javadoccomment">     * </em>
 <a class="jxr_linenumber" name="82" href="#82">82</a>  <em class="jxr_javadoccomment">     * @param stream</em>
 <a class="jxr_linenumber" name="83" href="#83">83</a>  <em class="jxr_javadoccomment">     *            Target.</em>
