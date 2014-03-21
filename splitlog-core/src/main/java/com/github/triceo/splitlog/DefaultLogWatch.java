@@ -283,7 +283,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean isFollowedBy(final Follower follower) {
-        return !this.followers.contains(follower);
+        return this.followers.contains(follower);
     }
 
     public long getDelayBetweenReads() {
