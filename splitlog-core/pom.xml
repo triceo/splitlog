@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.github.triceo.splitlog</groupId>
     <artifactId>splitlog-parent</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.3.0.CR1</version>
   </parent>
   <artifactId>splitlog-core</artifactId>
   <name>splitlog-core: the client library</name>
