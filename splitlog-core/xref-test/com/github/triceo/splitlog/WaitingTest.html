@@ -26,7 +26,7 @@
 <a class="jxr_linenumber" name="16" href="#16">16</a>  
 <a class="jxr_linenumber" name="17" href="#17">17</a>  <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 <a class="jxr_linenumber" name="18" href="#18">18</a>  
-<a class="jxr_linenumber" name="19" href="#19">19</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/github/triceo/splitlog/WaitingTest.html">WaitingTest</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/github/triceo/splitlog/DefaultTailerBaseTest.html">DefaultTailerBaseTest</a> {
+<a class="jxr_linenumber" name="19" href="#19">19</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/github/triceo/splitlog/WaitingTest.html">WaitingTest</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/github/triceo/splitlog/DefaultFollowerBaseTest.html">DefaultFollowerBaseTest</a> {
 <a class="jxr_linenumber" name="20" href="#20">20</a>  
 <a class="jxr_linenumber" name="21" href="#21">21</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> TIMEOUT_MILLIS = 10000;
 <a class="jxr_linenumber" name="22" href="#22">22</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> TOTAL_MESSAGES = 10;
@@ -50,37 +50,38 @@
 <a class="jxr_linenumber" name="40" href="#40">40</a>  
 <a class="jxr_linenumber" name="41" href="#41">41</a>      @Test(timeout = WaitingTest.TIMEOUT_MILLIS)
 <a class="jxr_linenumber" name="42" href="#42">42</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testConcurrentWaitingForMessages() <strong class="jxr_keyword">throws</strong> InterruptedException, ExecutionException {
-<a class="jxr_linenumber" name="43" href="#43">43</a>          HashMap&lt;Future&lt;Message&gt;, String&gt; tasks = <strong class="jxr_keyword">new</strong> HashMap&lt;Future&lt;Message&gt;, String&gt;(THREADS);
-<a class="jxr_linenumber" name="44" href="#44">44</a>          Random random = <strong class="jxr_keyword">new</strong> Random();
-<a class="jxr_linenumber" name="45" href="#45">45</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; THREADS; i++) {
-<a class="jxr_linenumber" name="46" href="#46">46</a>              <em class="jxr_comment">// First thread always waits for the last message, the rest is random.</em>
-<a class="jxr_linenumber" name="47" href="#47">47</a>              <strong class="jxr_keyword">final</strong> String expectedValue = <span class="jxr_string">"&lt;"</span> + ((i == 0)
-<a class="jxr_linenumber" name="48" href="#48">48</a>                      ? String.valueOf(TOTAL_MESSAGES - 1)
-<a class="jxr_linenumber" name="49" href="#49">49</a>                      : String.valueOf(random.nextInt(TOTAL_MESSAGES))) + <span class="jxr_string">"&gt;"</span>;
-<a class="jxr_linenumber" name="50" href="#50">50</a>              Future&lt;Message&gt; task = <strong class="jxr_keyword">this</strong>.es.submit(<strong class="jxr_keyword">new</strong> Callable&lt;Message&gt;() {
-<a class="jxr_linenumber" name="51" href="#51">51</a>                  @Override
-<a class="jxr_linenumber" name="52" href="#52">52</a>                  <strong class="jxr_keyword">public</strong> Message call() {
-<a class="jxr_linenumber" name="53" href="#53">53</a>                      <strong class="jxr_keyword">final</strong> LogTailer tailer = WaitingTest.<strong class="jxr_keyword">this</strong>.getLogWatch().startTailing();
-<a class="jxr_linenumber" name="54" href="#54">54</a>                      <strong class="jxr_keyword">return</strong> tailer.waitFor(<strong class="jxr_keyword">new</strong> MessageDeliveryCondition() {
-<a class="jxr_linenumber" name="55" href="#55">55</a>                          @Override
-<a class="jxr_linenumber" name="56" href="#56">56</a>                          <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> accept(Message evaluate, MessageDeliveryStatus status) {
-<a class="jxr_linenumber" name="57" href="#57">57</a>                              <strong class="jxr_keyword">return</strong> evaluate.toString().trim().endsWith(expectedValue);
-<a class="jxr_linenumber" name="58" href="#58">58</a>                          }
-<a class="jxr_linenumber" name="59" href="#59">59</a>                      }, TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);
-<a class="jxr_linenumber" name="60" href="#60">60</a>                  }
-<a class="jxr_linenumber" name="61" href="#61">61</a>              });
-<a class="jxr_linenumber" name="62" href="#62">62</a>              tasks.put(task, expectedValue);
-<a class="jxr_linenumber" name="63" href="#63">63</a>          }
-<a class="jxr_linenumber" name="64" href="#64">64</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; TOTAL_MESSAGES; i++) {
-<a class="jxr_linenumber" name="65" href="#65">65</a>              <strong class="jxr_keyword">this</strong>.getWriter().writeWithoutWaiting(<span class="jxr_string">"&lt;"</span> + String.valueOf(i) + <span class="jxr_string">"&gt;"</span>);
-<a class="jxr_linenumber" name="66" href="#66">66</a>          }
-<a class="jxr_linenumber" name="67" href="#67">67</a>          <strong class="jxr_keyword">for</strong> (Future&lt;Message&gt; task : tasks.keySet()) {
-<a class="jxr_linenumber" name="68" href="#68">68</a>              Message accepted = task.get();
-<a class="jxr_linenumber" name="69" href="#69">69</a>              Assert.assertNotNull(<span class="jxr_string">"Failed to accept message #"</span> + tasks.get(task), accepted);
-<a class="jxr_linenumber" name="70" href="#70">70</a>          }
-<a class="jxr_linenumber" name="71" href="#71">71</a>          System.out.println(<span class="jxr_string">"All messages collected."</span>);
-<a class="jxr_linenumber" name="72" href="#72">72</a>      }
-<a class="jxr_linenumber" name="73" href="#73">73</a>  }
+<a class="jxr_linenumber" name="43" href="#43">43</a>          <strong class="jxr_keyword">final</strong> HashMap&lt;Future&lt;Message&gt;, String&gt; tasks = <strong class="jxr_keyword">new</strong> HashMap&lt;Future&lt;Message&gt;, String&gt;(WaitingTest.THREADS);
+<a class="jxr_linenumber" name="44" href="#44">44</a>          <strong class="jxr_keyword">final</strong> Random random = <strong class="jxr_keyword">new</strong> Random();
+<a class="jxr_linenumber" name="45" href="#45">45</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; WaitingTest.THREADS; i++) {
+<a class="jxr_linenumber" name="46" href="#46">46</a>              <em class="jxr_comment">// First thread always waits for the last message, the rest is</em>
+<a class="jxr_linenumber" name="47" href="#47">47</a>              <em class="jxr_comment">// random.</em>
+<a class="jxr_linenumber" name="48" href="#48">48</a>              <strong class="jxr_keyword">final</strong> String expectedValue = <span class="jxr_string">"&lt;"</span>
+<a class="jxr_linenumber" name="49" href="#49">49</a>                      + ((i == 0) ? String.valueOf(WaitingTest.TOTAL_MESSAGES - 1) : String.valueOf(random
+<a class="jxr_linenumber" name="50" href="#50">50</a>                              .nextInt(WaitingTest.TOTAL_MESSAGES))) + <span class="jxr_string">"&gt;"</span>;
+<a class="jxr_linenumber" name="51" href="#51">51</a>              <strong class="jxr_keyword">final</strong> Future&lt;Message&gt; task = <strong class="jxr_keyword">this</strong>.es.submit(<strong class="jxr_keyword">new</strong> Callable&lt;Message&gt;() {
+<a class="jxr_linenumber" name="52" href="#52">52</a>                  @Override
+<a class="jxr_linenumber" name="53" href="#53">53</a>                  <strong class="jxr_keyword">public</strong> Message call() {
+<a class="jxr_linenumber" name="54" href="#54">54</a>                      <strong class="jxr_keyword">final</strong> Follower follower = WaitingTest.<strong class="jxr_keyword">this</strong>.getLogWatch().follow();
+<a class="jxr_linenumber" name="55" href="#55">55</a>                      <strong class="jxr_keyword">return</strong> follower.waitFor(<strong class="jxr_keyword">new</strong> MessageDeliveryCondition() {
+<a class="jxr_linenumber" name="56" href="#56">56</a>                          @Override
+<a class="jxr_linenumber" name="57" href="#57">57</a>                          <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> accept(<strong class="jxr_keyword">final</strong> Message evaluate, <strong class="jxr_keyword">final</strong> MessageDeliveryStatus status) {
+<a class="jxr_linenumber" name="58" href="#58">58</a>                              <strong class="jxr_keyword">return</strong> evaluate.toString().trim().endsWith(expectedValue);
+<a class="jxr_linenumber" name="59" href="#59">59</a>                          }
+<a class="jxr_linenumber" name="60" href="#60">60</a>                      }, WaitingTest.TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);
+<a class="jxr_linenumber" name="61" href="#61">61</a>                  }
+<a class="jxr_linenumber" name="62" href="#62">62</a>              });
+<a class="jxr_linenumber" name="63" href="#63">63</a>              tasks.put(task, expectedValue);
+<a class="jxr_linenumber" name="64" href="#64">64</a>          }
+<a class="jxr_linenumber" name="65" href="#65">65</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; WaitingTest.TOTAL_MESSAGES; i++) {
+<a class="jxr_linenumber" name="66" href="#66">66</a>              <strong class="jxr_keyword">this</strong>.getWriter().writeWithoutWaiting(<span class="jxr_string">"&lt;"</span> + String.valueOf(i) + <span class="jxr_string">"&gt;"</span>);
+<a class="jxr_linenumber" name="67" href="#67">67</a>          }
+<a class="jxr_linenumber" name="68" href="#68">68</a>          <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">final</strong> Future&lt;Message&gt; task : tasks.keySet()) {
+<a class="jxr_linenumber" name="69" href="#69">69</a>              <strong class="jxr_keyword">final</strong> Message accepted = task.get();
+<a class="jxr_linenumber" name="70" href="#70">70</a>              Assert.assertNotNull(<span class="jxr_string">"Failed to accept message #"</span> + tasks.get(task), accepted);
+<a class="jxr_linenumber" name="71" href="#71">71</a>          }
+<a class="jxr_linenumber" name="72" href="#72">72</a>          System.out.println(<span class="jxr_string">"All messages collected."</span>);
+<a class="jxr_linenumber" name="73" href="#73">73</a>      }
+<a class="jxr_linenumber" name="74" href="#74">74</a>  }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>

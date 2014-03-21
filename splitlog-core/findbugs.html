@@ -41,7 +41,7 @@
                   <li id="publishDate">Last Published: 2014-03-21
                       <span class="divider">|</span>
                    </li>
-                  <li id="projectVersion">Version: 1.2.0.Final
+                  <li id="projectVersion">Version: 1.3.0.CR1
                       </li>
                       
                 
@@ -179,8 +179,8 @@
 <th>Errors</th>
 <th>Missing Classes</th></tr>
 <tr class="b">
-<td>39</td>
-<td>5</td>
+<td>43</td>
+<td>2</td>
 <td>0</td>
 <td>0</td></tr></table></div>
 <div class="section">
@@ -190,37 +190,13 @@
 <th>Class</th>
 <th>Bugs</th></tr>
 <tr class="b">
-<td><a href="#com.github.triceo.splitlog.MessageStore">com.github.triceo.splitlog.MessageStore</a></td>
-<td>2</td></tr>
+<td><a href="#com.github.triceo.splitlog.NonStoringFollower">com.github.triceo.splitlog.NonStoringFollower</a></td>
+<td>1</td></tr>
 <tr class="a">
-<td><a href="#com.github.triceo.splitlog.NonStoringLogTailer">com.github.triceo.splitlog.NonStoringLogTailer</a></td>
-<td>2</td></tr>
-<tr class="b">
 <td><a href="#com.github.triceo.splitlog.exceptions.ExceptionParser$1">com.github.triceo.splitlog.exceptions.ExceptionParser$1</a></td>
-<td>1</td></tr></table></div><a name="com.github.triceo.splitlog.MessageStore"></a>
+<td>1</td></tr></table></div><a name="com.github.triceo.splitlog.NonStoringFollower"></a>
 <div class="section">
-<h3>com.github.triceo.splitlog.MessageStore<a name="com.github.triceo.splitlog.MessageStore"></a></h3>
-<table border="0" class="table table-striped">
-<tr class="a">
-<th>Bug</th>
-<th>Category</th>
-<th>Details</th>
-<th>Line</th>
-<th>Priority</th></tr>
-<tr class="b">
-<td>Vacuous comparison of integer value new com.github.triceo.splitlog.MessageStore(int) </td>
-<td>STYLE</td>
-<td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#INT_VACUOUS_COMPARISON">INT_VACUOUS_COMPARISON</a></td>
-<td><a href="./xref/com/github/triceo/splitlog/MessageStore.html#38">38</a></td>
-<td>Medium</td></tr>
-<tr class="a">
-<td>Inconsistent synchronization of com.github.triceo.splitlog.MessageStore.lastMessageId; locked 66% of time</td>
-<td>MT_CORRECTNESS</td>
-<td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#IS2_INCONSISTENT_SYNC">IS2_INCONSISTENT_SYNC</a></td>
-<td><a href="./xref/com/github/triceo/splitlog/MessageStore.html#75">75</a></td>
-<td>Low</td></tr></table></div><a name="com.github.triceo.splitlog.NonStoringLogTailer"></a>
-<div class="section">
-<h3>com.github.triceo.splitlog.NonStoringLogTailer<a name="com.github.triceo.splitlog.NonStoringLogTailer"></a></h3>
+<h3>com.github.triceo.splitlog.NonStoringFollower<a name="com.github.triceo.splitlog.NonStoringFollower"></a></h3>
 <table border="0" class="table table-striped">
 <tr class="b">
 <th>Bug</th>
@@ -229,27 +205,21 @@
 <th>Line</th>
 <th>Priority</th></tr>
 <tr class="a">
-<td>Inconsistent synchronization of com.github.triceo.splitlog.NonStoringLogTailer.messageBlockingCondition; locked 50% of time</td>
+<td>Inconsistent synchronization of com.github.triceo.splitlog.NonStoringFollower.messageBlockingCondition; locked 60% of time</td>
 <td>MT_CORRECTNESS</td>
 <td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#IS2_INCONSISTENT_SYNC">IS2_INCONSISTENT_SYNC</a></td>
-<td><a href="./xref/com/github/triceo/splitlog/NonStoringLogTailer.html#80">80</a></td>
-<td>Medium</td></tr>
-<tr class="b">
-<td>Exception is caught when Exception is not thrown in com.github.triceo.splitlog.NonStoringLogTailer.waitForMessage(MessageDeliveryCondition, long, TimeUnit)</td>
-<td>STYLE</td>
-<td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#REC_CATCH_EXCEPTION">REC_CATCH_EXCEPTION</a></td>
-<td><a href="./xref/com/github/triceo/splitlog/NonStoringLogTailer.html#157">157</a></td>
-<td>Low</td></tr></table></div><a name="com.github.triceo.splitlog.exceptions.ExceptionParser1"></a>
+<td><a href="./xref/com/github/triceo/splitlog/NonStoringFollower.html#80">80</a></td>
+<td>Medium</td></tr></table></div><a name="com.github.triceo.splitlog.exceptions.ExceptionParser1"></a>
 <div class="section">
 <h3>com.github.triceo.splitlog.exceptions.ExceptionParser$1<a name="com.github.triceo.splitlog.exceptions.ExceptionParser1"></a></h3>
 <table border="0" class="table table-striped">
-<tr class="a">
+<tr class="b">
 <th>Bug</th>
 <th>Category</th>
 <th>Details</th>
 <th>Line</th>
 <th>Priority</th></tr>
-<tr class="b">
+<tr class="a">
 <td>The class com.github.triceo.splitlog.exceptions.ExceptionParser$1 could be refactored into a named _static_ inner class</td>
 <td>PERFORMANCE</td>
 <td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#SIC_INNER_SHOULD_BE_STATIC_ANON">SIC_INNER_SHOULD_BE_STATIC_ANON</a></td>
