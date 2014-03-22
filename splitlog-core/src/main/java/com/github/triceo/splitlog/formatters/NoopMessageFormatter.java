@@ -18,7 +18,7 @@ public class NoopMessageFormatter implements MessageFormatter {
     @Override
     public String format(final Message m) {
         final StringBuilder sb = new StringBuilder();
-        for (final String line : m.getLines()) { // FIXME raw?
+        for (final String line : m.getLines()) {
             sb.append(line);
             sb.append(MessageFormatter.LINE_SEPARATOR);
         }
