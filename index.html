@@ -22,43 +22,51 @@
 
 
         <ul>
-          <li><a href="https://github.com/triceo/splitlog/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/triceo/splitlog/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/triceo/splitlog/zipball/1.3.0.CR2">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/triceo/splitlog/tarball/1.3.0.CR2">Download <strong>TAR Ball</strong></a></li>
           <li><a href="https://github.com/triceo/splitlog">View On <strong>GitHub</strong></a></li>
         </ul>
       </header>
       <section>
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <h3><a class="anchor" href="#welcome-to-splitlog"><span class="octicon octicon-link"></span></a>Welcome to <em>Splitlog</em></h3>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p><em>Splitlog</em> helps you make some sense out of continually developing files, such as application log files. Think of it as <code>tail</code> and <code>grep</code> combined, plus much more. And, of course, it is open source software.</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+<h3>What can <em>Splitlog</em> do for you?</h3>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<dl>
+    <dt>Block your code until a specific message appears in the log.</dt>
+    <dd>Say you're writing integration tests for a web application. Your servlet is deploying and you only want to start your tests after it deploys. <em>Splitlog</em> to the rescue&nbsp;&mdash; just wait for the deployment notification from the server!</dd>
+    
+    <dt>Focus on the interesting parts of the log.</dt>
+    <dd>Let's say the log contains a lot of junk, such as DEBUG-level information. You can use <em>Splitlog</em> to filter it out and only tell you about the important stuff.</dd>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+    <dt>Forward any part of the log to a different file.</dt>
+    <dd>Ever wondered which part of the server log happened while your test was running? Look no further, <em>Splitlog</em> can tell you.</dd>
+    
+    <dt>And much more...</dt>
+    <dd>Currently, the only log format supported is the <a href="maven-site/apidocs/com/github/triceo/splitlog/splitters/JBossServerLogTailSplitter.html">JBoss server log format</a>, but it is <a href="maven-site/apidocs/com/github/triceo/splitlog/splitters/TailSplitter.html">trivial</a> to make <em>Splitlog</em> understand any other format. <a href="https://github.com/triceo/splitlog/fork">Pull requests</a> are welcome!</dd>
+    
+</dl>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<h3>Getting support</h3>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<p><em>Splitlog</em> is a <a href="maven-site/">Maven-based project</a>, licensed under the <a href="maven-site/license.html">Apache Software License 2.0</a>. To use it in your Maven projects, you simply need to use the following dependency:</p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;com.github.triceo.splitlog&lt;/groupId&gt;
+    &lt;artifactId&gt;splitlog-core&lt;/artifactId&gt;
+    &lt;version&gt;1.3.0.CR2&lt;version&gt;
+&lt;/dependency&gt;</code></pre>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<p>Look for the artifacts in the <a href="http://search.maven.org/">Maven Central</a> repository.</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<h3>Looking for support?</h3>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<p>At the moment, there is no user forum for <em>Splitlog</em>. Bugs can be <a href="https://github.com/triceo/splitlog/issues">filed through Github</a> and we welcome any <a href="https://github.com/triceo/splitlog/fork">pull requests</a>.</p>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p><em>Splitlog</em> could use some documentation or code examples. For now, we can only provide <a href="maven-site/apidocs/index.html">Javadocs</a> and <a href="maven-site/xref/index.html">source code cross-reference</a>.</p>
+
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/triceo">triceo</a></p>
@@ -66,16 +74,15 @@ $ git checkout gh-pages
       </footer>
     </div>
     <script src="javascripts/scale.fix.js"></script>
-              <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-30702047-3");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
-
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+      try {
+        var pageTracker = _gat._getTracker("UA-30702047-3");
+      pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
   </body>
 </html>
