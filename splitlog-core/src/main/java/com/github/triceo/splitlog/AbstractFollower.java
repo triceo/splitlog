@@ -4,7 +4,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.Comparator;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.apache.commons.io.IOUtils;
@@ -13,6 +15,7 @@ import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.formatters.MessageFormatter;
 import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
+import com.github.triceo.splitlog.ordering.MessageComparator;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
 /**
@@ -29,13 +32,10 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 abstract class AbstractFollower implements Follower {
 
     private static final MessageFormatter DEFAULT_FORMATTER = NoopMessageFormatter.INSTANCE;
-    private static final Comparator<Message> DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
+    private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final MessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
-    private final DefaultLogWatch watch;
 
-    protected AbstractFollower(final DefaultLogWatch watch) {
-        this.watch = watch;
-    }
+    private final Set<Message> tags = new LinkedHashSet<Message>();
 
     @Override
     public SortedSet<Message> getMessages() {
@@ -43,17 +43,19 @@ abstract class AbstractFollower implements Follower {
     }
 
     @Override
-    public SortedSet<Message> getMessages(final Comparator<Message> order) {
+    public SortedSet<Message> getMessages(final MessageComparator order) {
         return this.getMessages(AbstractFollower.DEFAULT_CONDITION, order);
     }
 
-    protected DefaultLogWatch getWatch() {
-        return this.watch;
+    @Override
+    public Message tag(final String tagLine) {
+        final Message message = new Message(tagLine);
+        this.tags.add(message);
+        return message;
     }
 
-    @Override
-    public boolean isFollowing() {
-        return this.watch.isFollowedBy(this);
+    protected Set<Message> getTags() {
+        return Collections.unmodifiableSet(this.tags);
     }
 
     /**
@@ -63,8 +65,13 @@ abstract class AbstractFollower implements Follower {
      * 
      * @param msg
      *            The message.
+     * @param source
+     *            Where does the notification come from.
+     * @throws IllegalArgumentException
+     *             In case the source is a class that should not access to this
+     *             {@link Follower}.
      */
-    protected abstract void notifyOfUndeliveredMessage(Message msg);
+    protected abstract void notifyOfUndeliveredMessage(Message msg, MessageDeliveryNotificationSource source);
 
     /**
      * Notify the follower of a new line in the watched log. Must never be
@@ -72,8 +79,13 @@ abstract class AbstractFollower implements Follower {
      * 
      * @param msg
      *            The message.
+     * @param source
+     *            Where does the notification come from.
+     * @throws IllegalArgumentException
+     *             In case the source is a class that should not access to this
+     *             {@link Follower}.
      */
-    protected abstract void notifyOfIncomingMessage(Message msg);
+    protected abstract void notifyOfIncomingMessage(Message msg, MessageDeliveryNotificationSource source);
 
     /**
      * Notify the follower of a new message in the watched log. Must never be
@@ -81,8 +93,13 @@ abstract class AbstractFollower implements Follower {
      * 
      * @param msg
      *            The message.
+     * @param source
+     *            Where does the notification come from.
+     * @throws IllegalArgumentException
+     *             In case the source is a class that should not access to this
+     *             {@link Follower}.
      */
-    protected abstract void notifyOfAcceptedMessage(Message msg);
+    protected abstract void notifyOfAcceptedMessage(Message msg, MessageDeliveryNotificationSource source);
 
     /**
      * Notify the follower of a new message from the log that was rejected from
@@ -91,8 +108,13 @@ abstract class AbstractFollower implements Follower {
      * 
      * @param msg
      *            The message.
+     * @param source
+     *            Where does the notification come from.
+     * @throws IllegalArgumentException
+     *             In case the source is a class that should not access to this
+     *             {@link Follower}.
      */
-    protected abstract void notifyOfRejectedMessage(Message msg);
+    protected abstract void notifyOfRejectedMessage(Message msg, MessageDeliveryNotificationSource source);
 
     @Override
     public boolean write(final OutputStream stream) {
@@ -110,7 +132,7 @@ abstract class AbstractFollower implements Follower {
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order,
+    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order,
         final MessageFormatter formatter) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");
@@ -140,17 +162,17 @@ abstract class AbstractFollower implements Follower {
     }
 
     @Override
-    public boolean write(final OutputStream stream, final Comparator<Message> order) {
+    public boolean write(final OutputStream stream, final MessageComparator order) {
         return this.write(stream, order, AbstractFollower.DEFAULT_FORMATTER);
     }
 
     @Override
-    public boolean write(final OutputStream stream, final Comparator<Message> order, final MessageFormatter formatter) {
+    public boolean write(final OutputStream stream, final MessageComparator order, final MessageFormatter formatter) {
         return this.write(stream, AbstractFollower.DEFAULT_CONDITION, order, formatter);
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order) {
+    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order) {
         return this.write(stream, condition, order, AbstractFollower.DEFAULT_FORMATTER);
     }
 

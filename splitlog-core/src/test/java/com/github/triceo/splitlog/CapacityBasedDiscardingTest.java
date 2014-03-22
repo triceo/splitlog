@@ -11,8 +11,6 @@ public class CapacityBasedDiscardingTest extends DefaultFollowerBaseTest {
         super(builder.limitCapacityTo(1));
     }
 
-    // FIXME share
-
     @Test
     public void test() {
         final Follower follower = this.getLogWatch().follow();
@@ -26,14 +24,14 @@ public class CapacityBasedDiscardingTest extends DefaultFollowerBaseTest {
         this.getWriter().write(secondMessage, follower);
         final Message secondTag = follower.tag("test2");
         DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, firstMessage, secondTag);
-        // receive second message, discarding first message and the tag
+        // receive second message, discarding first message and not the tag
         final String thirdMessage = "check3";
         this.getWriter().write(thirdMessage, follower);
-        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), secondTag, secondMessage);
-        // receive third message, discarding second message and the tag
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, secondTag, secondMessage);
+        // receive third message, discarding second message and not the tag
         final String fourthMessage = "check4";
         this.getWriter().write(fourthMessage, follower);
-        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), thirdMessage);
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, secondTag, thirdMessage);
     }
 
 }

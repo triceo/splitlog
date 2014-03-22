@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 import com.github.triceo.splitlog.formatters.MessageFormatter;
+import com.github.triceo.splitlog.ordering.MessageComparator;
 
 /**
  * Follower's primary function is to allow users to work with their portion of
@@ -35,7 +36,7 @@ public interface Follower {
      *            The comparator that will be used to order the messages.
      * @return Messages we have been notified of.
      */
-    SortedSet<Message> getMessages(Comparator<Message> order);
+    SortedSet<Message> getMessages(MessageComparator order);
 
     /**
      * Retrieve messages that this follower has been notified of, if a certain
@@ -49,7 +50,7 @@ public interface Follower {
      * @return Messages we have been notified of, for which the condition holds
      *         true.
      */
-    SortedSet<Message> getMessages(final MessageCondition condition, final Comparator<Message> order);
+    SortedSet<Message> getMessages(final MessageCondition condition, final MessageComparator order);
 
     /**
      * Retrieve messages that this follower has been notified of, if a certain
@@ -64,6 +65,22 @@ public interface Follower {
     SortedSet<Message> getMessages(final MessageCondition condition);
 
     /**
+     * Merge this {@link Follower} with another. This {@link Follower} has a
+     * responsibility of notifying the resulting {@link MergingFollower} of
+     * every {@link Message} that it receives, until such time that
+     * {@link MergingFollower#separate(Follower)} is called on it.
+     * 
+     * @param f
+     *            To merge with.
+     * @return A new {@link MergingFollower}, that will merge both
+     *         {@link Follower}s. If any of the {@link Follower}s already is a
+     *         {@link MergingFollower}, the returned instance will hold every
+     *         merged {@link Follower} individually and not compose
+     *         {@link MergingFollower}s.
+     */
+    MergingFollower mergeWith(Follower f);
+
+    /**
      * Whether or not this follower is still actively following its
      * {@link LogWatch}. It is suggested that the reference to this follower be
      * thrown away immediately after the user has processed the results of
@@ -76,9 +93,11 @@ public interface Follower {
     boolean isFollowing();
 
     /**
-     * Mark the current location in the tail by a custom message. It is up to
-     * the implementors to decide whether or not a tag inserted at the same time
-     * twice is inserted twice, or the second tag overwrites the first.
+     * Mark the current location in the tail by a custom message.
+     * 
+     * In case the messages before and after the tag should be discarded in the
+     * future, the tag should still remain in place - this will give users the
+     * notification that some messages had been discarded.
      * 
      * @param tagLine
      *            Text of the message.
@@ -127,7 +146,7 @@ public interface Follower {
      *            The comparator to pass to {@link #getMessages(Comparator)}.
      * @return True if written, false otherwise.
      */
-    boolean write(final OutputStream stream, final Comparator<Message> order);
+    boolean write(final OutputStream stream, final MessageComparator order);
 
     /**
      * Will write to a stream the result of {@link #getMessages(Comparator)},
@@ -141,7 +160,7 @@ public interface Follower {
      *            Formatter to use to transform message into string.
      * @return True if written, false otherwise.
      */
-    boolean write(final OutputStream stream, final Comparator<Message> order, final MessageFormatter formatter);
+    boolean write(final OutputStream stream, final MessageComparator order, final MessageFormatter formatter);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using given
@@ -185,7 +204,7 @@ public interface Follower {
      *            {@link #getMessages(MessageCondition, Comparator)}.
      * @return True if written, false otherwise.
      */
-    boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order);
+    boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order);
 
     /**
      * Will write to a stream the result of
@@ -220,6 +239,6 @@ public interface Follower {
      *            Formatter to use to transform message into string.
      * @return True if written, false otherwise.
      */
-    boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order,
+    boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order,
         final MessageFormatter formatter);
 }

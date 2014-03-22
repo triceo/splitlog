@@ -46,11 +46,20 @@ class LogWriter {
         // wait until the last part of the string is finally present
         final Message result = follower.waitFor(new MessageDeliveryCondition() {
 
-            @Override
-            public boolean accept(final Message receivedMessage, final MessageDeliveryStatus status) {
+            private boolean accept(final Message receivedMessage, final MessageDeliveryStatus status) {
                 final String lastLine = receivedMessage.getLines().get(receivedMessage.getLines().size() - 1);
                 final String textStr[] = line.split("\\r?\\n");
                 return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
+            }
+
+            @Override
+            public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
+                return this.accept(evaluate, status);
+            }
+
+            @Override
+            public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
+                return this.accept(evaluate, status);
             }
 
         }, 10, TimeUnit.SECONDS);

@@ -5,10 +5,9 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -115,7 +114,7 @@ final class DefaultLogWatch implements LogWatch {
     private synchronized Message handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         for (final AbstractFollower f : this.followers) {
-            f.notifyOfIncomingMessage(message);
+            f.notifyOfIncomingMessage(message, this);
         }
         return message;
     }
@@ -131,7 +130,7 @@ final class DefaultLogWatch implements LogWatch {
     private synchronized Message handleUndeliveredMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         for (final AbstractFollower f : this.followers) {
-            f.notifyOfUndeliveredMessage(message);
+            f.notifyOfUndeliveredMessage(message, this);
         }
         return message;
     }
@@ -156,9 +155,9 @@ final class DefaultLogWatch implements LogWatch {
         }
         for (final AbstractFollower f : this.followers) {
             if (messageAccepted) {
-                f.notifyOfAcceptedMessage(message);
+                f.notifyOfAcceptedMessage(message, this);
             } else {
-                f.notifyOfRejectedMessage(message);
+                f.notifyOfRejectedMessage(message, this);
             }
         }
         if (messageAccepted) {
@@ -179,10 +178,10 @@ final class DefaultLogWatch implements LogWatch {
      * 
      * @param follower
      *            The follower in question.
-     * @return Unmodifiable map of all the received messages, with keys being
-     *         IDs of those messages.
+     * @return Unmodifiable list of all the received messages, in the order
+     *         received.
      */
-    protected synchronized SortedMap<Integer, Message> getAllMessages(final Follower follower) {
+    protected synchronized List<Message> getAllMessages(final Follower follower) {
         final int start = this.getStartingMessageId(follower);
         // get the expected ending message ID
         final int end = this.getEndingMessageId(follower);
@@ -195,15 +194,9 @@ final class DefaultLogWatch implements LogWatch {
              * before the first message in the store, there really is nothing to
              * return.
              */
-            return Collections.unmodifiableSortedMap(new TreeMap<Integer, Message>());
+            return Collections.unmodifiableList(Collections.<Message> emptyList());
         } else {
-            final SortedMap<Integer, Message> messages = new TreeMap<Integer, Message>();
-            int id = start;
-            for (final Message msg : this.messages.getFromRange(start, end + 1)) {
-                messages.put(id, msg);
-                id++;
-            }
-            return Collections.unmodifiableSortedMap(messages);
+            return Collections.unmodifiableList(this.messages.getFromRange(start, end + 1));
         }
     }
 

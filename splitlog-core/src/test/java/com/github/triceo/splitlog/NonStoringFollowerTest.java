@@ -9,7 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
+import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
@@ -132,14 +132,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     public void testWaitForAfterPreviousFailed() {
         final Follower follower = this.getLogWatch().follow();
         // this call will fail, since we're not writing anything
-        follower.waitFor(new MessageDeliveryCondition() {
-
-            @Override
-            public boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
-                return true;
-            }
-
-        }, 1, TimeUnit.SECONDS);
+        follower.waitFor(AllMessagesAcceptingCondition.INSTANCE, 1, TimeUnit.SECONDS);
         // these calls should succeed
         final String message = "test";
         String result = this.getWriter().write(message, follower);

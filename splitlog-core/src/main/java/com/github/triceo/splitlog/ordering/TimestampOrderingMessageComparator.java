@@ -1,15 +1,14 @@
 package com.github.triceo.splitlog.ordering;
 
-import java.util.Comparator;
-
 import com.github.triceo.splitlog.Message;
 
 /**
  * Will sort messages in the order of increasing {@link Message#getDate()}.
  */
-public final class TimestampOrderingMessageComparator implements Comparator<Message> {
+public final class TimestampOrderingMessageComparator implements MessageComparator {
 
-    public static final Comparator<Message> INSTANCE = new TimestampOrderingMessageComparator();
+    private static final long serialVersionUID = 810642571483072218L;
+    public static final MessageComparator INSTANCE = new TimestampOrderingMessageComparator();
 
     private TimestampOrderingMessageComparator() {
         // singleton

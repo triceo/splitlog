@@ -23,6 +23,7 @@ final public class MessageBuilder {
     /**
      * Construct a message builder that will link to a particular previous
      * message.
+     * 
      * @param firstLine
      *            Untreated, unprocessed first line of the new message retrieved
      *            from the log.

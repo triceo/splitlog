@@ -1,5 +1,7 @@
 package com.github.triceo.splitlog.conditions;
 
+import com.github.triceo.splitlog.Follower;
+import com.github.triceo.splitlog.LogWatch;
 import com.github.triceo.splitlog.Message;
 import com.github.triceo.splitlog.MessageDeliveryStatus;
 
@@ -20,7 +22,12 @@ public class AllMessagesAcceptingCondition implements MessageCondition, MessageD
     }
 
     @Override
-    public boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
+    public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
+        return true;
+    }
+
+    @Override
+    public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
         return true;
     }
 

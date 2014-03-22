@@ -5,7 +5,7 @@ package com.github.triceo.splitlog;
  * listening to changes in log files. Use {@link LogWatchBuilder} to get an
  * instance.
  */
-public interface LogWatch {
+public interface LogWatch extends MessageDeliveryNotificationSource {
 
     /**
      * Whether or not {@link #terminate()} has been called.
