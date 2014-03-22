@@ -24,7 +24,7 @@ public class UnifyingMessageFormatter implements MessageFormatter {
         sb.append(") ");
         sb.append(m.getSeverity());
         sb.append(" ");
-        for (final String line : m.getLines()) { // FIXME raw?
+        for (final String line : m.getLinesWithoutMetadata()) {
             sb.append(line);
             sb.append(MessageFormatter.LINE_SEPARATOR);
         }
