@@ -21,9 +21,12 @@ public class MessageTest {
         final Collection<String> raw1 = Arrays.asList(lines);
         final Collection<String> raw2 = Arrays.asList(lines);
         final Collection<String> raw3 = Arrays.asList(lines).subList(1, 3);
-        Assert.assertEquals(new Message(raw1), new Message(raw1));
-        Assert.assertEquals(new Message(raw1), new Message(raw2));
-        Assert.assertNotEquals(new Message(raw1), new Message(raw3));
+        final Message message0 = new Message(raw1);
+        Assert.assertEquals(message0, message0);
+        final Message message1 = new Message(raw2);
+        Assert.assertNotEquals(message0, message1);
+        Assert.assertNotEquals(message1, new Message(raw2));
+        Assert.assertNotEquals(message1, new Message(raw3));
     }
 
     @Test
@@ -33,7 +36,7 @@ public class MessageTest {
         final Message msg2 = new Message(line);
         final Message msg3 = new Message(line + "2");
         Assert.assertEquals(msg1, msg1);
-        Assert.assertEquals(msg1, msg2);
+        Assert.assertNotEquals(msg1, msg2);
         Assert.assertNotEquals(msg1, msg3);
     }
 

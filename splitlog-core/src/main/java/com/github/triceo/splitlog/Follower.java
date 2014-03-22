@@ -1,7 +1,8 @@
 package com.github.triceo.splitlog;
 
 import java.io.OutputStream;
-import java.util.List;
+import java.util.Comparator;
+import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
 
 import com.github.triceo.splitlog.conditions.MessageCondition;
@@ -13,26 +14,54 @@ import com.github.triceo.splitlog.formatters.MessageFormatter;
  * the tailed log file. It provides means for a blocking wait for particular
  * chunks, and can also send these chunks to output.
  * 
+ * Messages get into the Follower when {@link LogWatch} notifies it of them.
  */
 public interface Follower {
 
     /**
-     * Retrieve messages that this follower has been notified of, including tags
+     * Retrieve messages that this follower has been notified of, including
+     * tags. They will appear in the order in which we have been notified of
+     * them.
      * 
-     * @return Messages we are aware of, in their original order.
+     * @return Messages we have been notified of.
      */
-    List<Message> getMessages();
+    SortedSet<Message> getMessages();
+
+    /**
+     * Retrieve messages that this follower has been notified of, including
+     * tags, in a given order.
+     * 
+     * @param order
+     *            The comparator that will be used to order the messages.
+     * @return Messages we have been notified of.
+     */
+    SortedSet<Message> getMessages(Comparator<Message> order);
 
     /**
      * Retrieve messages that this follower has been notified of, if a certain
-     * condition holds true for them, including tags.
+     * condition holds true for them, including tags. They will be in the order
+     * in which we have been notified of them.
      * 
      * @param condition
      *            The condition.
-     * @return Every message we are aware of, for which the condition holds
+     * @param order
+     *            The comparator that will be used to order the messages.
+     * @return Messages we have been notified of, for which the condition holds
      *         true.
      */
-    List<Message> getMessages(final MessageCondition condition);
+    SortedSet<Message> getMessages(final MessageCondition condition, final Comparator<Message> order);
+
+    /**
+     * Retrieve messages that this follower has been notified of, if a certain
+     * condition holds true for them, including tags. They will be in the order
+     * given.
+     * 
+     * @param condition
+     *            The condition.
+     * @return Messages we have been notified of, for which the condition holds
+     *         true.
+     */
+    SortedSet<Message> getMessages(final MessageCondition condition);
 
     /**
      * Whether or not this follower is still actively following its
@@ -88,6 +117,33 @@ public interface Follower {
     boolean write(final OutputStream stream);
 
     /**
+     * Will write to a stream the result of {@link #getMessages(Comparator)},
+     * using a {@link MessageFormatter} implementation of its own choosing. Will
+     * close the stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param order
+     *            The comparator to pass to {@link #getMessages(Comparator)}.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final Comparator<Message> order);
+
+    /**
+     * Will write to a stream the result of {@link #getMessages(Comparator)},
+     * using given {@link MessageFormatter}. Will close the stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param order
+     *            The comparator to pass to {@link #getMessages(Comparator)}.
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final Comparator<Message> order, final MessageFormatter formatter);
+
+    /**
      * Will write to a stream the result of {@link #getMessages()}, using given
      * {@link MessageFormatter}. Will close the stream.
      * 
@@ -115,6 +171,24 @@ public interface Follower {
 
     /**
      * Will write to a stream the result of
+     * {@link #getMessages(MessageCondition, Comparator)}, using a
+     * {@link MessageFormatter} implementation of its own choosing. Will close
+     * the stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(MessageCondition, Comparator)}.
+     * @param order
+     *            The comparator to pass to
+     *            {@link #getMessages(MessageCondition, Comparator)}.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order);
+
+    /**
+     * Will write to a stream the result of
      * {@link #getMessages(MessageCondition)}, using given
      * {@link MessageFormatter}. Will close the stream.
      * 
@@ -128,4 +202,24 @@ public interface Follower {
      * @return True if written, false otherwise.
      */
     boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter);
+
+    /**
+     * Will write to a stream the result of
+     * {@link #getMessages(MessageCondition, Comparator)}, using given
+     * {@link MessageFormatter}. Will close the stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(MessageCondition, Comparator)}.
+     * @param order
+     *            The comparator to pass to
+     *            {@link #getMessages(MessageCondition, Comparator)}.
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order,
+        final MessageFormatter formatter);
 }

@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.SortedSet;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -42,11 +44,12 @@ public abstract class DefaultFollowerBaseTest {
      *            Either {@link Message} to compare messages, or a string if we
      *            want to compare against a tag.
      */
-    protected static void assertProperOrder(final List<Message> messages, final Object... expectedMessages) {
+    protected static void assertProperOrder(final SortedSet<Message> messages, final Object... expectedMessages) {
         Assert.assertEquals(expectedMessages.length, messages.size());
+        final List<Message> indexableMessages = new LinkedList<Message>(messages);
         for (int i = 0; i < expectedMessages.length; i++) {
             final Object expected = expectedMessages[i];
-            final Message actual = messages.get(i);
+            final Message actual = indexableMessages.get(i);
             if (expected instanceof Message) {
                 Assert.assertEquals(expected, actual);
             } else {

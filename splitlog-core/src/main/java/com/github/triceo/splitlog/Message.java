@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
@@ -19,7 +20,9 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 final public class Message {
 
     private static final TailSplitter DEFAULT_SPLITTER = new SimpleTailSplitter();
+    private static final AtomicLong UNIQUE_ID_GENERATOR = new AtomicLong(0);
 
+    private final long uniqueId = Message.UNIQUE_ID_GENERATOR.getAndIncrement();
     private final TailSplitter splitter;
     private final List<String> lines;
     private final MessageSeverity severity;
@@ -113,6 +116,11 @@ final public class Message {
         this.exceptionDescriptor = null;
     }
 
+    /**
+     * Two {@link Message}s are equal if and only if they have the same
+     * {@link #getUniqueId()}. This effectively means no two distinct ones will
+     * ever be equal.
+     */
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
@@ -125,14 +133,21 @@ final public class Message {
             return false;
         }
         final Message other = (Message) obj;
-        if (this.lines == null) {
-            if (other.lines != null) {
-                return false;
-            }
-        } else if (!this.lines.equals(other.lines)) {
+        if (this.uniqueId != other.uniqueId) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Unique ID of the message, that can be used to compare messages in the
+     * order of their arrival into this tool.
+     * 
+     * @return ID of the message, guaranteed to be unique for every message, and
+     *         increasing from message to message.
+     */
+    public long getUniqueId() {
+        return this.uniqueId;
     }
 
     /**
@@ -198,7 +213,7 @@ final public class Message {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = (prime * result) + ((this.lines == null) ? 0 : this.lines.hashCode());
+        result = (prime * result) + (int) (this.uniqueId ^ (this.uniqueId >>> 32));
         return result;
     }
 

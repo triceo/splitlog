@@ -18,6 +18,9 @@ public class UnifyingMessageFormatter implements MessageFormatter {
     @Override
     public String format(final Message m) {
         final StringBuilder sb = new StringBuilder();
+        sb.append("#");
+        sb.append(m.getUniqueId());
+        sb.append(" ");
         sb.append(m.getDate());
         sb.append(" (");
         sb.append(m.getType());

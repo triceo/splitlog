@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +36,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         result = this.getWriter().write(message3part1 + "\r\n" + message3part2, follower);
         Assert.assertEquals(message3part2, result);
         // now validate the results
-        final List<Message> messages = follower.getMessages();
+        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
         Assert.assertEquals(5, messages.size());
         Assert.assertEquals(message1, messages.get(1).getLines().get(0));
         Assert.assertEquals(message2part1, messages.get(2).getLines().get(0));
@@ -66,7 +67,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assert.assertEquals(message3, result);
         follower.tag(tag2); // message2 will only be written after message3 has
                             // been sent
-        final List<Message> messages = follower.getMessages();
+        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
         Assert.assertEquals(5, messages.size());
         Assert.assertEquals(tag0, messages.get(0).getLines().get(0));
         Assert.assertEquals(message1, messages.get(1).getLines().get(0));
@@ -89,24 +90,26 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assert.assertEquals(message2, result);
         Assert.assertEquals(1, follower.getMessages().size());
         // start a second follower, send some messages
-        final Follower nestedTailer = this.getLogWatch().follow();
+        final Follower nestedFollower = this.getLogWatch().follow();
         result = this.getWriter().write(message3, follower);
         result = this.getWriter().write(message4, follower);
         Assert.assertEquals(message4, result);
-        this.getLogWatch().unfollow(nestedTailer);
+        this.getLogWatch().unfollow(nestedFollower);
         // send another message, so the original follower has something extra
-        Assert.assertEquals(true, nestedTailer.isFollowing());
+        Assert.assertEquals(true, nestedFollower.isFollowing());
         result = this.getWriter().write(message5, follower);
         // and make sure that the original follower has all messages
-        Assert.assertEquals(4, follower.getMessages().size());
-        Assert.assertEquals(message1, follower.getMessages().get(0).getLines().get(0));
-        Assert.assertEquals(message2, follower.getMessages().get(1).getLines().get(0));
-        Assert.assertEquals(message3, follower.getMessages().get(2).getLines().get(0));
-        Assert.assertEquals(message4, follower.getMessages().get(3).getLines().get(0));
+        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
+        Assert.assertEquals(4, messages.size());
+        Assert.assertEquals(message1, messages.get(0).getLines().get(0));
+        Assert.assertEquals(message2, messages.get(1).getLines().get(0));
+        Assert.assertEquals(message3, messages.get(2).getLines().get(0));
+        Assert.assertEquals(message4, messages.get(3).getLines().get(0));
         // and the nested follower has only the two while it was running
-        Assert.assertEquals(2, nestedTailer.getMessages().size());
-        Assert.assertEquals(message2, nestedTailer.getMessages().get(0).getLines().get(0));
-        Assert.assertEquals(message3, nestedTailer.getMessages().get(1).getLines().get(0));
+        final List<Message> nestedMessages = new LinkedList<Message>(nestedFollower.getMessages());
+        Assert.assertEquals(2, nestedFollower.getMessages().size());
+        Assert.assertEquals(message2, nestedMessages.get(0).getLines().get(0));
+        Assert.assertEquals(message3, nestedMessages.get(1).getLines().get(0));
     }
 
     @Test
@@ -143,7 +146,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assert.assertEquals(message, result);
         result = this.getWriter().write(message, follower);
         Assert.assertEquals(message, result);
-        final List<Message> messages = follower.getMessages();
+        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
         Assert.assertEquals(1, messages.size());
         Assert.assertEquals(message, messages.get(0).getLines().get(0));
         this.getLogWatch().unfollow(follower);

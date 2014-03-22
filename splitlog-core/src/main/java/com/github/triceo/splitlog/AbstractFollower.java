@@ -4,7 +4,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.List;
+import java.util.Comparator;
+import java.util.SortedSet;
 
 import org.apache.commons.io.IOUtils;
 
@@ -12,6 +13,7 @@ import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.formatters.MessageFormatter;
 import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
+import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
 /**
  * Internal API for a log follower that, on top of the public API, provides ways
@@ -19,13 +21,16 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * follower implementation, such as {@link NonStoringFollower}, needs to extend
  * this class.
  * 
- * Will use {@value #DEFAULT_FORMATTER} as default when using
- * {@link #write(OutputStream)} and
- * {@link #write(OutputStream, MessageCondition)}.
+ * Will use {@value #DEFAULT_FORMATTER} as default message formatter. Will use
+ * {@value #DEFAULT_CONDITION} as a default in getMessages() and write()
+ * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
+ * messages.
  */
 abstract class AbstractFollower implements Follower {
 
     private static final MessageFormatter DEFAULT_FORMATTER = NoopMessageFormatter.INSTANCE;
+    private static final Comparator<Message> DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
+    private static final MessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
     private final DefaultLogWatch watch;
 
     protected AbstractFollower(final DefaultLogWatch watch) {
@@ -33,8 +38,13 @@ abstract class AbstractFollower implements Follower {
     }
 
     @Override
-    public List<Message> getMessages() {
-        return this.getMessages(AllMessagesAcceptingCondition.INSTANCE);
+    public SortedSet<Message> getMessages() {
+        return this.getMessages(AbstractFollower.DEFAULT_COMPARATOR);
+    }
+
+    @Override
+    public SortedSet<Message> getMessages(final Comparator<Message> order) {
+        return this.getMessages(AbstractFollower.DEFAULT_CONDITION, order);
     }
 
     protected DefaultLogWatch getWatch() {
@@ -96,20 +106,23 @@ abstract class AbstractFollower implements Follower {
 
     @Override
     public boolean write(final OutputStream stream, final MessageFormatter formatter) {
-        return this.write(stream, AllMessagesAcceptingCondition.INSTANCE, formatter);
+        return this.write(stream, AbstractFollower.DEFAULT_CONDITION, formatter);
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter) {
+    public boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order,
+        final MessageFormatter formatter) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");
         } else if (condition == null) {
             throw new IllegalArgumentException("Condition may not be null.");
+        } else if (order == null) {
+            throw new IllegalArgumentException("Comparator may not be null.");
         }
         BufferedWriter w = null;
         try {
             w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
-            for (final Message msg : this.getMessages(condition)) {
+            for (final Message msg : this.getMessages(condition, order)) {
                 w.write(formatter.format(msg));
                 w.newLine();
             }
@@ -120,4 +133,30 @@ abstract class AbstractFollower implements Follower {
             IOUtils.closeQuietly(w);
         }
     }
+
+    @Override
+    public SortedSet<Message> getMessages(final MessageCondition condition) {
+        return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final Comparator<Message> order) {
+        return this.write(stream, order, AbstractFollower.DEFAULT_FORMATTER);
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final Comparator<Message> order, final MessageFormatter formatter) {
+        return this.write(stream, AbstractFollower.DEFAULT_CONDITION, order, formatter);
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final MessageCondition condition, final Comparator<Message> order) {
+        return this.write(stream, condition, order, AbstractFollower.DEFAULT_FORMATTER);
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter) {
+        return this.write(stream, condition, AbstractFollower.DEFAULT_COMPARATOR, formatter);
+    }
+
 }

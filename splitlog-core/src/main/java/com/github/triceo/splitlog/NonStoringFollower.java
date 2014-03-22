@@ -1,11 +1,12 @@
 package com.github.triceo.splitlog;
 
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -37,8 +38,8 @@ final class NonStoringFollower extends AbstractFollower {
     }
 
     @Override
-    public List<Message> getMessages(final MessageCondition condition) {
-        final List<Message> messages = new LinkedList<Message>();
+    public SortedSet<Message> getMessages(final MessageCondition condition, final Comparator<Message> order) {
+        final SortedSet<Message> messages = new TreeSet<Message>(order);
         /*
          * get the last message ID; done as close as possible to retrieving the
          * list of messages, so that it would be unlikely the list would be
@@ -63,7 +64,7 @@ final class NonStoringFollower extends AbstractFollower {
         if (this.tags.containsKey(maxMessageId)) {
             messages.add(this.tags.get(maxMessageId));
         }
-        return Collections.unmodifiableList(messages);
+        return Collections.unmodifiableSortedSet(messages);
     }
 
     @Override
