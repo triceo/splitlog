@@ -64,6 +64,7 @@
             </dependency>
           </dependencies>
           <configuration>
+            <runOrder>alphabetical</runOrder>
             <reuseForks>false</reuseForks>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
           </configuration>
