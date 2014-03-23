@@ -13,12 +13,7 @@ public class AllMessagesAcceptingCondition implements MessageCondition, MessageD
     public static final AllMessagesAcceptingCondition INSTANCE = new AllMessagesAcceptingCondition();
 
     private AllMessagesAcceptingCondition() {
-
-    }
-
-    @Override
-    public boolean accept(final Message evaluate) {
-        return true;
+        // singleton
     }
 
     @Override
@@ -31,4 +26,13 @@ public class AllMessagesAcceptingCondition implements MessageCondition, MessageD
         return true;
     }
 
+    @Override
+    public boolean accept(final Message evaluate, final Follower source) {
+        return true;
+    }
+
+    @Override
+    public boolean accept(final Message evaluate, final LogWatch source) {
+        return true;
+    }
 }

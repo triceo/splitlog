@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
+// FIXME this is not a fluent builder
 final public class MessageBuilder {
 
     private final List<String> lines = new LinkedList<String>();

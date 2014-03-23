@@ -16,7 +16,7 @@ import java.util.Set;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractLogWatchFollower extends AbstractFollower implements MessageDeliveryNotificationSource {
+abstract class AbstractLogWatchFollower extends AbstractFollower implements MessageDeliveryNotificationSource, Follower {
 
     private final DefaultLogWatch watch;
     private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
@@ -27,6 +27,11 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
 
     protected Set<AbstractMergingFollower> getMergingFollowersToNotify() {
         return Collections.unmodifiableSet(this.mergingFollowersToNotify);
+    }
+
+    @Override
+    public LogWatch getFollowed() {
+        return this.getWatch();
     }
 
     protected DefaultLogWatch getWatch() {
@@ -47,7 +52,7 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
     }
 
     @Override
-    public MergingFollower mergeWith(final Follower f) {
+    public MergingFollower mergeWith(final CommonFollower f) {
         if (f instanceof MergingFollower) {
             final MergingFollower mf = (MergingFollower) f;
             final Set<Follower> followers = new HashSet<Follower>(mf.getMerged());

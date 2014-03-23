@@ -29,7 +29,7 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractFollower implements Follower {
+abstract class AbstractFollower implements CommonFollower {
 
     private static final MessageFormatter DEFAULT_FORMATTER = NoopMessageFormatter.INSTANCE;
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
@@ -68,8 +68,7 @@ abstract class AbstractFollower implements Follower {
      * @param source
      *            Where does the notification come from.
      * @throws IllegalArgumentException
-     *             In case the source is a class that should not access to this
-     *             {@link Follower}.
+     *             In case the source is a class that should not access to this.
      */
     protected abstract void notifyOfUndeliveredMessage(Message msg, MessageDeliveryNotificationSource source);
 
@@ -82,8 +81,7 @@ abstract class AbstractFollower implements Follower {
      * @param source
      *            Where does the notification come from.
      * @throws IllegalArgumentException
-     *             In case the source is a class that should not access to this
-     *             {@link Follower}.
+     *             In case the source is a class that should not access to this.
      */
     protected abstract void notifyOfIncomingMessage(Message msg, MessageDeliveryNotificationSource source);
 
@@ -96,8 +94,7 @@ abstract class AbstractFollower implements Follower {
      * @param source
      *            Where does the notification come from.
      * @throws IllegalArgumentException
-     *             In case the source is a class that should not access to this
-     *             {@link Follower}.
+     *             In case the source is a class that should not access to this.
      */
     protected abstract void notifyOfAcceptedMessage(Message msg, MessageDeliveryNotificationSource source);
 
@@ -111,8 +108,7 @@ abstract class AbstractFollower implements Follower {
      * @param source
      *            Where does the notification come from.
      * @throws IllegalArgumentException
-     *             In case the source is a class that should not access to this
-     *             {@link Follower}.
+     *             In case the source is a class that should not access to this.
      */
     protected abstract void notifyOfRejectedMessage(Message msg, MessageDeliveryNotificationSource source);
 

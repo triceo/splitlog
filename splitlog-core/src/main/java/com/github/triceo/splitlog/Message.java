@@ -87,7 +87,7 @@ final public class Message {
         this.type = splitter.determineType(this.lines);
         this.exceptionDescriptor = splitter.determineException(this.lines);
         // determine message timestamp
-        Date d = splitter.determineDate(this.lines);
+        final Date d = splitter.determineDate(this.lines);
         if (d == null) {
             this.millisecondsSinceJanuary1st1970 = timestamp;
         } else {

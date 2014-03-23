@@ -1,5 +1,7 @@
 package com.github.triceo.splitlog;
 
+import java.io.File;
+
 /**
  * The primary point of interaction with this tool. Allows users to start
  * listening to changes in log files. Use {@link LogWatchBuilder} to get an
@@ -13,6 +15,13 @@ public interface LogWatch extends MessageDeliveryNotificationSource {
      * @return True if it has.
      */
     boolean isTerminated();
+
+    /**
+     * The file that is being tracked by this class.
+     * 
+     * @return Never null
+     */
+    File getWatchedFile();
 
     /**
      * Whether or not {@link #unfollow(Follower)} has been called for a given

@@ -18,7 +18,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
 
     private final MessageExchange exchange = new MessageExchange();
 
-    public NonStoringMergingFollower(final Follower... followers) {
+    public NonStoringMergingFollower(final CommonFollower... followers) {
         super(followers);
     }
 
@@ -26,7 +26,12 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     public SortedSet<Message> getMessages(final MessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
-            sorted.addAll(f.getMessages(condition, order));
+            for (final Message m : f.getMessages()) {
+                if (!condition.accept(m, f)) {
+                    continue;
+                }
+                sorted.add(m);
+            }
         }
         sorted.addAll(this.getTags());
         return Collections.unmodifiableSortedSet(sorted);

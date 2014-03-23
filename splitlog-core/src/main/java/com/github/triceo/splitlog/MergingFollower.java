@@ -13,14 +13,21 @@ import java.util.Collection;
  * {@link #waitFor(com.github.triceo.splitlog.conditions.MessageDeliveryCondition)}
  * any message or just for messages from a particular
  * {@link MessageDeliveryNotificationSource}.</li>
- * <li>Their {@link #isFollowing()} is true for as long as either one of
- * {@link #getMerged()}'s {@link #isFollowing()} is true.</li>
  * <li>Their {@link #tag(String)} doesn't affect any tags in their
  * {@link #getMerged()}. They will always be added on top and not propagated.</li>
  * </ul>
  * 
  */
-public interface MergingFollower extends Follower {
+public interface MergingFollower extends CommonFollower {
+
+    /**
+     * Whether or not this follower is still capable of receiving any new
+     * messages.
+     * 
+     * @return True if any of {@link #getMerged()}'s {@link #isFollowing()} is
+     *         true.
+     */
+    boolean isFollowing();
 
     /**
      * Will remove the follower from {@link #getMerged()}. As a result, this

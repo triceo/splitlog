@@ -40,8 +40,8 @@ final class DefaultLogWatch implements LogWatch {
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final AtomicInteger numberOfTimesThatTailerWasStarted = new AtomicInteger(0);
-    private final Set<AbstractFollower> followers = new LinkedHashSet<AbstractFollower>();
-    private final File watchedFile;
+    private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
+    final File watchedFile;
     /**
      * These maps are weak; when a follower stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
@@ -148,7 +148,7 @@ final class DefaultLogWatch implements LogWatch {
      */
     private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
-        final boolean messageAccepted = this.acceptanceCondition.accept(message);
+        final boolean messageAccepted = this.acceptanceCondition.accept(message, this);
         if (messageAccepted) {
             this.messages.add(message);
         } else {
@@ -280,6 +280,7 @@ final class DefaultLogWatch implements LogWatch {
         return this.followers.contains(follower);
     }
 
+    @Override
     public File getWatchedFile() {
         return this.watchedFile;
     }
@@ -311,7 +312,7 @@ final class DefaultLogWatch implements LogWatch {
                             this.watchedFile, delay);
         }
         final int startingMessageId = this.messages.getNextMessageId();
-        final AbstractFollower follower = new NonStoringFollower(this);
+        final AbstractLogWatchFollower follower = new NonStoringFollower(this);
         this.followers.add(follower);
         this.startingMessageIds.put(follower, startingMessageId);
         DefaultLogWatch.LOGGER.info("Registered {} for file '{}'.", follower, this.watchedFile);
@@ -333,7 +334,7 @@ final class DefaultLogWatch implements LogWatch {
             return false;
         }
         this.isTerminated.set(true);
-        for (final AbstractFollower chunk : new ArrayList<AbstractFollower>(this.followers)) {
+        for (final AbstractLogWatchFollower chunk : new ArrayList<AbstractLogWatchFollower>(this.followers)) {
             this.unfollow(chunk);
         }
         this.currentlyRunningSweeper.cancel(false);

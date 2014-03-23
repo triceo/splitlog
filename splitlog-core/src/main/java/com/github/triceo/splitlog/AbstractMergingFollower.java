@@ -8,10 +8,10 @@ import java.util.Set;
 
 abstract class AbstractMergingFollower extends AbstractFollower implements MergingFollower {
 
-    private final Set<AbstractFollower> followers = new LinkedHashSet<AbstractFollower>();
+    private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
 
-    protected AbstractMergingFollower(final Follower... followers) {
-        for (final Follower f : followers) {
+    protected AbstractMergingFollower(final CommonFollower... followers) {
+        for (final CommonFollower f : followers) {
             if (!(f instanceof AbstractLogWatchFollower)) {
                 throw new IllegalArgumentException("Illegal follower: " + f);
             }
@@ -33,7 +33,7 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
 
     @Override
     public boolean isFollowing() {
-        for (final Follower f : this.followers) {
+        for (final AbstractLogWatchFollower f : this.followers) {
             if (f.isFollowing()) {
                 return true;
             }
@@ -47,8 +47,8 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
     }
 
     @Override
-    public MergingFollower mergeWith(final Follower f) {
-        final Set<Follower> followers = new HashSet<Follower>(this.followers);
+    public MergingFollower mergeWith(final CommonFollower f) {
+        final Set<CommonFollower> followers = new HashSet<CommonFollower>(this.followers);
         if (f instanceof MergingFollower) {
             final MergingFollower mf = (MergingFollower) f;
             followers.addAll(mf.getMerged());

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
-class LogWriter {
+public class LogWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWriter.class);
     private final File target;

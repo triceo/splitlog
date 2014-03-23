@@ -11,7 +11,7 @@ public interface MessageFormatter {
     /**
      * Platform-specific line separator.
      */
-    final String LINE_SEPARATOR = System.getProperty("line.separator");
+    String LINE_SEPARATOR = System.getProperty("line.separator");
 
     /**
      * Provides a textual representation of a message.
