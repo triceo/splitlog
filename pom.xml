@@ -64,6 +64,7 @@
             </dependency>
           </dependencies>
           <configuration>
+            <reuseForks>false</reuseForks>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
           </configuration>
         </plugin>
