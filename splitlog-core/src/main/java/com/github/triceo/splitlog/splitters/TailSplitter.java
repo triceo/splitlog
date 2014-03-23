@@ -33,7 +33,7 @@ public interface TailSplitter {
      * 
      * @param raw
      *            Raw, untreated lines of the message.
-     * @return Date from the message, or the current date if not found.
+     * @return Date from the message, or null if not found.
      */
     Date determineDate(final List<String> raw);
 

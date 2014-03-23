@@ -1,6 +1,5 @@
 package com.github.triceo.splitlog.splitters;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -11,7 +10,7 @@ final public class SimpleTailSplitter extends AbstractTailSplitter {
 
     @Override
     public Date determineDate(final List<String> raw) {
-        return Calendar.getInstance().getTime();
+        return null;
     }
 
     @Override

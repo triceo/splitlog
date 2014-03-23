@@ -92,7 +92,7 @@ final class DefaultLogWatch implements LogWatch {
             }
             // prepare for new message
             this.currentlyProcessedMessage = (this.previousAcceptedMessage == null) ? new MessageBuilder(line)
-                    : new MessageBuilder(line, this.previousAcceptedMessage.get());
+                    : new MessageBuilder(line, System.currentTimeMillis(), this.previousAcceptedMessage.get());
         } else {
             // continue present message
             if (!isMessageBeingProcessed) {
