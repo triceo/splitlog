@@ -2,8 +2,10 @@ package com.github.triceo.splitlog;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,6 +43,7 @@ class LogWriter {
      */
     public String write(final String line, final Follower follower) {
         if (!this.writeWithoutWaiting(line, follower)) {
+            LogWriter.LOGGER.debug("Write failed: '{}'.", line);
             return null;
         }
         // wait until the last part of the string is finally present
@@ -64,7 +67,7 @@ class LogWriter {
 
         }, 10, TimeUnit.SECONDS);
         if (result == null) {
-            return null;
+            throw new IllegalStateException("No message received in time.");
         }
         return result.getLines().get(result.getLines().size() - 1);
     }
@@ -105,11 +108,17 @@ class LogWriter {
             w = new BufferedWriter(new FileWriter(LogWriter.this.target, true));
             w.write(line);
             w.newLine();
-            return true;
         } catch (final IOException ex) {
             return false;
         } finally {
             IOUtils.closeQuietly(w);
         }
+        try {
+            final Collection<String> lines = IOUtils.readLines(new FileReader(this.target));
+            LogWriter.LOGGER.debug("Contents of file '{}': {}.", this.target, lines);
+        } catch (final Exception e) {
+            LogWriter.LOGGER.warn("File '{}' cannot be read.", this.target, e);
+        }
+        return true;
     }
 }

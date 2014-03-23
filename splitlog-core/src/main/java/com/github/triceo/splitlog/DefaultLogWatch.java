@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -35,12 +36,12 @@ final class DefaultLogWatch implements LogWatch {
     private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
 
     private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
-    private Tailer tailer;
+    private Future<?> tailer;
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
+    private final AtomicInteger numberOfTimesThatTailerWasStarted = new AtomicInteger(0);
     private final Set<AbstractFollower> followers = new LinkedHashSet<AbstractFollower>();
-    private final LogWatchTailerListener listener;
-    final File watchedFile;
+    private final File watchedFile;
     /**
      * These maps are weak; when a follower stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
@@ -69,7 +70,6 @@ final class DefaultLogWatch implements LogWatch {
         this.reopenBetweenReads = reopenBetweenReads;
         this.ignoreExistingContent = ignoreExistingContent;
         this.watchedFile = watchedFile;
-        this.listener = new LogWatchTailerListener(this);
     }
 
     private MessageBuilder currentlyProcessedMessage = null;
@@ -91,7 +91,7 @@ final class DefaultLogWatch implements LogWatch {
             }
             // prepare for new message
             this.currentlyProcessedMessage = (this.previousAcceptedMessage == null) ? new MessageBuilder(line)
-                    : new MessageBuilder(line, this.previousAcceptedMessage.get());
+                    : new MessageBuilder(line, System.currentTimeMillis(), this.previousAcceptedMessage.get());
         } else {
             // continue present message
             if (!isMessageBeingProcessed) {
@@ -120,18 +120,19 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     /**
-     * Notify {@link Follower}s of a message that is
-     * {@link MessageDeliveryStatus#UNDELIVERED}.
+     * Notify {@link Follower} of a message that could not be delivered fully as
+     * the Follower terminated.
      * 
+     * @param followe
+     *            The followe that was terminated.
      * @param messageBuilder
      *            Builder to use to construct the message.
      * @return The message that was the subject of notifications.
      */
-    private synchronized Message handleUndeliveredMessage(final MessageBuilder messageBuilder) {
+    private synchronized Message handleUndeliveredMessage(final AbstractFollower follower,
+        final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        for (final AbstractFollower f : this.followers) {
-            f.notifyOfUndeliveredMessage(message, this);
-        }
+        follower.notifyOfUndeliveredMessage(message, this);
         return message;
     }
 
@@ -276,7 +277,11 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean isFollowedBy(final Follower follower) {
-        return !this.followers.contains(follower);
+        return this.followers.contains(follower);
+    }
+
+    public File getWatchedFile() {
+        return this.watchedFile;
     }
 
     public long getDelayBetweenReads() {
@@ -297,9 +302,6 @@ final class DefaultLogWatch implements LogWatch {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
-        if (this.getNumberOfActiveFollowers() < 1) {
-            this.startTailer();
-        }
         if (this.currentlyRunningSweeper == null) {
             final long delay = this.delayBetweenSweeps;
             this.currentlyRunningSweeper = DefaultLogWatch.TIMER.scheduleWithFixedDelay(
@@ -312,7 +314,10 @@ final class DefaultLogWatch implements LogWatch {
         final AbstractFollower follower = new NonStoringFollower(this);
         this.followers.add(follower);
         this.startingMessageIds.put(follower, startingMessageId);
-        this.numberOfActiveFollowers.incrementAndGet();
+        DefaultLogWatch.LOGGER.info("Registered {} for file '{}'.", follower, this.watchedFile);
+        if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
+            this.startTailer();
+        }
         return follower;
     }
 
@@ -328,9 +333,6 @@ final class DefaultLogWatch implements LogWatch {
             return false;
         }
         this.isTerminated.set(true);
-        if (this.currentlyProcessedMessage != null) {
-            this.handleUndeliveredMessage(this.currentlyProcessedMessage);
-        }
         for (final AbstractFollower chunk : new ArrayList<AbstractFollower>(this.followers)) {
             this.unfollow(chunk);
         }
@@ -345,17 +347,40 @@ final class DefaultLogWatch implements LogWatch {
     private final ExecutorService e = Executors.newSingleThreadExecutor();
     private ScheduledFuture<?> currentlyRunningSweeper = null;
 
+    private boolean willReadFromEnd() {
+        if (this.numberOfTimesThatTailerWasStarted.get() > 0) {
+            return true;
+        } else {
+            return this.ignoreExistingContent;
+        }
+    }
+
     private boolean startTailer() {
-        this.tailer = new Tailer(this.watchedFile, this.listener, this.delayBetweenReads, this.ignoreExistingContent,
-                this.reopenBetweenReads, this.bufferSize);
-        this.e.execute(this.tailer);
-        DefaultLogWatch.LOGGER.debug("Started log tailer for file '{}'", this.watchedFile);
+        if (this.tailer != null) {
+            DefaultLogWatch.LOGGER.debug("Tailer already running, therefore not starting.");
+            return false;
+        }
+        final Tailer t = new Tailer(this.watchedFile, new LogWatchTailerListener(this), this.delayBetweenReads,
+                this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
+        this.tailer = this.e.submit(t);
+        if (this.numberOfTimesThatTailerWasStarted.getAndIncrement() == 0) {
+            DefaultLogWatch.LOGGER.debug("Started log tailer for file '{}'", this.watchedFile);
+        } else {
+            DefaultLogWatch.LOGGER.debug("Re-started log tailer for file '{}'", this.watchedFile);
+        }
         return true;
     }
 
     private boolean terminateTailer() {
-        this.tailer.stop();
+        if (this.tailer == null) {
+            DefaultLogWatch.LOGGER.debug("Tailer not running, therefore not terminating.");
+            return false;
+        }
+        // forcibly terminate tailer
+        this.tailer.cancel(true);
         this.tailer = null;
+        // cancel whatever message processing that was ongoing
+        this.currentlyProcessedMessage = null;
         DefaultLogWatch.LOGGER.debug(
                 "Terminated log tailer for file '{}' as the last known Follower has just been terminated.",
                 this.watchedFile);
@@ -365,6 +390,10 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean unfollow(final Follower follower) {
         if (this.followers.remove(follower)) {
+            if (this.currentlyProcessedMessage != null) {
+                this.handleUndeliveredMessage((AbstractFollower) follower, this.currentlyProcessedMessage);
+            }
+            DefaultLogWatch.LOGGER.info("Unregistered {} for file '{}'.", follower, this.watchedFile);
             final int endingMessageId = this.messages.getLatestMessageId();
             this.endingMessageIds.put(follower, endingMessageId);
             this.numberOfActiveFollowers.decrementAndGet();

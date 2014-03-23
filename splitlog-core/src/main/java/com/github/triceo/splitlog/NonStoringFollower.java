@@ -5,6 +5,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 import com.github.triceo.splitlog.ordering.MessageComparator;
@@ -18,6 +21,8 @@ import com.github.triceo.splitlog.ordering.MessageComparator;
  * Otherwise, unpredictable behavior from waitFor() methods is possible.
  */
 final class NonStoringFollower extends AbstractLogWatchFollower {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MessageExchange exchange = new MessageExchange();
 
@@ -70,6 +75,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
+        NonStoringFollower.LOGGER.info("{} notified of {} with status {}.", this, msg, status);
         this.exchange.notifyOfMessage(msg, status, source);
     }
 

@@ -32,9 +32,8 @@ final public class Message {
     private final ExceptionDescriptor exceptionDescriptor;
 
     /**
-     * Form a new message and infer its metadata using
-     * {@value #DEFAULT_SPLITTER}. The message will point to no previous
-     * message.
+     * Will call {@link #Message(Collection, TailSplitter)} with
+     * {@link #DEFAULT_SPLITTER}.
      * 
      * @param raw
      *            Message lines, expected without any pre-processing.
@@ -44,8 +43,8 @@ final public class Message {
     }
 
     /**
-     * Form a new message and infer its metadata using a given splitter. The
-     * message will point to no previous message.
+     * Will call {@link #Message(Collection, long, TailSplitter, Message)} with
+     * current time and no previous message.
      * 
      * @param raw
      *            Message lines, expected without any pre-processing.
@@ -53,7 +52,7 @@ final public class Message {
      *            Used to extract metadata out of the raw lines.
      */
     protected Message(final Collection<String> raw, final TailSplitter splitter) {
-        this(raw, splitter, null);
+        this(raw, System.currentTimeMillis(), splitter, null);
     }
 
     /**
@@ -61,10 +60,17 @@ final public class Message {
      * 
      * @param raw
      *            Message lines, expected without any pre-processing.
+     * @param timestamp
+     *            In milliseconds since January 1st 1970. Will be overriden if
+     *            {@link TailSplitter} can decode the timestamp from the log.
      * @param splitter
      *            Used to extract metadata out of the raw lines.
+     * @param previousMessage
+     *            Message that preceded this one in the log file. Should not
+     *            include tags from {@link CommonFollower}.
      */
-    protected Message(final Collection<String> raw, final TailSplitter splitter, final Message previousMessage) {
+    protected Message(final Collection<String> raw, final long timestamp, final TailSplitter splitter,
+            final Message previousMessage) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
         } else if (splitter == null) {
@@ -79,8 +85,14 @@ final public class Message {
         this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
         this.severity = splitter.determineSeverity(this.lines);
         this.type = splitter.determineType(this.lines);
-        this.millisecondsSinceJanuary1st1970 = splitter.determineDate(this.lines).getTime();
         this.exceptionDescriptor = splitter.determineException(this.lines);
+        // determine message timestamp
+        Date d = splitter.determineDate(this.lines);
+        if (d == null) {
+            this.millisecondsSinceJanuary1st1970 = timestamp;
+        } else {
+            this.millisecondsSinceJanuary1st1970 = d.getTime();
+        }
     }
 
     /**

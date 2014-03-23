@@ -12,8 +12,13 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class DefaultFollowerBaseTest {
+
+    private static final String INITIAL_MESSAGE = "INITIAL";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultFollowerBaseTest.class);
 
     // will verify various configs of log watch
     @Parameters(name = "{index}: {0}")
@@ -98,6 +103,26 @@ public abstract class DefaultFollowerBaseTest {
         this.writer = new LogWriter(toWrite);
         // and start the log watch
         this.logwatch = this.getBuilder().build();
+        // this will write an initial message to the log
+        this.writer.writeWithoutWaiting(DefaultFollowerBaseTest.INITIAL_MESSAGE);
+        if (!this.getBuilder().isReadingFromBeginning()) {
+            return;
+        }
+        /*
+         * if we are reading from beginning, we get rid of the first message;
+         * this way, Github issue #25 is tested and all tests still work for
+         * both cases.
+         */
+        DefaultFollowerBaseTest.LOGGER.info("Initial message written.");
+        final Follower f = this.getLogWatch().follow();
+        try {
+            // give the follower some time to be notified of the message
+            Thread.sleep(100);
+        } catch (final InterruptedException e) {
+            DefaultFollowerBaseTest.LOGGER.warn("Test wait failed.");
+        }
+        this.getLogWatch().unfollow(f);
+        DefaultFollowerBaseTest.LOGGER.info("@Before finished.");
     }
 
     @After

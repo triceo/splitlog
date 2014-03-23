@@ -5,11 +5,16 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 import com.github.triceo.splitlog.ordering.MessageComparator;
 
 final class NonStoringMergingFollower extends AbstractMergingFollower {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MessageExchange exchange = new MessageExchange();
 
@@ -73,6 +78,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
         if (!this.getMerged().contains(source)) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
+        NonStoringMergingFollower.LOGGER.info("{} notified of {} with status {} by {}.", this, msg, status, source);
         this.exchange.notifyOfMessage(msg, status, source);
     }
 
