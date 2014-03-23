@@ -27,6 +27,7 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
             return false;
         }
         // we know about this follower, so the cast is safe
+        this.followers.remove(f);
         final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
         return af.unregisterMerge(this);
     }
@@ -48,6 +49,11 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
 
     @Override
     public MergingFollower mergeWith(final CommonFollower f) {
+        if (f == null) {
+            throw new IllegalArgumentException("Cannot merge with null.");
+        } else if (f == this) {
+            throw new IllegalArgumentException("Cannot merge with self.");
+        }
         final Set<CommonFollower> followers = new HashSet<CommonFollower>(this.followers);
         if (f instanceof MergingFollower) {
             final MergingFollower mf = (MergingFollower) f;

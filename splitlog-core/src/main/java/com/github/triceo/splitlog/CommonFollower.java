@@ -1,7 +1,6 @@
 package com.github.triceo.splitlog;
 
 import java.io.OutputStream;
-import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
 

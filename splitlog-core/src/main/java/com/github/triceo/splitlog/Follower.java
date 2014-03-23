@@ -1,7 +1,5 @@
 package com.github.triceo.splitlog;
 
-import com.github.triceo.splitlog.conditions.MessageCondition;
-
 /**
  * On top of the {@link CommonFollower}'s functions, this allows for merging
  * followers.
@@ -14,7 +12,7 @@ public interface Follower extends CommonFollower, MessageDeliveryNotificationSou
      * @return The {@link LogWatch} whose {@link LogWatch#follow()} was called
      *         to obtain reference to this follower.
      */
-    public LogWatch getFollowed();
+    LogWatch getFollowed();
 
     /**
      * Whether or not this follower is still capable of receiving messages from

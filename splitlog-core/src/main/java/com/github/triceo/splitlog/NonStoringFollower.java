@@ -75,7 +75,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
-        NonStoringFollower.LOGGER.info("{} notified of {} with status {}.", this, msg, status);
+        NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
         this.exchange.notifyOfMessage(msg, status, source);
     }
 

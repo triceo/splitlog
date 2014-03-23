@@ -53,6 +53,11 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
 
     @Override
     public MergingFollower mergeWith(final CommonFollower f) {
+        if (f == null) {
+            throw new IllegalArgumentException("Cannot merge with null.");
+        } else if (f == this) {
+            throw new IllegalArgumentException("Cannot merge with self.");
+        }
         if (f instanceof MergingFollower) {
             final MergingFollower mf = (MergingFollower) f;
             final Set<Follower> followers = new HashSet<Follower>(mf.getMerged());
