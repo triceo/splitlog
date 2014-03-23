@@ -1,7 +1,5 @@
 package com.github.triceo.splitlog;
 
-import java.io.File;
-
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
 import org.slf4j.Logger;
@@ -12,7 +10,6 @@ final class LogWatchTailerListener implements TailerListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchTailerListener.class);
 
     private final DefaultLogWatch watcher;
-    private File watchedFile;
 
     /*
      * TODO ideally this would accept AbstractLogWatch instead, to enable
@@ -24,12 +21,12 @@ final class LogWatchTailerListener implements TailerListener {
 
     @Override
     public void fileNotFound() {
-        LogWatchTailerListener.LOGGER.info("Log file not found: {}.", this.watchedFile);
+        LogWatchTailerListener.LOGGER.info("Log file not found: {}.", this.watcher.getWatchedFile());
     }
 
     @Override
     public void fileRotated() {
-        LogWatchTailerListener.LOGGER.info("Log file rotated: {}.", this.watchedFile);
+        LogWatchTailerListener.LOGGER.info("Log file rotated: {}.", this.watcher.getWatchedFile());
     }
 
     @Override
@@ -45,8 +42,7 @@ final class LogWatchTailerListener implements TailerListener {
 
     @Override
     public void init(final Tailer tailer) {
-        this.watchedFile = tailer.getFile();
-        LogWatchTailerListener.LOGGER.info("Tailer initialized for file: {}.", this.watchedFile);
+        LogWatchTailerListener.LOGGER.info("Tailer initialized for file: {}.", this.watcher.getWatchedFile());
     }
 
 }

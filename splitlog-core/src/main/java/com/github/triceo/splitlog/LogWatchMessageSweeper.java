@@ -48,18 +48,18 @@ final class LogWatchMessageSweeper implements Runnable {
         final int minId = w.getFirstReachableMessageId();
         LogWatchMessageSweeper.LOGGER.debug(
                 "Starting message sweep from log watch for file '{}'. First reachable message ID reportedly {}.",
-                w.watchedFile, minId);
+                w.getWatchedFile(), minId);
         if (minId < 0) {
             LogWatchMessageSweeper.LOGGER.info(
-                    "Sweeping all messages from log watch for file '{}' as none are reachable.", w.watchedFile);
+                    "Sweeping all messages from log watch for file '{}' as none are reachable.", w.getWatchedFile());
             messages.discardBefore(messages.getNextMessageId());
             return;
         } else if (messages.isEmpty()) {
-            LogWatchMessageSweeper.LOGGER.info("No messages in the log watch for file '{}'.", w.watchedFile);
+            LogWatchMessageSweeper.LOGGER.info("No messages in the log watch for file '{}'.", w.getWatchedFile());
             return;
         }
         final int num = messages.discardBefore(minId);
-        LogWatchMessageSweeper.LOGGER.info("Swept {} messages from log watch for file '{}'.", num, w.watchedFile);
+        LogWatchMessageSweeper.LOGGER.info("Swept {} messages from log watch for file '{}'.", num, w.getWatchedFile());
     }
 
 }

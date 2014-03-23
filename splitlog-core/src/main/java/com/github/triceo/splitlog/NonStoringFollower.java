@@ -77,6 +77,7 @@ final class NonStoringFollower extends AbstractFollower {
     }
 
     private void notifyOfMessage(final Message msg, final MessageDeliveryStatus status) {
+        NonStoringFollower.LOGGER.info("{} notified of {} with status {}.", this, msg, status);
         if (this.messageBlockingCondition == null) {
             // this does nothing with the message
             return;
