@@ -48,8 +48,6 @@ public abstract class DefaultFollowerBaseTest {
      *            want to compare against a tag.
      */
     protected static void assertProperOrder(final List<Message> messages, final Object... expectedMessages) {
-        System.out.println(messages);
-        System.out.println(Arrays.toString(expectedMessages));
         Assert.assertEquals(expectedMessages.length, messages.size());
         for (int i = 0; i < expectedMessages.length; i++) {
             final Object expected = expectedMessages[i];
