@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
+import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
@@ -27,6 +28,10 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
  * <dd>{@link Integer#MAX_VALUE}, the maximum possible. See {@link MessageStore}
  * <dt>Interval between two sweeps for unreachable messages.</dt>
  * <dd>See {@link #DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS}.</dd>
+ * <dt>Interval between requesting tailing and the actual start of tailing.</dt>
+ * <dd>See {@link #DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS}. Please see
+ * {@link #withDelayBeforeTailingStarts(int, TimeUnit)} for an explanation of
+ * why this is necessary.</dd>
  * </dl>
  * 
  * By default, the instance will allow every message through.
@@ -34,7 +39,8 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 final public class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
-    public static final int DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
+    public static final long DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
+    public static final long DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS = 5;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
 
     /**
@@ -53,6 +59,7 @@ final public class LogWatchBuilder {
     private int limitCapacityTo = Integer.MAX_VALUE;
     private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
+    private long delayBeforeTailingStarts = LogWatchBuilder.DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS;
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads = false;
     // will accept all messages
@@ -113,7 +120,7 @@ final public class LogWatchBuilder {
         }
         return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.messageAcceptanceCondition,
                 this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning, this.closingBetweenReads,
-                this.bufferSize);
+                this.bufferSize, this.delayBeforeTailingStarts);
     }
 
     /**
@@ -211,6 +218,18 @@ final public class LogWatchBuilder {
      */
     public long getDelayBetweenReads() {
         return this.delayBetweenReads;
+    }
+
+    /**
+     * Get the delay between the request for starting tailing and the actual
+     * start of tailing. Please see
+     * {@link #withDelayBeforeTailingStarts(int, TimeUnit)} for an explanation
+     * of why this is necessary.
+     * 
+     * @return In milliseconds.
+     */
+    public long getDelayBeforeTailingStarts() {
+        return this.delayBeforeTailingStarts;
     }
 
     /**
@@ -321,6 +340,28 @@ final public class LogWatchBuilder {
      */
     public LogWatchBuilder withDelayBetweenReads(final int length, final TimeUnit unit) {
         this.delayBetweenReads = LogWatchBuilder.getDelay(length, unit);
+        return this;
+    }
+
+    /**
+     * Specify the delay between when the log tailing is requested and when it
+     * is actually started.
+     * 
+     * In order for {@link LogWatch#follow(MessageDeliveryCondition)} to
+     * actually work, we need the tailer to start after we are already waiting.
+     * But the waiting will block the thread, making it impossible to start the
+     * tailer. Therefore, we schedule the tailer on a different thread before we
+     * start waiting and we delay the actual execution by this amount, so that
+     * the waiting has time to start.
+     * 
+     * @param length
+     *            Length of time.
+     * @param unit
+     *            Unit of that length.
+     * @return This.
+     */
+    public LogWatchBuilder withDelayBeforeTailingStarts(final int length, final TimeUnit unit) {
+        this.delayBeforeTailingStarts = LogWatchBuilder.getDelay(length, unit);
         return this;
     }
 

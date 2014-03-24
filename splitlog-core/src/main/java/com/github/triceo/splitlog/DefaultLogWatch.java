@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -19,24 +17,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.input.Tailer;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.conditions.MessageCondition;
+import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
 /**
  * Default log watch implementation which provides all the bells and whistles so
  * that the rest of the tool can work together.
- * 
  */
 final class DefaultLogWatch implements LogWatch {
+
+    private final long delayedTailerStartInMilliseconds;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
     private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
 
     private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
-    private Future<?> tailer;
+    private ScheduledFuture<?> tailer;
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final AtomicInteger numberOfTimesThatTailerWasStarted = new AtomicInteger(0);
@@ -59,7 +61,8 @@ final class DefaultLogWatch implements LogWatch {
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
             final MessageCondition acceptanceCondition, final long delayBetweenReads, final long delayBetweenSweeps,
-            final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize) {
+            final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize,
+            final long delayForTailerStart) {
         this.acceptanceCondition = acceptanceCondition;
         this.messages = new MessageStore(capacity);
         this.splitter = splitter;
@@ -70,6 +73,7 @@ final class DefaultLogWatch implements LogWatch {
         this.reopenBetweenReads = reopenBetweenReads;
         this.ignoreExistingContent = ignoreExistingContent;
         this.watchedFile = watchedFile;
+        this.delayedTailerStartInMilliseconds = delayForTailerStart;
     }
 
     private MessageBuilder currentlyProcessedMessage = null;
@@ -295,13 +299,37 @@ final class DefaultLogWatch implements LogWatch {
         return this.delayBetweenSweeps;
     }
 
+    @Override
+    public Follower follow() {
+        final Follower f = this.followInternal(false);
+        long remainingDelay = Long.MAX_VALUE;
+        // the tailer may have a delayed start; wait until it actually started
+        while (remainingDelay > 0) {
+            remainingDelay = this.tailer.getDelay(TimeUnit.MILLISECONDS) + 1;
+            if (remainingDelay < 0) {
+                continue;
+            }
+            try {
+                DefaultLogWatch.LOGGER.debug("Will wait further {} milliseconds for tailer to be started.");
+                Thread.sleep(remainingDelay);
+            } catch (final InterruptedException e) {
+                // do nothing
+            }
+        }
+        return f;
+    }
+
     /**
      * First invocation of the method on an instance will trigger
      * {@link LogWatchMessageSweeper} to be scheduled for periodical sweeping of
      * unreachable messages.
+     * 
+     * @param boolean If the tailer needs a delayed start because of
+     *        {@link #follow(MessageDeliveryCondition)}, as explained in
+     *        {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
+     * @return The follower that follows this log watch from now on.
      */
-    @Override
-    public synchronized Follower follow() {
+    private synchronized Follower followInternal(final boolean needsToWait) {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
@@ -319,9 +347,22 @@ final class DefaultLogWatch implements LogWatch {
         this.startingMessageIds.put(follower, startingMessageId);
         DefaultLogWatch.LOGGER.info("Registered {} for file '{}'.", follower, this.watchedFile);
         if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
-            this.startTailer();
+            this.startTailer(needsToWait);
         }
         return follower;
+    }
+
+    @Override
+    public Pair<Follower, Message> follow(final MessageDeliveryCondition waitFor) {
+        final Follower f = this.followInternal(true);
+        return ImmutablePair.of(f, f.waitFor(waitFor));
+    }
+
+    @Override
+    public Pair<Follower, Message> follow(final MessageDeliveryCondition waitFor, final long howLong,
+        final TimeUnit unit) {
+        final Follower f = this.followInternal(true);
+        return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
 
     /**
@@ -347,7 +388,7 @@ final class DefaultLogWatch implements LogWatch {
         return true;
     }
 
-    private final ExecutorService e = Executors.newSingleThreadExecutor();
+    private final ScheduledExecutorService e = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> currentlyRunningSweeper = null;
 
     private boolean willReadFromEnd() {
@@ -358,18 +399,30 @@ final class DefaultLogWatch implements LogWatch {
         }
     }
 
-    private boolean startTailer() {
+    /**
+     * Start the tailer on a separate thread. Only when a tailer is running can
+     * {@link Follower}s be notified of new {@link Message}s from the log.
+     * 
+     * @param needsToWait
+     *            Whether the start of the tailer needs to be delayed by
+     *            {@link #delayedTailerStartInMilliseconds} milliseconds.
+     * @return Whether or not the tailer start was scheduled.
+     */
+    private boolean startTailer(final boolean needsToWait) {
         if (this.tailer != null) {
             DefaultLogWatch.LOGGER.debug("Tailer already running, therefore not starting.");
             return false;
         }
         final Tailer t = new Tailer(this.watchedFile, new LogWatchTailerListener(this), this.delayBetweenReads,
                 this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
-        this.tailer = this.e.submit(t);
+        final long delay = needsToWait ? this.delayedTailerStartInMilliseconds : 0;
+        this.tailer = this.e.schedule(t, delay, TimeUnit.MILLISECONDS);
         if (this.numberOfTimesThatTailerWasStarted.getAndIncrement() == 0) {
-            DefaultLogWatch.LOGGER.debug("Started log tailer for file '{}'", this.watchedFile);
+            DefaultLogWatch.LOGGER.debug("Scheduling log tailer for file '{}' with delay of {} milliseconds.",
+                    this.watchedFile, delay);
         } else {
-            DefaultLogWatch.LOGGER.debug("Re-started log tailer for file '{}'", this.watchedFile);
+            DefaultLogWatch.LOGGER.debug("Re-scheduling log tailer for file '{}' with delay of {} milliseconds.",
+                    this.watchedFile, delay);
         }
         return true;
     }
@@ -408,4 +461,5 @@ final class DefaultLogWatch implements LogWatch {
             return false;
         }
     }
+
 }
