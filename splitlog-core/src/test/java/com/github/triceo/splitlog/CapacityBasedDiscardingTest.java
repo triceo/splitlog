@@ -27,7 +27,7 @@ public class CapacityBasedDiscardingTest extends DefaultFollowerBaseTest {
         // receive second message, discarding first message and not the tag
         final String thirdMessage = "check3";
         this.getWriter().write(thirdMessage, follower);
-        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, secondTag, secondMessage);
+        DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, secondMessage, secondTag);
         // receive third message, discarding second message and not the tag
         final String fourthMessage = "check4";
         this.getWriter().write(fourthMessage, follower);

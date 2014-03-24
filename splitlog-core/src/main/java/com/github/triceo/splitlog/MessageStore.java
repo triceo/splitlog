@@ -17,11 +17,11 @@ import org.slf4j.LoggerFactory;
 final class MessageStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageStore.class);
-    private static final int INITIAL_MESSAGE_ID = 0;
+    private static final int INITIAL_MESSAGE_POSITION = 0;
 
     private final SortedMap<Integer, Message> store = new TreeMap<Integer, Message>();
     private final int messageLimit;
-    private int nextMessageId = MessageStore.INITIAL_MESSAGE_ID;
+    private int nextMessagePosition = MessageStore.INITIAL_MESSAGE_POSITION;
 
     /**
      * Create a message store with a maximum capacity of
@@ -45,32 +45,36 @@ final class MessageStore {
     }
 
     /**
-     * Remove messages from the queue that are older than the given ID. If the
-     * ID is larger than {@link #getLatestMessageId()}, all messages will be
+     * Remove messages from the queue that come before the given position. If
+     * the ID is larger than {@link #getLatestPosition()}, all messages will be
      * discarded while marking no future messages for discarding.
      * 
-     * @param firstKeyNotToDiscard
-     *            ID of the first message to be kept.
+     * @param firstPositionNotToDiscard
+     *            Messages be kept from this position onward, inclusive.
      * @return Number of messages actually discarded.
      */
-    public synchronized int discardBefore(final int firstKeyNotToDiscard) {
-        final int firstMessageId = this.getFirstMessageId();
-        if (this.getNextMessageId() == MessageStore.INITIAL_MESSAGE_ID) {
+    public synchronized int discardBefore(final int firstPositionNotToDiscard) {
+        final int firstMessagePosition = this.getFirstPosition();
+        if (this.getNextPosition() == MessageStore.INITIAL_MESSAGE_POSITION) {
             MessageStore.LOGGER.info("Not discarding any messages, as there haven't been any messages yet.");
             return 0;
-        } else if ((firstKeyNotToDiscard < MessageStore.INITIAL_MESSAGE_ID) || (firstKeyNotToDiscard <= firstMessageId)) {
-            MessageStore.LOGGER.info("Not discarding any messages, as there are no messages with ID lower than {}.",
-                    firstKeyNotToDiscard);
+        } else if ((firstPositionNotToDiscard < MessageStore.INITIAL_MESSAGE_POSITION)
+                || (firstPositionNotToDiscard <= firstMessagePosition)) {
+            MessageStore.LOGGER.info(
+                    "Not discarding any messages, as there are no messages with position lower than {}.",
+                    firstPositionNotToDiscard);
             return 0;
-        } else if (firstKeyNotToDiscard > this.getLatestMessageId()) {
-            MessageStore.LOGGER.info("Discarding all messages, as all have IDs lower than {}.", firstKeyNotToDiscard);
+        } else if (firstPositionNotToDiscard > this.getLatestPosition()) {
+            MessageStore.LOGGER.info("Discarding all messages, as all have lower positions than {}.",
+                    firstPositionNotToDiscard);
             final int size = this.store.size();
             this.store.clear();
             return size;
         }
         // and now actually discard
-        MessageStore.LOGGER.info("Discarding messages in range <{},{}).", firstMessageId, firstKeyNotToDiscard);
-        final SortedMap<Integer, Message> toDiscard = this.store.headMap(firstKeyNotToDiscard);
+        MessageStore.LOGGER.info("Discarding messages in positions <{},{}).", firstMessagePosition,
+                firstPositionNotToDiscard);
+        final SortedMap<Integer, Message> toDiscard = this.store.headMap(firstPositionNotToDiscard);
         final int size = toDiscard.size();
         toDiscard.clear();
         return size;
@@ -79,19 +83,19 @@ final class MessageStore {
     /**
      * Add message to the storage.
      * 
-     * Every call will change values returned by {@link #getNextMessageId()} and
-     * {@link #getLatestMessageId()}. Any call may change value returned by
-     * {@link #getFirstMessageId()}, which will happen if a message is discarded
+     * Every call will change values returned by {@link #getNextPosition()} and
+     * {@link #getLatestPosition()}. Any call may change value returned by
+     * {@link #getFirstPosition()}, which will happen if a message is discarded
      * due to hitting the message store capacity.
      * 
      * @param msg
      *            Message in question.
-     * @return ID of the message.
+     * @return Position of the message.
      */
     public synchronized int add(final Message msg) {
-        final int nextKey = this.getNextMessageId();
+        final int nextKey = this.getNextPosition();
         this.store.put(nextKey, msg);
-        this.nextMessageId++;
+        this.nextMessagePosition++;
         if (this.store.size() > this.messageLimit) {
             // discard first message if we're over limit
             this.store.remove(this.store.firstKey());
@@ -100,74 +104,76 @@ final class MessageStore {
     }
 
     /**
-     * The latest ID that has been given out to a message.
+     * The latest position that has already been filled with a message.
      * 
      * @return -1 if no messages yet.
      */
-    public synchronized int getLatestMessageId() {
-        return (this.store.isEmpty()) ? this.nextMessageId - 1 : this.store.lastKey();
+    public synchronized int getLatestPosition() {
+        return (this.store.isEmpty()) ? this.nextMessagePosition - 1 : this.store.lastKey();
     }
 
     /**
-     * ID of the message that comes first in this store.
+     * The first position that is occupied by a message.
      * 
      * @return -1 if no messages yet. 0 if no messages have been discarded. Add
      *         one for every discarded message.
      */
-    public synchronized int getFirstMessageId() {
+    public synchronized int getFirstPosition() {
         if (this.store.isEmpty()) {
-            return MessageStore.INITIAL_MESSAGE_ID - 1;
+            return MessageStore.INITIAL_MESSAGE_POSITION - 1;
         } else {
             return this.store.firstKey();
         }
     }
 
     /**
-     * The ID that will be given out to the message that goes through the very
-     * next {@link #add(Message)} call.
+     * The position that will be occupied by the message that goes through the
+     * very next {@link #add(Message)} call.
      * 
      * @return 0 if no messages have been inserted yet.
      */
-    public synchronized int getNextMessageId() {
-        return this.nextMessageId;
+    public synchronized int getNextPosition() {
+        return this.nextMessagePosition;
     }
 
     /**
-     * Return all messages with IDs in the given range.
+     * Return all messages on positions in the given range.
      * 
-     * @param startId
-     *            Least id, inclusive.
-     * @param endId
-     *            Greatest id, exclusive.
+     * @param startPosition
+     *            Least position, inclusive.
+     * @param endPosition
+     *            Greatest position, exclusive.
      * @return Unmodifiable list containing those messages.
      */
-    public synchronized List<Message> getFromRange(final int startId, final int endId) {
+    public synchronized List<Message> getFromRange(final int startPosition, final int endPosition) {
         // cache this here, so all parts of the method operate on the same data
-        final int firstMessageId = this.getFirstMessageId();
+        final int firstMessageId = this.getFirstPosition();
         // input validation
-        if ((startId < MessageStore.INITIAL_MESSAGE_ID) || (endId < MessageStore.INITIAL_MESSAGE_ID)) {
-            throw new IllegalArgumentException("Message ID cannot be negative.");
-        } else if ((firstMessageId >= MessageStore.INITIAL_MESSAGE_ID) && (startId < firstMessageId)) {
-            throw new IllegalArgumentException("Message with ID " + startId
-                    + " had already been discarded. First available message has ID " + firstMessageId + ".");
-        } else if (endId <= startId) {
-            throw new IllegalArgumentException("Ending message ID must be larger than starting message ID.");
-        } else if (endId > this.getNextMessageId()) {
-            throw new IllegalArgumentException("Range end cannot be greater than the next message ID.");
+        if ((startPosition < MessageStore.INITIAL_MESSAGE_POSITION)
+                || (endPosition < MessageStore.INITIAL_MESSAGE_POSITION)) {
+            throw new IllegalArgumentException("Message position cannot be negative.");
+        } else if ((firstMessageId >= MessageStore.INITIAL_MESSAGE_POSITION) && (startPosition < firstMessageId)) {
+            throw new IllegalArgumentException("Message at position " + startPosition
+                    + " had already been discarded. First available message position is " + firstMessageId + ".");
+        } else if (endPosition <= startPosition) {
+            throw new IllegalArgumentException("Ending position must be larger than starting message position.");
+        } else if (endPosition > this.getNextPosition()) {
+            throw new IllegalArgumentException("Range end cannot be greater than the next message position.");
         }
         // and properly synchronized range retrieval
-        return Collections.unmodifiableList(new LinkedList<Message>(this.store.subMap(startId, endId).values()));
+        return Collections.unmodifiableList(new LinkedList<Message>(this.store.subMap(startPosition, endPosition)
+                .values()));
     }
 
     /**
-     * Return all messages with IDs larger or equal to the given ID.
+     * Return all messages on positions higher or equal to the given.
      * 
-     * @param startId
-     *            Least id, inclusive.
+     * @param startPosition
+     *            Least position, inclusive.
      * @return Unmodifiable list containing those messages.
      */
-    public synchronized List<Message> getFrom(final int startId) {
-        return this.getFromRange(startId, this.getNextMessageId());
+    public synchronized List<Message> getFrom(final int startPosition) {
+        return this.getFromRange(startPosition, this.getNextPosition());
     }
 
     /**
@@ -176,11 +182,11 @@ final class MessageStore {
      * @return Unmodifiable list containing those messages.
      */
     public synchronized List<Message> getAll() {
-        final int firstMessageId = this.getFirstMessageId();
-        if (firstMessageId < MessageStore.INITIAL_MESSAGE_ID) {
+        final int firstMessagePosition = this.getFirstPosition();
+        if (firstMessagePosition < MessageStore.INITIAL_MESSAGE_POSITION) {
             return Collections.unmodifiableList(Collections.<Message> emptyList());
         }
-        return this.getFrom(firstMessageId);
+        return this.getFrom(firstMessagePosition);
     }
 
     /**

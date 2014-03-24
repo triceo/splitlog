@@ -54,13 +54,9 @@ public class MessageOrderingTest {
         // messages will be ordered exactly as they came in
         final List<Message> messages = new LinkedList<Message>(f.getMessages());
         Assert.assertEquals(3, messages.size()); // 3 ACCEPTED, 1 INCOMING
-        /*
-         * message IDs are increased not by 1, but by 2. first for INCOMING,
-         * then for ACCEPTED
-         */
-        Assert.assertEquals(1, messages.get(0).getUniqueId());
-        Assert.assertEquals(3, messages.get(1).getUniqueId());
-        Assert.assertEquals(5, messages.get(2).getUniqueId());
+        Assert.assertEquals(0, messages.get(0).getUniqueId());
+        Assert.assertEquals(1, messages.get(1).getUniqueId());
+        Assert.assertEquals(2, messages.get(2).getUniqueId());
         this.watch.unfollow(f);
     }
 
@@ -73,9 +69,10 @@ public class MessageOrderingTest {
         final List<Message> messages = new LinkedList<Message>(
                 f.getMessages(TimestampOrderingMessageComparator.INSTANCE));
         Assert.assertEquals(3, messages.size()); // 3 ACCEPTED, 1 INCOMING
-        Assert.assertEquals(10, messages.get(0).getUniqueId());
-        Assert.assertEquals(14, messages.get(1).getUniqueId());
-        Assert.assertEquals(12, messages.get(2).getUniqueId());
+        // number 3 was dropped as INCOMING in previous test method
+        Assert.assertEquals(4, messages.get(0).getUniqueId());
+        Assert.assertEquals(6, messages.get(1).getUniqueId());
+        Assert.assertEquals(5, messages.get(2).getUniqueId());
         this.watch.unfollow(f);
     }
 }

@@ -59,14 +59,17 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         follower.tag(tag0);
         String result = this.getWriter().write(message1, follower);
         Assert.assertEquals(message1, result);
+        /*
+         * when this tag is being created, the first message is already
+         * instantiated. therefore, it will come after this message.
+         */
+        follower.tag(tag1);
         result = this.getWriter().write(message2, follower);
         Assert.assertEquals(message2, result);
-        follower.tag(tag1); // message1 will only be written after message2 has
-                            // been sent
+        // ditto
+        follower.tag(tag2);
         result = this.getWriter().write(message3, follower);
         Assert.assertEquals(message3, result);
-        follower.tag(tag2); // message2 will only be written after message3 has
-                            // been sent
         final List<Message> messages = new LinkedList<Message>(follower.getMessages());
         Assert.assertEquals(5, messages.size());
         Assert.assertEquals(tag0, messages.get(0).getLines().get(0));

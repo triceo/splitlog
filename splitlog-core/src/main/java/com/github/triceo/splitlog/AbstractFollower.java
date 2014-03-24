@@ -49,7 +49,7 @@ abstract class AbstractFollower implements CommonFollower {
 
     @Override
     public Message tag(final String tagLine) {
-        final Message message = new Message(tagLine);
+        final Message message = new MessageBuilder(tagLine).buildTag();
         this.tags.add(message);
         return message;
     }

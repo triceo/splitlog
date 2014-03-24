@@ -90,15 +90,17 @@ final class DefaultLogWatch implements LogWatch {
                 }
             }
             // prepare for new message
-            this.currentlyProcessedMessage = (this.previousAcceptedMessage == null) ? new MessageBuilder(line)
-                    : new MessageBuilder(line, System.currentTimeMillis(), this.previousAcceptedMessage.get());
+            this.currentlyProcessedMessage = new MessageBuilder(line);
+            if (this.previousAcceptedMessage != null) {
+                this.currentlyProcessedMessage.setPreviousMessage(this.previousAcceptedMessage.get());
+            }
         } else {
             // continue present message
             if (!isMessageBeingProcessed) {
                 // most likely just a garbage immediately after start
                 return;
             }
-            this.currentlyProcessedMessage.addLine(line);
+            this.currentlyProcessedMessage.add(line);
         }
         this.handleIncomingMessage(this.currentlyProcessedMessage);
     }
@@ -209,7 +211,7 @@ final class DefaultLogWatch implements LogWatch {
      */
     protected int getEndingMessageId(final Follower follower) {
         return this.endingMessageIds.containsKey(follower) ? this.endingMessageIds.get(follower) : this.messages
-                .getLatestMessageId();
+                .getLatestPosition();
     }
 
     /**
@@ -220,7 +222,7 @@ final class DefaultLogWatch implements LogWatch {
      *            Tailer in question.
      */
     protected int getStartingMessageId(final Follower follower) {
-        return Math.max(this.messages.getFirstMessageId(), this.startingMessageIds.get(follower));
+        return Math.max(this.messages.getFirstPosition(), this.startingMessageIds.get(follower));
     }
 
     /**
@@ -311,7 +313,7 @@ final class DefaultLogWatch implements LogWatch {
                     .debug("Scheduled automated unreachable message sweep in log watch for file '{}' to run every {} millisecond(s).",
                             this.watchedFile, delay);
         }
-        final int startingMessageId = this.messages.getNextMessageId();
+        final int startingMessageId = this.messages.getNextPosition();
         final AbstractLogWatchFollower follower = new NonStoringFollower(this);
         this.followers.add(follower);
         this.startingMessageIds.put(follower, startingMessageId);
@@ -395,7 +397,7 @@ final class DefaultLogWatch implements LogWatch {
                 this.handleUndeliveredMessage((AbstractFollower) follower, this.currentlyProcessedMessage);
             }
             DefaultLogWatch.LOGGER.info("Unregistered {} for file '{}'.", follower, this.watchedFile);
-            final int endingMessageId = this.messages.getLatestMessageId();
+            final int endingMessageId = this.messages.getLatestPosition();
             this.endingMessageIds.put(follower, endingMessageId);
             this.numberOfActiveFollowers.decrementAndGet();
             if (this.getNumberOfActiveFollowers() == 0) {

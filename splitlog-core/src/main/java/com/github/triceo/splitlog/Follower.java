@@ -1,5 +1,7 @@
 package com.github.triceo.splitlog;
 
+import com.github.triceo.splitlog.conditions.MessageCondition;
+
 /**
  * On top of the {@link CommonFollower}'s functions, this allows for merging
  * followers.

@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
@@ -20,9 +19,8 @@ import com.github.triceo.splitlog.splitters.TailSplitter;
 final public class Message {
 
     private static final TailSplitter DEFAULT_SPLITTER = new SimpleTailSplitter();
-    private static final AtomicLong UNIQUE_ID_GENERATOR = new AtomicLong(0);
 
-    private final long uniqueId = Message.UNIQUE_ID_GENERATOR.getAndIncrement();
+    private final long uniqueId;
     private final TailSplitter splitter;
     private final List<String> lines;
     private final MessageSeverity severity;
@@ -35,29 +33,38 @@ final public class Message {
      * Will call {@link #Message(Collection, TailSplitter)} with
      * {@link #DEFAULT_SPLITTER}.
      * 
+     * @param id
+     *            Unique ID for the message. No other instance may have this ID,
+     *            or else they will be considered equal.
      * @param raw
      *            Message lines, expected without any pre-processing.
      */
-    protected Message(final Collection<String> raw) {
-        this(raw, Message.DEFAULT_SPLITTER);
+    protected Message(final long id, final Collection<String> raw) {
+        this(id, raw, Message.DEFAULT_SPLITTER);
     }
 
     /**
      * Will call {@link #Message(Collection, long, TailSplitter, Message)} with
      * current time and no previous message.
      * 
+     * @param id
+     *            Unique ID for the message. No other instance may have this ID,
+     *            or else they will be considered equal.
      * @param raw
      *            Message lines, expected without any pre-processing.
      * @param splitter
      *            Used to extract metadata out of the raw lines.
      */
-    protected Message(final Collection<String> raw, final TailSplitter splitter) {
-        this(raw, System.currentTimeMillis(), splitter, null);
+    protected Message(final long id, final Collection<String> raw, final TailSplitter splitter) {
+        this(id, raw, System.currentTimeMillis(), splitter, null);
     }
 
     /**
      * Form a new message and infer its metadata using a given splitter.
      * 
+     * @param id
+     *            Unique ID for the message. No other instance may have this ID,
+     *            or else they will be considered equal.
      * @param raw
      *            Message lines, expected without any pre-processing.
      * @param timestamp
@@ -69,7 +76,7 @@ final public class Message {
      *            Message that preceded this one in the log file. Should not
      *            include tags from {@link CommonFollower}.
      */
-    protected Message(final Collection<String> raw, final long timestamp, final TailSplitter splitter,
+    protected Message(final long id, final Collection<String> raw, final long timestamp, final TailSplitter splitter,
             final Message previousMessage) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("Message must not be null.");
@@ -81,6 +88,7 @@ final public class Message {
         } else {
             this.previousMessage = new WeakReference<Message>(previousMessage);
         }
+        this.uniqueId = id;
         this.splitter = splitter;
         this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
         this.severity = splitter.determineSeverity(this.lines);
@@ -112,13 +120,17 @@ final public class Message {
      * Creates a one-line message of type {@link MessageType#TAG}. The message
      * will point to no previous message.
      * 
+     * @param id
+     *            Unique ID for the message. No other instance may have this ID,
+     *            or else they will be considered equal.
      * @param message
      *            The only line in the message.
      */
-    protected Message(final String message) {
+    protected Message(final long id, final String message) {
         if ((message == null) || (message.length() == 0)) {
             throw new IllegalArgumentException("Message must not be empty.");
         }
+        this.uniqueId = id;
         this.previousMessage = null;
         this.splitter = null;
         this.lines = Collections.singletonList(message.trim());

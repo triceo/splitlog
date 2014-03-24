@@ -52,7 +52,7 @@ final class LogWatchMessageSweeper implements Runnable {
         if (minId < 0) {
             LogWatchMessageSweeper.LOGGER.info(
                     "Sweeping all messages from log watch for file '{}' as none are reachable.", w.getWatchedFile());
-            messages.discardBefore(messages.getNextMessageId());
+            messages.discardBefore(messages.getNextPosition());
             return;
         } else if (messages.isEmpty()) {
             LogWatchMessageSweeper.LOGGER.info("No messages in the log watch for file '{}'.", w.getWatchedFile());
