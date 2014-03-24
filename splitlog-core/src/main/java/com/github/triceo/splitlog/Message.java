@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 
 import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
-import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 import com.github.triceo.splitlog.splitters.TailSplitter;
 
@@ -84,7 +83,7 @@ final public class Message {
         this.type = splitter.determineType(this.lines);
         this.exceptionDescriptor = splitter.determineException(this.lines);
         // determine message timestamp
-        Date d = splitter.determineDate(this.lines);
+        final Date d = splitter.determineDate(this.lines);
         if (d == null) {
             this.millisecondsSinceJanuary1st1970 = timestamp;
         } else {
@@ -216,7 +215,21 @@ final public class Message {
 
     @Override
     public String toString() {
-        return UnifyingMessageFormatter.INSTANCE.format(this);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(this.getDate());
+        sb.append(" (");
+        sb.append(this.type);
+        sb.append(") ");
+        sb.append(this.severity);
+        sb.append(" '");
+        sb.append(this.lines.get(0));
+        sb.append("'");
+        if (this.lines.size() > 1) {
+            sb.append(" and ");
+            sb.append(this.lines.size() - 1);
+            sb.append(" more lines...");
+        }
+        return sb.toString();
     }
 
 }
