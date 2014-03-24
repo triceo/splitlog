@@ -4,17 +4,64 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
+import java.io.File;
+import java.io.FileOutputStream;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollowerTest.class);
+    private static final File WRITE_MESSAGES_CANONICAL_RESULT = new File(
+            "src/test/resources/com/github/triceo/splitlog", "nonstoringfollowertest-testwritemessages.log");
+
     public NonStoringFollowerTest(final LogWatchBuilder builder) {
         super(builder);
+    }
+
+    private void writeAndTest(final boolean closeBeforeWriting) {
+        Assert.assertTrue(NonStoringFollowerTest.WRITE_MESSAGES_CANONICAL_RESULT.exists());
+        final Follower follower = this.getLogWatch().follow();
+        for (final String message : new String[] { "will be written", "will also be written", "will not be written" }) {
+            this.getWriter().write(message, follower);
+        }
+        if (closeBeforeWriting) {
+            this.getLogWatch().unfollow(follower);
+        }
+        try {
+            final File f = File.createTempFile("splitlog-", ".log");
+            NonStoringFollowerTest.LOGGER.info("Will write into '{}'.", f);
+            follower.write(new FileOutputStream(f));
+            Assert.assertTrue(f.exists());
+            final boolean filesEqual = FileUtils.contentEqualsIgnoreEOL(f,
+                    NonStoringFollowerTest.WRITE_MESSAGES_CANONICAL_RESULT, "UTF-8");
+            Assert.assertTrue(filesEqual);
+        } catch (final Exception e) {
+            Assert.fail("Couldn't write to file.");
+        } finally {
+            if (this.getLogWatch().isFollowedBy(follower)) {
+                this.getLogWatch().unfollow(follower);
+            }
+        }
+    }
+
+    @Test
+    public void testWriteMessages() {
+        this.writeAndTest(false);
+    }
+
+    @Test
+    public void testWriteMessagesAfterTerminated() {
+        this.writeAndTest(true);
     }
 
     @Test
@@ -125,6 +172,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assert.assertTrue("Log watch not terminated after termination.", this.getLogWatch().isTerminated());
     }
 
+    @Ignore
     @Test
     public void testWaitForAfterPreviousFailed() {
         final Follower follower = this.getLogWatch().follow();
