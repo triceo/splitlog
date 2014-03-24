@@ -2,7 +2,7 @@ package com.github.triceo.splitlog;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -33,7 +33,7 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
         // send third message, receive second
         final String thirdMessage = "check3";
         this.getWriter().write(thirdMessage, follower2);
-        Assert.assertEquals(2, w.countMessagesInStorage());
+        Assertions.assertThat(w.countMessagesInStorage()).isEqualTo(2);
         /*
          * remove all references to the first follower; the first message now
          * has no followers available and can be GC'd
@@ -45,9 +45,9 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
         try {
             Thread.sleep(delay);
         } catch (final InterruptedException e) {
-            Assert.fail("Test will fail as there was not enough time to wait for message sweep.");
+            Assertions.fail("Test will fail as there was not enough time to wait for message sweep.");
         }
-        Assert.assertEquals(1, w.countMessagesInStorage());
+        Assertions.assertThat(w.countMessagesInStorage()).isEqualTo(1);
         /*
          * make sure the second follower has what it's supposed to; the second
          * message
@@ -60,9 +60,9 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
         try {
             Thread.sleep(delay);
         } catch (final InterruptedException e) {
-            Assert.fail("Test will fail as there was not enough time to wait for message sweep.");
+            Assertions.fail("Test will fail as there was not enough time to wait for message sweep.");
         }
-        Assert.assertEquals(0, w.countMessagesInStorage());
+        Assertions.assertThat(w.countMessagesInStorage()).isEqualTo(0);
     }
 
 }

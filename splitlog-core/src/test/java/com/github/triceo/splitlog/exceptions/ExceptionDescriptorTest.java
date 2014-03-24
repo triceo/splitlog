@@ -2,16 +2,16 @@ package com.github.triceo.splitlog.exceptions;
 
 import java.net.ConnectException;
 
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 public class ExceptionDescriptorTest {
 
     private void assertException(final ExceptionDescriptor ex, final String expectedClassName,
         final String expectedMessage) {
-        Assert.assertNotNull(ex);
-        Assert.assertEquals(expectedClassName, ex.getExceptionClassName());
-        Assert.assertEquals(expectedMessage, ex.getMessage());
+        Assertions.assertThat(ex).isNotNull();
+        Assertions.assertThat(ex.getExceptionClassName()).isEqualTo(expectedClassName);
+        Assertions.assertThat(ex.getMessage()).isEqualTo(expectedMessage);
     }
 
     @Test
@@ -22,8 +22,8 @@ public class ExceptionDescriptorTest {
                 ex,
                 "java.lang.IllegalStateException",
                 "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
-        Assert.assertEquals(IllegalStateException.class, ex.getExceptionClass());
-        Assert.assertNull(ex.getCause());
+        Assertions.assertThat(ex.getExceptionClass()).isEqualTo(IllegalStateException.class);
+        Assertions.assertThat(ex.getCause()).isNull();
     }
 
     @Test
@@ -32,11 +32,11 @@ public class ExceptionDescriptorTest {
                 .getClass().getResourceAsStream("exception-with-causes.txt"))));
         this.assertException(ex, "org.jboss.qa.bpms.rest.wb.RequestFailureException",
                 "java.net.ConnectException: Connection refused");
-        Assert.assertNull(ex.getExceptionClass()); // highly likely
+        Assertions.assertThat(ex.getExceptionClass()).isNull(); // highly likely
         final ExceptionDescriptor cause = ex.getCause();
         this.assertException(cause, "java.net.ConnectException", "Connection refused");
-        Assert.assertEquals(ConnectException.class, cause.getExceptionClass());
-        Assert.assertNull(cause.getCause());
+        Assertions.assertThat(cause.getExceptionClass()).isEqualTo(ConnectException.class);
+        Assertions.assertThat(cause.getCause()).isNull();
 
     }
 
@@ -45,7 +45,7 @@ public class ExceptionDescriptorTest {
         final ExceptionDescriptor ex = ExceptionDescriptor.parseStackTrace((ExceptionParserTest.parseIntoLines(this
                 .getClass().getResourceAsStream("exception-with-causes2.txt"))));
         this.assertException(ex, "javax.servlet.ServletException", "Something bad happened");
-        Assert.assertNotNull(ex.getCause());
+        Assertions.assertThat(ex.getCause()).isNotNull();
         // TODO could use a bit more validation; but at least it parses
     }
 

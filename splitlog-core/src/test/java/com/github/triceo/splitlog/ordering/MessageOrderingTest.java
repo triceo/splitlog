@@ -6,8 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,10 +53,11 @@ public class MessageOrderingTest {
         this.writer.write("test", f);
         // messages will be ordered exactly as they came in
         final List<Message> messages = new LinkedList<Message>(f.getMessages());
-        Assert.assertEquals(3, messages.size()); // 3 ACCEPTED, 1 INCOMING
-        Assert.assertEquals(0, messages.get(0).getUniqueId());
-        Assert.assertEquals(1, messages.get(1).getUniqueId());
-        Assert.assertEquals(2, messages.get(2).getUniqueId());
+        Assertions.assertThat(messages.size()).isEqualTo(3); // 3 ACCEPTED, 1
+                                                             // INCOMING
+        Assertions.assertThat(messages.get(0).getUniqueId()).isEqualTo(0);
+        Assertions.assertThat(messages.get(1).getUniqueId()).isEqualTo(1);
+        Assertions.assertThat(messages.get(2).getUniqueId()).isEqualTo(2);
         this.watch.unfollow(f);
     }
 
@@ -68,11 +69,12 @@ public class MessageOrderingTest {
         // messages will be ordered by their timestamp
         final List<Message> messages = new LinkedList<Message>(
                 f.getMessages(TimestampOrderingMessageComparator.INSTANCE));
-        Assert.assertEquals(3, messages.size()); // 3 ACCEPTED, 1 INCOMING
+        Assertions.assertThat(messages.size()).isEqualTo(3); // 3 ACCEPTED, 1
+                                                             // INCOMING
         // number 3 was dropped as INCOMING in previous test method
-        Assert.assertEquals(4, messages.get(0).getUniqueId());
-        Assert.assertEquals(6, messages.get(1).getUniqueId());
-        Assert.assertEquals(5, messages.get(2).getUniqueId());
+        Assertions.assertThat(messages.get(0).getUniqueId()).isEqualTo(4);
+        Assertions.assertThat(messages.get(1).getUniqueId()).isEqualTo(6);
+        Assertions.assertThat(messages.get(2).getUniqueId()).isEqualTo(5);
         this.watch.unfollow(f);
     }
 }

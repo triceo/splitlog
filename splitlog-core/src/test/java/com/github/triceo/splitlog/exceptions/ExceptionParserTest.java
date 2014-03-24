@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import com.github.triceo.splitlog.exceptions.StackTraceLine.Source;
@@ -39,24 +39,25 @@ public class ExceptionParserTest {
         final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
                 ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
                         "exception-with-causes.txt"))));
-        Assert.assertEquals(48, lines.size()); // one item per line in the file
+        Assertions.assertThat(lines.size()).isEqualTo(48); // one item per line
+                                                           // in the file
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);
-        Assert.assertEquals("org.jboss.qa.bpms.rest.wb.RequestFailureException", firstLine.getClassName());
-        Assert.assertEquals("java.net.ConnectException: Connection refused", firstLine.getMessage());
+        Assertions.assertThat(firstLine.getClassName()).isEqualTo("org.jboss.qa.bpms.rest.wb.RequestFailureException");
+        Assertions.assertThat(firstLine.getMessage()).isEqualTo("java.net.ConnectException: Connection refused");
         // verify one native method
         final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(7);
-        Assert.assertEquals(Source.NATIVE, stackTraceLine.getSource());
-        Assert.assertEquals("sun.reflect.NativeMethodAccessorImpl.invoke0", stackTraceLine.getMethodName());
-        Assert.assertEquals("na", stackTraceLine.getClassSource());
-        Assert.assertEquals("1.7.0_51", stackTraceLine.getClassSourceVersion());
+        Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.NATIVE);
+        Assertions.assertThat(stackTraceLine.getMethodName()).isEqualTo("sun.reflect.NativeMethodAccessorImpl.invoke0");
+        Assertions.assertThat(stackTraceLine.getClassSource()).isEqualTo("na");
+        Assertions.assertThat(stackTraceLine.getClassSourceVersion()).isEqualTo("1.7.0_51");
         // verify one causedBy
         final CauseLine rootCause = (CauseLine) lines.get(23);
-        Assert.assertEquals("java.net.ConnectException", rootCause.getClassName());
-        Assert.assertEquals("Connection refused", rootCause.getMessage());
+        Assertions.assertThat(rootCause.getClassName()).isEqualTo("java.net.ConnectException");
+        Assertions.assertThat(rootCause.getMessage()).isEqualTo("Connection refused");
         // verify last bit
         final StackTraceEndLine endLine = (StackTraceEndLine) lines.get(47);
-        Assert.assertEquals(27, endLine.getHowManyOmmitted());
+        Assertions.assertThat(endLine.getHowManyOmmitted()).isEqualTo(27);
     }
 
     @Test
@@ -64,20 +65,21 @@ public class ExceptionParserTest {
         final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
                 ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
                         "exception-with-causes2.txt"))));
-        Assert.assertEquals(62, lines.size()); // one item per line in the file
+        Assertions.assertThat(lines.size()).isEqualTo(62); // one item per line
+                                                           // in the file
         // verify random cause
         final CauseLine cause = (CauseLine) lines.get(29);
-        Assert.assertEquals("org.hibernate.exception.ConstraintViolationException", cause.getClassName());
-        Assert.assertEquals("could not insert: [com.example.myproject.MyEntity]", cause.getMessage());
+        Assertions.assertThat(cause.getClassName()).isEqualTo("org.hibernate.exception.ConstraintViolationException");
+        Assertions.assertThat(cause.getMessage()).isEqualTo("could not insert: [com.example.myproject.MyEntity]");
         // verify random unknown method
         final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(48);
-        Assert.assertEquals(Source.UNKNOWN, stackTraceLine.getSource());
-        Assert.assertEquals("sun.reflect.GeneratedMethodAccessor5.invoke", stackTraceLine.getMethodName());
-        Assert.assertEquals(null, stackTraceLine.getClassSource());
-        Assert.assertEquals(null, stackTraceLine.getClassSourceVersion());
+        Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.UNKNOWN);
+        Assertions.assertThat(stackTraceLine.getMethodName()).isEqualTo("sun.reflect.GeneratedMethodAccessor5.invoke");
+        Assertions.assertThat(stackTraceLine.getClassSource()).isEqualTo(null);
+        Assertions.assertThat(stackTraceLine.getClassSourceVersion()).isEqualTo(null);
         // verify one stacktrace-ending bit
         final StackTraceEndLine endLine = (StackTraceEndLine) lines.get(28);
-        Assert.assertEquals(27, endLine.getHowManyOmmitted());
+        Assertions.assertThat(endLine.getHowManyOmmitted()).isEqualTo(27);
     }
 
     @Test
@@ -85,22 +87,24 @@ public class ExceptionParserTest {
         final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
                 ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
                         "exception-maven.txt"))));
-        Assert.assertEquals(33, lines.size()); // one item per line in the file
+        Assertions.assertThat(lines.size()).isEqualTo(33); // one item per line
+                                                           // in the file
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);
-        Assert.assertEquals("java.lang.IllegalStateException", firstLine.getClassName());
-        Assert.assertEquals(
-                "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].",
-                firstLine.getMessage());
+        Assertions.assertThat(firstLine.getClassName()).isEqualTo("java.lang.IllegalStateException");
+        Assertions
+                .assertThat(firstLine.getMessage())
+                .isEqualTo(
+                        "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
         // verify one random stack trace line
         final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(14);
-        Assert.assertEquals(Source.REGULAR, stackTraceLine.getSource());
-        Assert.assertEquals("org.jboss.qa.brms.tools.GrapheneTestListener.onConfigurationFailure",
-                stackTraceLine.getMethodName());
-        Assert.assertEquals(27, stackTraceLine.getLineInCode());
-        Assert.assertEquals("GrapheneTestListener.java", stackTraceLine.getClassName());
-        Assert.assertEquals(null, stackTraceLine.getClassSource());
-        Assert.assertEquals(null, stackTraceLine.getClassSourceVersion());
+        Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);
+        Assertions.assertThat(stackTraceLine.getMethodName()).isEqualTo(
+                "org.jboss.qa.brms.tools.GrapheneTestListener.onConfigurationFailure");
+        Assertions.assertThat(stackTraceLine.getLineInCode()).isEqualTo(27);
+        Assertions.assertThat(stackTraceLine.getClassName()).isEqualTo("GrapheneTestListener.java");
+        Assertions.assertThat(stackTraceLine.getClassSource()).isEqualTo(null);
+        Assertions.assertThat(stackTraceLine.getClassSourceVersion()).isEqualTo(null);
     }
 
 }

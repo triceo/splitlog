@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 public class MessageTest {
@@ -22,11 +22,11 @@ public class MessageTest {
         final Collection<String> raw2 = Arrays.asList(lines);
         final Collection<String> raw3 = Arrays.asList(lines).subList(1, 3);
         final Message message0 = this.buildMessage(raw1);
-        Assert.assertEquals(message0, message0);
+        Assertions.assertThat(message0).isEqualTo(message0);
         final Message message1 = this.buildMessage(raw2);
-        Assert.assertNotEquals(message0, message1);
-        Assert.assertNotEquals(message1, this.buildMessage(raw2));
-        Assert.assertNotEquals(message1, this.buildMessage(raw3));
+        Assertions.assertThat(message1).isNotEqualTo(message0);
+        Assertions.assertThat(this.buildMessage(raw2)).isNotEqualTo(message1);
+        Assertions.assertThat(this.buildMessage(raw3)).isNotEqualTo(message1);
     }
 
     @Test
@@ -35,9 +35,9 @@ public class MessageTest {
         final Message msg1 = new MessageBuilder(line).buildTag();
         final Message msg2 = new MessageBuilder(line).buildTag();
         final Message msg3 = new MessageBuilder(line + "2").buildTag();
-        Assert.assertEquals(msg1, msg1);
-        Assert.assertNotEquals(msg1, msg2);
-        Assert.assertNotEquals(msg1, msg3);
+        Assertions.assertThat(msg1).isEqualTo(msg1);
+        Assertions.assertThat(msg2).isNotEqualTo(msg1);
+        Assertions.assertThat(msg3).isNotEqualTo(msg1);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -50,10 +50,10 @@ public class MessageTest {
     public void testTag() {
         final String line = "Test";
         final Message msg = new MessageBuilder(line).buildTag();
-        Assert.assertEquals(MessageSeverity.UNKNOWN, msg.getSeverity());
-        Assert.assertEquals(MessageType.TAG, msg.getType());
-        Assert.assertEquals(1, msg.getLines().size());
-        Assert.assertEquals(line, msg.getLines().get(0));
+        Assertions.assertThat(msg.getSeverity()).isEqualTo(MessageSeverity.UNKNOWN);
+        Assertions.assertThat(msg.getType()).isEqualTo(MessageType.TAG);
+        Assertions.assertThat(msg.getLines().size()).isEqualTo(1);
+        Assertions.assertThat(msg.getLines().get(0)).isEqualTo(line);
     }
 
 }

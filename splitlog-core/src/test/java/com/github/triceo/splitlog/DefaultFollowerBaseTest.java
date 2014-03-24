@@ -8,8 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
 
+import org.assertj.core.api.Assertions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
@@ -52,15 +52,15 @@ public abstract class DefaultFollowerBaseTest {
     protected static void assertProperOrder(final SortedSet<Message> messages, final Object... expectedMessages) {
         System.out.println("Original order: " + messages);
         System.out.println("Expected order: " + Arrays.toString(expectedMessages));
-        Assert.assertEquals(expectedMessages.length, messages.size());
+        Assertions.assertThat(messages.size()).isEqualTo(expectedMessages.length);
         final List<Message> indexableMessages = new LinkedList<Message>(messages);
         for (int i = 0; i < expectedMessages.length; i++) {
             final Object expected = expectedMessages[i];
             final Message actual = indexableMessages.get(i);
             if (expected instanceof Message) {
-                Assert.assertEquals(expected, actual);
+                Assertions.assertThat(actual).isEqualTo(expected);
             } else {
-                Assert.assertEquals(expected, actual.getLines().get(0));
+                Assertions.assertThat(actual.getLines().get(0)).isEqualTo(expected);
             }
         }
     }

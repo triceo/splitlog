@@ -9,8 +9,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.assertj.core.api.Assertions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -78,7 +78,7 @@ public class WaitingTest extends DefaultFollowerBaseTest {
         }
         for (final Future<Message> task : tasks.keySet()) {
             final Message accepted = task.get();
-            Assert.assertNotNull("Failed to accept message #" + tasks.get(task), accepted);
+            Assertions.assertThat(accepted).as("Failed to accept message #" + tasks.get(task)).isNotNull();
         }
         System.out.println("All messages collected.");
     }

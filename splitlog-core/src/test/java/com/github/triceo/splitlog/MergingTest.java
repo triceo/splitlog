@@ -1,6 +1,6 @@
 package com.github.triceo.splitlog;
 
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 public class MergingTest extends DefaultFollowerBaseTest {
@@ -25,32 +25,34 @@ public class MergingTest extends DefaultFollowerBaseTest {
         // send the message; the merged should still contain only the one
         this.getWriter().write("test", f);
         this.getWriter().write("test2", f2);
-        Assert.assertEquals(1, mf.getMessages().size());
+        Assertions.assertThat(mf.getMessages().size()).isEqualTo(1);
         // add third follower, will only receive the second message
         final Follower f3 = this.getLogWatch().follow();
         this.getWriter().write("test3", f3);
         final MergingFollower mf2 = mf.mergeWith(f3);
-        Assert.assertNotEquals(mf, mf2);
-        Assert.assertEquals(2, mf.getMessages().size());
-        Assert.assertEquals(2, mf2.getMessages().size());
+        Assertions.assertThat(mf2).isNotEqualTo(mf);
+        Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(2);
         // remove both followers from first merge, verify results
         mf.separate(f);
-        Assert.assertEquals(2, mf.getMessages().size());
-        Assert.assertTrue(mf.isFollowing());
-        Assert.assertTrue(this.getLogWatch().unfollow(f2));
-        Assert.assertFalse(mf.isFollowing()); // no followers are following
-        Assert.assertEquals(2, mf.getMessages().size());
+        Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(mf.isFollowing()).isTrue();
+        Assertions.assertThat(this.getLogWatch().unfollow(f2)).isTrue();
+        Assertions.assertThat(mf.isFollowing()).isFalse(); // no followers are
+                                                           // following
+        Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
         mf.separate(f2);
-        Assert.assertFalse(mf.isFollowing()); // no followers are following
-        Assert.assertEquals(0, mf.getMessages().size());
+        Assertions.assertThat(mf.isFollowing()).isFalse(); // no followers are
+                                                           // following
+        Assertions.assertThat(mf.getMessages().size()).isEqualTo(0);
         // none of these changes should have affected the second merge
-        Assert.assertEquals(2, mf2.getMessages().size());
+        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(2);
         mf2.separate(f2);
         this.getLogWatch().unfollow(f);
-        Assert.assertEquals(2, mf2.getMessages().size());
+        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(2);
         mf2.separate(f);
-        Assert.assertEquals(1, mf2.getMessages().size());
+        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(1);
         this.getLogWatch().terminate();
-        Assert.assertFalse(mf.isFollowing());
+        Assertions.assertThat(mf.isFollowing()).isFalse();
     }
 }

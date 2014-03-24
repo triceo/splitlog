@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -28,23 +28,23 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         final Follower follower = this.getLogWatch().follow();
         // test simple messages
         String result = this.getWriter().write(message1, follower);
-        Assert.assertEquals(message1, result);
+        Assertions.assertThat(result).isEqualTo(message1);
         result = this.getWriter().write(message1, follower);
-        Assert.assertEquals(message1, result);
+        Assertions.assertThat(result).isEqualTo(message1);
         result = this.getWriter().write(message2part1 + "\n" + message2part2, follower);
-        Assert.assertEquals(message2part2, result);
+        Assertions.assertThat(result).isEqualTo(message2part2);
         result = this.getWriter().write(message3part1 + "\r\n" + message3part2, follower);
-        Assert.assertEquals(message3part2, result);
+        Assertions.assertThat(result).isEqualTo(message3part2);
         // now validate the results
         final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assert.assertEquals(5, messages.size());
-        Assert.assertEquals(message1, messages.get(1).getLines().get(0));
-        Assert.assertEquals(message2part1, messages.get(2).getLines().get(0));
-        Assert.assertEquals(message2part2, messages.get(3).getLines().get(0));
-        Assert.assertEquals(message3part1, messages.get(4).getLines().get(0));
+        Assertions.assertThat(messages.size()).isEqualTo(5);
+        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
+        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message2part1);
+        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message2part2);
+        Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(message3part1);
         // final part of the message, message3part2, will remain unflushed
         this.getLogWatch().unfollow(follower);
-        Assert.assertFalse(follower.isFollowing());
+        Assertions.assertThat(follower.isFollowing()).isFalse();
     }
 
     @Test
@@ -58,25 +58,25 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         final Follower follower = this.getLogWatch().follow();
         follower.tag(tag0);
         String result = this.getWriter().write(message1, follower);
-        Assert.assertEquals(message1, result);
+        Assertions.assertThat(result).isEqualTo(message1);
         /*
          * when this tag is being created, the first message is already
          * instantiated. therefore, it will come after this message.
          */
         follower.tag(tag1);
         result = this.getWriter().write(message2, follower);
-        Assert.assertEquals(message2, result);
+        Assertions.assertThat(result).isEqualTo(message2);
         // ditto
         follower.tag(tag2);
         result = this.getWriter().write(message3, follower);
-        Assert.assertEquals(message3, result);
+        Assertions.assertThat(result).isEqualTo(message3);
         final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assert.assertEquals(5, messages.size());
-        Assert.assertEquals(tag0, messages.get(0).getLines().get(0));
-        Assert.assertEquals(message1, messages.get(1).getLines().get(0));
-        Assert.assertEquals(tag1, messages.get(2).getLines().get(0));
-        Assert.assertEquals(message2, messages.get(3).getLines().get(0));
-        Assert.assertEquals(tag2, messages.get(4).getLines().get(0));
+        Assertions.assertThat(messages.size()).isEqualTo(5);
+        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(tag0);
+        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
+        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(tag1);
+        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message2);
+        Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(tag2);
     }
 
     @Test
@@ -90,45 +90,51 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         // make sure the messages are received by the first follower
         this.getWriter().write(message1, follower);
         String result = this.getWriter().write(message2, follower);
-        Assert.assertEquals(message2, result);
-        Assert.assertEquals(1, follower.getMessages().size());
+        Assertions.assertThat(result).isEqualTo(message2);
+        Assertions.assertThat(follower.getMessages().size()).isEqualTo(1);
         // start a second follower, send some messages
         final Follower nestedFollower = this.getLogWatch().follow();
         result = this.getWriter().write(message3, follower);
         result = this.getWriter().write(message4, follower);
-        Assert.assertEquals(message4, result);
+        Assertions.assertThat(result).isEqualTo(message4);
         this.getLogWatch().unfollow(nestedFollower);
         // send another message, so the original follower has something extra
-        Assert.assertFalse(nestedFollower.isFollowing());
+        Assertions.assertThat(nestedFollower.isFollowing()).isFalse();
         result = this.getWriter().write(message5, follower);
         // and make sure that the original follower has all messages
         final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assert.assertEquals(4, messages.size());
-        Assert.assertEquals(message1, messages.get(0).getLines().get(0));
-        Assert.assertEquals(message2, messages.get(1).getLines().get(0));
-        Assert.assertEquals(message3, messages.get(2).getLines().get(0));
-        Assert.assertEquals(message4, messages.get(3).getLines().get(0));
+        Assertions.assertThat(messages.size()).isEqualTo(4);
+        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message1);
+        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message2);
+        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message3);
+        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message4);
         // and the nested follower has only the two while it was running
         final List<Message> nestedMessages = new LinkedList<Message>(nestedFollower.getMessages());
-        Assert.assertEquals(2, nestedFollower.getMessages().size());
-        Assert.assertEquals(message2, nestedMessages.get(0).getLines().get(0));
-        Assert.assertEquals(message3, nestedMessages.get(1).getLines().get(0));
+        Assertions.assertThat(nestedFollower.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(nestedMessages.get(0).getLines().get(0)).isEqualTo(message2);
+        Assertions.assertThat(nestedMessages.get(1).getLines().get(0)).isEqualTo(message3);
     }
 
     @Test
     public void testTermination() {
-        Assert.assertFalse("Log watch terminated immediately after starting.", this.getLogWatch().isTerminated());
+        Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch terminated immediately after starting.")
+                .isFalse();
         final Follower follower1 = this.getLogWatch().follow();
-        Assert.assertTrue("Follower terminated immediately after starting.", this.getLogWatch().isFollowedBy(follower1));
+        Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
+                .as("Follower terminated immediately after starting.").isTrue();
         final Follower follower2 = this.getLogWatch().follow();
-        Assert.assertTrue("Wrong termination result.", this.getLogWatch().unfollow(follower1));
-        Assert.assertFalse("Wrong termination result.", this.getLogWatch().unfollow(follower1));
-        Assert.assertTrue("Follower terminated without termination.", this.getLogWatch().isFollowedBy(follower2));
-        Assert.assertFalse("Follower not terminated after termination.", this.getLogWatch().isFollowedBy(follower1));
-        Assert.assertTrue("Wrong termination result.", this.getLogWatch().terminate());
-        Assert.assertFalse("Wrong termination result.", this.getLogWatch().terminate());
-        Assert.assertFalse("Follower not terminated after termination.", this.getLogWatch().isFollowedBy(follower2));
-        Assert.assertTrue("Log watch not terminated after termination.", this.getLogWatch().isTerminated());
+        Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isTrue();
+        Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isFalse();
+        Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
+                .as("Follower terminated without termination.").isTrue();
+        Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
+                .as("Follower not terminated after termination.").isFalse();
+        Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isTrue();
+        Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isFalse();
+        Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
+                .as("Follower not terminated after termination.").isFalse();
+        Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch not terminated after termination.")
+                .isTrue();
     }
 
     @Test
@@ -139,12 +145,12 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         // these calls should succeed
         final String message = "test";
         String result = this.getWriter().write(message, follower);
-        Assert.assertEquals(message, result);
+        Assertions.assertThat(result).isEqualTo(message);
         result = this.getWriter().write(message, follower);
-        Assert.assertEquals(message, result);
+        Assertions.assertThat(result).isEqualTo(message);
         final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assert.assertEquals(1, messages.size());
-        Assert.assertEquals(message, messages.get(0).getLines().get(0));
+        Assertions.assertThat(messages.size()).isEqualTo(1);
+        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message);
         this.getLogWatch().unfollow(follower);
     }
 

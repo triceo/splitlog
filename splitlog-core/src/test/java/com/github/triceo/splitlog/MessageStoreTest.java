@@ -2,7 +2,7 @@ package com.github.triceo.splitlog;
 
 import java.util.List;
 
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 public class MessageStoreTest {
@@ -15,14 +15,14 @@ public class MessageStoreTest {
     @Test
     public void testAdditions() {
         final MessageStore store = new MessageStore();
-        Assert.assertEquals(0, store.getNextPosition());
-        Assert.assertEquals(-1, store.getLatestPosition());
+        Assertions.assertThat(store.getNextPosition()).isEqualTo(0);
+        Assertions.assertThat(store.getLatestPosition()).isEqualTo(-1);
         store.add(new MessageBuilder("Test").buildFinal());
-        Assert.assertEquals(1, store.getNextPosition());
-        Assert.assertEquals(0, store.getLatestPosition());
+        Assertions.assertThat(store.getNextPosition()).isEqualTo(1);
+        Assertions.assertThat(store.getLatestPosition()).isEqualTo(0);
         store.add(new MessageBuilder("Test2").buildFinal());
-        Assert.assertEquals(2, store.getNextPosition());
-        Assert.assertEquals(1, store.getLatestPosition());
+        Assertions.assertThat(store.getNextPosition()).isEqualTo(2);
+        Assertions.assertThat(store.getLatestPosition()).isEqualTo(1);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -38,14 +38,14 @@ public class MessageStoreTest {
         final Message msg = new MessageBuilder("test").buildFinal();
         store.add(msg);
         List<Message> range = store.getFromRange(0, 1);
-        Assert.assertEquals(1, range.size());
-        Assert.assertSame(msg, range.get(0));
+        Assertions.assertThat(range.size()).isEqualTo(1);
+        Assertions.assertThat(range.get(0)).isSameAs(msg);
         // add second message
         final Message msg2 = new MessageBuilder("test2").buildFinal();
         store.add(msg2);
         range = store.getFromRange(1, 2);
-        Assert.assertEquals(1, range.size());
-        Assert.assertSame(msg2, range.get(0));
+        Assertions.assertThat(range.size()).isEqualTo(1);
+        Assertions.assertThat(range.get(0)).isSameAs(msg2);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -102,82 +102,82 @@ public class MessageStoreTest {
     public void testAutomatedDiscarding() {
         // single-message capacity for easy testing
         final MessageStore store = new MessageStore(1);
-        Assert.assertEquals(MessageStoreTest.NO_MESSAGE_ID, store.getFirstPosition());
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.NO_MESSAGE_ID);
         final Message msg1 = new MessageBuilder("test").buildFinal();
         store.add(msg1);
-        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_1, store.getFirstPosition());
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.MESSAGE_ID_1);
         // discarding the first message
         final Message msg2 = new MessageBuilder("test2").buildFinal();
         store.add(msg2);
-        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_2, store.getFirstPosition());
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.MESSAGE_ID_2);
         List<Message> postDiscard = store.getFrom(MessageStoreTest.MESSAGE_ID_2);
-        Assert.assertEquals(1, postDiscard.size());
-        Assert.assertSame(msg2, postDiscard.get(0));
+        Assertions.assertThat(postDiscard.size()).isEqualTo(1);
+        Assertions.assertThat(postDiscard.get(0)).isSameAs(msg2);
         // discarding the second message
         final Message msg3 = new MessageBuilder("test3").buildFinal();
         store.add(msg3);
-        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_3, store.getFirstPosition());
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.MESSAGE_ID_3);
         postDiscard = store.getFrom(MessageStoreTest.MESSAGE_ID_3);
-        Assert.assertEquals(1, postDiscard.size());
-        Assert.assertSame(msg3, postDiscard.get(0));
+        Assertions.assertThat(postDiscard.size()).isEqualTo(1);
+        Assertions.assertThat(postDiscard.get(0)).isSameAs(msg3);
     }
 
     @Test
     public void testManualDiscarding() {
         // unlimited capacity
         final MessageStore store = new MessageStore();
-        Assert.assertEquals(MessageStoreTest.NO_MESSAGE_ID, store.getFirstPosition());
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.NO_MESSAGE_ID);
         final Message msg1 = new MessageBuilder("test").buildFinal();
         store.add(msg1);
         final Message msg2 = new MessageBuilder("test2").buildFinal();
         store.add(msg2);
-        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_1, store.getFirstPosition());
-        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_2, store.getLatestPosition());
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.MESSAGE_ID_1);
+        Assertions.assertThat(store.getLatestPosition()).isEqualTo(MessageStoreTest.MESSAGE_ID_2);
         // send third, discard first two
         final Message msg3 = new MessageBuilder("test3").buildFinal();
         store.add(msg3);
-        Assert.assertEquals(2, store.discardBefore(MessageStoreTest.MESSAGE_ID_3));
-        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_3, store.getFirstPosition());
-        Assert.assertEquals(MessageStoreTest.MESSAGE_ID_3, store.getLatestPosition());
+        Assertions.assertThat(store.discardBefore(MessageStoreTest.MESSAGE_ID_3)).isEqualTo(2);
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.MESSAGE_ID_3);
+        Assertions.assertThat(store.getLatestPosition()).isEqualTo(MessageStoreTest.MESSAGE_ID_3);
         final List<Message> postDiscard = store.getFrom(MessageStoreTest.MESSAGE_ID_3);
-        Assert.assertEquals(1, postDiscard.size());
-        Assert.assertSame(msg3, postDiscard.get(0));
+        Assertions.assertThat(postDiscard.size()).isEqualTo(1);
+        Assertions.assertThat(postDiscard.get(0)).isSameAs(msg3);
     }
 
     @Test
     public void testManualDiscardingOutsideLimits() {
         // unlimited capacity
         final MessageStore store = new MessageStore();
-        Assert.assertEquals(MessageStoreTest.NO_MESSAGE_ID, store.getFirstPosition());
+        Assertions.assertThat(store.getFirstPosition()).isEqualTo(MessageStoreTest.NO_MESSAGE_ID);
         // ensure proper behavior on empty store
-        Assert.assertEquals(0, store.discardBefore(0));
-        Assert.assertEquals(0, store.discardBefore(MessageStoreTest.MESSAGE_ID_1));
+        Assertions.assertThat(store.discardBefore(0)).isEqualTo(0);
+        Assertions.assertThat(store.discardBefore(MessageStoreTest.MESSAGE_ID_1)).isEqualTo(0);
         final Message msg1 = new MessageBuilder("test").buildFinal();
         store.add(msg1);
         final Message msg2 = new MessageBuilder("test2").buildFinal();
         store.add(msg2);
         // ensure proper behavior when out of bounds
-        Assert.assertEquals(0, store.discardBefore(0));
-        Assert.assertEquals(2, store.getAll().size());
-        Assert.assertEquals(0, store.discardBefore(-1));
-        Assert.assertEquals(2, store.getAll().size());
-        Assert.assertEquals(2, store.discardBefore(MessageStoreTest.MESSAGE_ID_3));
-        Assert.assertEquals(0, store.getAll().size());
-        Assert.assertEquals(0, store.discardBefore(0));
-        Assert.assertEquals(0, store.getAll().size());
-        Assert.assertEquals(0, store.discardBefore(-1));
-        Assert.assertEquals(0, store.getAll().size());
-        Assert.assertEquals(0, store.discardBefore(1000));
-        Assert.assertEquals(0, store.getAll().size());
+        Assertions.assertThat(store.discardBefore(0)).isEqualTo(0);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(2);
+        Assertions.assertThat(store.discardBefore(-1)).isEqualTo(0);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(2);
+        Assertions.assertThat(store.discardBefore(MessageStoreTest.MESSAGE_ID_3)).isEqualTo(2);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(0);
+        Assertions.assertThat(store.discardBefore(0)).isEqualTo(0);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(0);
+        Assertions.assertThat(store.discardBefore(-1)).isEqualTo(0);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(0);
+        Assertions.assertThat(store.discardBefore(1000)).isEqualTo(0);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(0);
         // and ensure it still works after we add another
         final Message msg3 = new MessageBuilder("test3").buildFinal();
         store.add(msg3);
-        Assert.assertEquals(1, store.getAll().size());
-        Assert.assertEquals(0, store.discardBefore(0));
-        Assert.assertEquals(1, store.getAll().size());
-        Assert.assertEquals(0, store.discardBefore(-1));
-        Assert.assertEquals(1, store.getAll().size());
-        Assert.assertEquals(1, store.discardBefore(1000));
-        Assert.assertEquals(0, store.getAll().size());
+        Assertions.assertThat(store.getAll().size()).isEqualTo(1);
+        Assertions.assertThat(store.discardBefore(0)).isEqualTo(0);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(1);
+        Assertions.assertThat(store.discardBefore(-1)).isEqualTo(0);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(1);
+        Assertions.assertThat(store.discardBefore(1000)).isEqualTo(1);
+        Assertions.assertThat(store.getAll().size()).isEqualTo(0);
     }
 }
