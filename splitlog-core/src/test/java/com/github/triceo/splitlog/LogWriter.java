@@ -2,10 +2,8 @@ package com.github.triceo.splitlog;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -103,12 +101,6 @@ class LogWriter {
             return false;
         } finally {
             IOUtils.closeQuietly(w);
-        }
-        try {
-            final Collection<String> lines = IOUtils.readLines(new FileReader(this.target));
-            LogWriter.LOGGER.debug("Contents of file '{}': {}.", this.target, lines);
-        } catch (final Exception e) {
-            LogWriter.LOGGER.warn("File '{}' cannot be read.", this.target, e);
         }
         return true;
     }
