@@ -1,9 +1,12 @@
 package com.github.triceo.splitlog;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
+
 import java.io.File;
 import java.io.FileOutputStream;
 
@@ -20,19 +23,19 @@ import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollowerTest.class);
-    private static final File WRITE_MESSAGES_CANONICAL_RESULT = new File(
-            "src/test/resources/com/github/triceo/splitlog", "nonstoringfollowertest-testwritemessages.log");
+    private static final int MESSAGES_TO_WRITE = 10;
 
     public NonStoringFollowerTest(final LogWatchBuilder builder) {
         super(builder);
     }
 
     private void writeAndTest(final boolean closeBeforeWriting) {
-        Assert.assertTrue(NonStoringFollowerTest.WRITE_MESSAGES_CANONICAL_RESULT.exists());
         final Follower follower = this.getLogWatch().follow();
-        for (final String message : new String[] { "will be written", "will also be written", "will not be written" }) {
-            this.getWriter().write(message, follower);
+        List<String> messages = new LinkedList<String>();
+        for (int i = 0; i < MESSAGES_TO_WRITE; i++) {
+            messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
         }
+        messages.remove(messages.size() - 1); // last message will not be written
         if (closeBeforeWriting) {
             this.getLogWatch().unfollow(follower);
         }
@@ -41,9 +44,8 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
             NonStoringFollowerTest.LOGGER.info("Will write into '{}'.", f);
             follower.write(new FileOutputStream(f));
             Assert.assertTrue(f.exists());
-            final boolean filesEqual = FileUtils.contentEqualsIgnoreEOL(f,
-                    NonStoringFollowerTest.WRITE_MESSAGES_CANONICAL_RESULT, "UTF-8");
-            Assert.assertTrue(filesEqual);
+            List<String> lines = FileUtils.readLines(f, "UTF-8");
+            Assert.assertEquals(messages, lines);
         } catch (final Exception e) {
             Assert.fail("Couldn't write to file.");
         } finally {
