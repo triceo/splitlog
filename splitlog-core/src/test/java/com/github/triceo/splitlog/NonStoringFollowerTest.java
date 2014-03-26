@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -172,12 +171,11 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assert.assertTrue("Log watch not terminated after termination.", this.getLogWatch().isTerminated());
     }
 
-    @Ignore
     @Test
     public void testWaitForAfterPreviousFailed() {
         final Follower follower = this.getLogWatch().follow();
         // this call will fail, since we're not writing anything
-        follower.waitFor(new MessageDeliveryCondition() {
+        final Message noMessage = follower.waitFor(new MessageDeliveryCondition() {
 
             @Override
             public boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
@@ -185,6 +183,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
             }
 
         }, 1, TimeUnit.SECONDS);
+        Assert.assertNull(noMessage);
         // these calls should succeed
         final String message = "test";
         String result = this.getWriter().write(message, follower);
