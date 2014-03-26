@@ -77,17 +77,20 @@ final class NonStoringFollower extends AbstractFollower {
     }
 
     private void notifyOfMessage(final Message msg, final MessageDeliveryStatus status) {
-        NonStoringFollower.LOGGER.info("{} notified of {} with status {}.", this, msg, status);
+        NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
         if (this.messageBlockingCondition == null) {
+            NonStoringFollower.LOGGER.debug("{} not waiting for any messages.", this, msg, status);
             // this does nothing with the message
             return;
         }
         if (!this.messageBlockingCondition.accept(msg, status)) {
+            NonStoringFollower.LOGGER.debug("{} rejected '{}' with status {}.", this, msg, status);
             return;
         }
         this.messageBlockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);
+            NonStoringFollower.LOGGER.debug("{} finished handling '{}' with status {}.", this, msg, status);
         } catch (final InterruptedException e) {
             NonStoringFollower.LOGGER.warn("Notifying follower {} of message {} in state {} failed.", this, msg,
                     status, e);

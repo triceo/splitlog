@@ -55,7 +55,7 @@ public class WaitingTest extends DefaultFollowerBaseTest {
                     return follower.waitFor(new MessageDeliveryCondition() {
                         @Override
                         public boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
-                            return evaluate.toString().trim().endsWith(expectedValue);
+                            return evaluate.getLines().get(0).endsWith(expectedValue);
                         }
                     }, WaitingTest.TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);
                 }
