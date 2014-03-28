@@ -74,6 +74,8 @@ final public class LogWatchBuilder {
     /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden.
+     * 
+     * @return The newly build log watch.
      */
     public LogWatch build() {
         return this.buildWith(new SimpleTailSplitter());
@@ -235,6 +237,8 @@ final public class LogWatchBuilder {
 
     /**
      * Get the file that the log watch will be watching.
+     * 
+     * @return The file that will be watched by the future log watch.
      */
     public File getFileToWatch() {
         return this.fileToWatch;
@@ -277,15 +281,15 @@ final public class LogWatchBuilder {
     }
 
     /**
-     * Whether or not the file will be closed after it is read from.
+     * @return Whether or not the file will be closed after it is read from.
      */
     public boolean isClosingBetweenReads() {
         return this.closingBetweenReads;
     }
 
     /**
-     * Whether or not the file will be read from the beginning, or just the
-     * additions made post starting the log watch.
+     * @return True if the file will be read from the beginning, false if just
+     *         the additions made post starting the log watch.
      */
     public boolean isReadingFromBeginning() {
         return this.readingFromBeginning;

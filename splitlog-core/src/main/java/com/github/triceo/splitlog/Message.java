@@ -29,7 +29,7 @@ final public class Message {
     private final ExceptionDescriptor exceptionDescriptor;
 
     /**
-     * Will call {@link #Message(Collection, TailSplitter)} with
+     * Will call {@link #Message(long, Collection, TailSplitter)} with
      * {@link #DEFAULT_SPLITTER}.
      * 
      * @param id
@@ -43,8 +43,8 @@ final public class Message {
     }
 
     /**
-     * Will call {@link #Message(Collection, long, TailSplitter, Message)} with
-     * current time and no previous message.
+     * Will call {@link #Message(long, Collection, long, TailSplitter, Message)}
+     * with current time and no previous message.
      * 
      * @param id
      *            Unique ID for the message. No other instance may have this ID,

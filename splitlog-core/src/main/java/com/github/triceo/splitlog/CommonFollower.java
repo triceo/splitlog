@@ -96,6 +96,10 @@ public interface CommonFollower {
      * 
      * @param condition
      *            Condition that needs to be true for the method to unblock.
+     * @param timeout
+     *            Time before forcibly aborting.
+     * @param unit
+     *            Unit of time.
      * @return Null if the method unblocked due to some other reason.
      */
     Message waitFor(MessageDeliveryCondition condition, long timeout, TimeUnit unit);
