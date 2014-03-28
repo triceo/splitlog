@@ -78,7 +78,8 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
         this.notifyOfMessage(msg, MessageDeliveryStatus.UNDELIVERED, source);
     }
 
-    private void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
+    // notifications must be mutually exclusive
+    private synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
         final MessageDeliveryNotificationSource source) {
         if (!this.getMerged().contains(source)) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);

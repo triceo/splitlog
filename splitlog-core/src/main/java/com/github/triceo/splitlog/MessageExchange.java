@@ -18,9 +18,9 @@ final class MessageExchange {
 
     public void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
         final MessageDeliveryNotificationSource source) {
-        MessageExchange.LOGGER.info("Follower {} notified of message {} in state {}.", this, msg, status);
+        MessageExchange.LOGGER.info("Notified of message {} in state {} from {}.", msg, status, source);
         if (this.messageBlockingCondition == null) {
-            MessageExchange.LOGGER.debug("Follower {} not waiting for message {} in state {}.", this, msg, status);
+            MessageExchange.LOGGER.debug("Not waiting for message {} in state {} from {}.", msg, status, source);
             // this does nothing with the message
             return;
         }
@@ -36,13 +36,13 @@ final class MessageExchange {
         } else {
             throw new IllegalStateException(source + " is not a valid message notification source.");
         }
-        MessageExchange.LOGGER.debug("Follower {} accepted message {} in state {}.", this, msg, status);
+        MessageExchange.LOGGER.debug("Accepted message {} in state {} from {}.", msg, status, source);
         this.messageBlockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);
         } catch (final InterruptedException e) {
-            MessageExchange.LOGGER
-                    .warn("Notifying follower {} of message {} in state {} failed.", this, msg, status, e);
+            MessageExchange.LOGGER.warn("Failed to notify Follower of message {} in state {} from {}.", msg, status,
+                    source, e);
         }
     }
 

@@ -50,8 +50,6 @@ public abstract class DefaultFollowerBaseTest {
      *            want to compare against a tag.
      */
     protected static void assertProperOrder(final SortedSet<Message> messages, final Object... expectedMessages) {
-        System.out.println("Original order: " + messages);
-        System.out.println("Expected order: " + Arrays.toString(expectedMessages));
         Assertions.assertThat(messages.size()).isEqualTo(expectedMessages.length);
         final List<Message> indexableMessages = new LinkedList<Message>(messages);
         for (int i = 0; i < expectedMessages.length; i++) {
@@ -102,11 +100,11 @@ public abstract class DefaultFollowerBaseTest {
             throw new IllegalStateException("Cannot create temp files.", e);
         }
         // prepare writer
-        this.writer = new LogWriter(toWrite);
+        this.writer = LogWriter.forFile(toWrite);
         // and start the log watch
         this.logwatch = this.getBuilder().build();
         // this will write an initial message to the log
-        this.writer.writeWithoutWaiting(DefaultFollowerBaseTest.INITIAL_MESSAGE);
+        this.writer.writeNow(DefaultFollowerBaseTest.INITIAL_MESSAGE);
         if (!this.getBuilder().isReadingFromBeginning()) {
             return;
         }
@@ -129,7 +127,7 @@ public abstract class DefaultFollowerBaseTest {
 
     @After
     public void destroyEverything() {
-        this.writer.destroy();
+        this.writer.dispose();
         if (!this.logwatch.isTerminated()) {
             this.logwatch.terminate();
         }

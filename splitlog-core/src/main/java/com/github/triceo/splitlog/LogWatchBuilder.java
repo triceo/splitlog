@@ -90,8 +90,9 @@ final public class LogWatchBuilder {
     }
 
     /**
-     * Only the messages for which {@link MessageCondition#accept(Message)} is
-     * true will be registered by the future log watch.
+     * Only the messages for which
+     * {@link MessageCondition#accept(Message, LogWatch)} is true will be
+     * registered by the future log watch.
      * 
      * @param condition
      *            The condition.
