@@ -14,7 +14,6 @@ import org.apache.commons.io.IOUtils;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.MessageCondition;
 import com.github.triceo.splitlog.formatters.MessageFormatter;
-import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
 import com.github.triceo.splitlog.ordering.MessageComparator;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
@@ -24,14 +23,13 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * follower implementation, such as {@link NonStoringFollower}, needs to extend
  * this class.
  * 
- * Will use {@value #DEFAULT_FORMATTER} as default message formatter. Will use
- * {@value #DEFAULT_CONDITION} as a default in getMessages() and write()
+ * Will use {@link #getDefaultFormatter()} as default message formatter. Will
+ * use {@value #DEFAULT_CONDITION} as a default in getMessages() and write()
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
 abstract class AbstractFollower implements CommonFollower {
 
-    private static final MessageFormatter DEFAULT_FORMATTER = NoopMessageFormatter.INSTANCE;
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final MessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
 
@@ -112,14 +110,21 @@ abstract class AbstractFollower implements CommonFollower {
      */
     protected abstract void notifyOfRejectedMessage(Message msg, MessageDeliveryNotificationSource source);
 
+    /**
+     * Provide the default formatter for messages in this follower.
+     * 
+     * @return Formatter to use on messages.
+     */
+    protected abstract MessageFormatter getDefaultFormatter();
+
     @Override
     public boolean write(final OutputStream stream) {
-        return this.write(stream, AbstractFollower.DEFAULT_FORMATTER);
+        return this.write(stream, this.getDefaultFormatter());
     }
 
     @Override
     public boolean write(final OutputStream stream, final MessageCondition condition) {
-        return this.write(stream, condition, AbstractFollower.DEFAULT_FORMATTER);
+        return this.write(stream, condition, this.getDefaultFormatter());
     }
 
     @Override
@@ -159,7 +164,7 @@ abstract class AbstractFollower implements CommonFollower {
 
     @Override
     public boolean write(final OutputStream stream, final MessageComparator order) {
-        return this.write(stream, order, AbstractFollower.DEFAULT_FORMATTER);
+        return this.write(stream, order, this.getDefaultFormatter());
     }
 
     @Override
@@ -169,7 +174,7 @@ abstract class AbstractFollower implements CommonFollower {
 
     @Override
     public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order) {
-        return this.write(stream, condition, order, AbstractFollower.DEFAULT_FORMATTER);
+        return this.write(stream, condition, order, this.getDefaultFormatter());
     }
 
     @Override

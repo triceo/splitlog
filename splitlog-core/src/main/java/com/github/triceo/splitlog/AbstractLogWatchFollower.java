@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.github.triceo.splitlog.formatters.MessageFormatter;
+import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
+
 /**
  * Internal API for a log follower that, on top of the public API, provides ways
  * for {@link LogWatch} of notifying the follower of new messages. Every
@@ -23,6 +26,11 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
 
     protected AbstractLogWatchFollower(final DefaultLogWatch watch) {
         this.watch = watch;
+    }
+
+    @Override
+    protected MessageFormatter getDefaultFormatter() {
+        return NoopMessageFormatter.INSTANCE;
     }
 
     protected Set<AbstractMergingFollower> getMergingFollowersToNotify() {

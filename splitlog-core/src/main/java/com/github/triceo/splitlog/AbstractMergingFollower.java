@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.github.triceo.splitlog.formatters.MessageFormatter;
+import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
+
 abstract class AbstractMergingFollower extends AbstractFollower implements MergingFollower {
 
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
@@ -19,6 +22,11 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
             this.followers.add(af);
             af.registerMerge(this);
         }
+    }
+
+    @Override
+    protected MessageFormatter getDefaultFormatter() {
+        return UnifyingMessageFormatter.INSTANCE;
     }
 
     @Override
