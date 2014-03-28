@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog.exceptions;
+package com.github.triceo.splitlog.splitters.exceptions;
 
 import java.util.Arrays;
 import java.util.Collection;

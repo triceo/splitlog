@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog.exceptions;
+package com.github.triceo.splitlog.splitters.exceptions;
 
 import java.net.ConnectException;
 
@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import com.github.triceo.splitlog.api.ExceptionDescriptor;
+import com.github.triceo.splitlog.splitters.exceptions.DefaultExceptionDescriptor;
 
 public class DefaultExceptionDescriptorTest {
 

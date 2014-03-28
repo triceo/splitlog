@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.github.triceo.splitlog.api.ExceptionDescriptor;
 import com.github.triceo.splitlog.api.TailSplitter;
-import com.github.triceo.splitlog.exceptions.DefaultExceptionDescriptor;
+import com.github.triceo.splitlog.splitters.exceptions.DefaultExceptionDescriptor;
 
 abstract class AbstractTailSplitter implements TailSplitter {
 

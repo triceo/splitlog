@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog.exceptions;
+package com.github.triceo.splitlog.splitters.exceptions;
 
 class StackTraceLine implements ExceptionLine {
 

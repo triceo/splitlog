@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog.exceptions;
+package com.github.triceo.splitlog.splitters.exceptions;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -12,7 +12,13 @@ import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-import com.github.triceo.splitlog.exceptions.StackTraceLine.Source;
+import com.github.triceo.splitlog.splitters.exceptions.CauseLine;
+import com.github.triceo.splitlog.splitters.exceptions.ExceptionLine;
+import com.github.triceo.splitlog.splitters.exceptions.ExceptionParseException;
+import com.github.triceo.splitlog.splitters.exceptions.ExceptionParser;
+import com.github.triceo.splitlog.splitters.exceptions.StackTraceEndLine;
+import com.github.triceo.splitlog.splitters.exceptions.StackTraceLine;
+import com.github.triceo.splitlog.splitters.exceptions.StackTraceLine.Source;
 
 public class ExceptionParserTest {
 
