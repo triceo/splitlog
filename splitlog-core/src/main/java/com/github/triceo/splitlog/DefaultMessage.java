@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.api.MessageType;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
-final public class DefaultMessage implements Message {
+final class DefaultMessage implements Message {
 
     private static final TailSplitter DEFAULT_SPLITTER = new SimpleTailSplitter();
 
