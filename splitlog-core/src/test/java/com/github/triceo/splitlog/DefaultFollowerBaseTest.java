@@ -50,8 +50,6 @@ public abstract class DefaultFollowerBaseTest {
      *            want to compare against a tag.
      */
     protected static void assertProperOrder(final SortedSet<Message> messages, final Object... expectedMessages) {
-        System.out.println("Original order: " + messages);
-        System.out.println("Expected order: " + Arrays.toString(expectedMessages));
         Assertions.assertThat(messages.size()).isEqualTo(expectedMessages.length);
         final List<Message> indexableMessages = new LinkedList<Message>(messages);
         for (int i = 0; i < expectedMessages.length; i++) {
