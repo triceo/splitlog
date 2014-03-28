@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class LogWriter {
     }
 
     public void writeWithoutWaiting(final String line) {
-        this.write(line);
+        this.actuallyWrite(line);
     }
 
     /**
@@ -87,7 +88,7 @@ public class LogWriter {
 
             @Override
             public Boolean call() throws Exception {
-                return LogWriter.this.write(line);
+                return LogWriter.this.actuallyWrite(line);
             }
 
         });
@@ -99,13 +100,12 @@ public class LogWriter {
         }
     }
 
-    private boolean write(final String line) {
-        FileWriter w = null;
+    private synchronized boolean actuallyWrite(final String line) {
+        BufferedWriter w = null;
         try {
-            w = new FileWriter(LogWriter.this.target, true);
+            w = new BufferedWriter(new FileWriter(this.target, true));
             w.write(line);
-            w.write("\n");
-            w.flush();
+            w.newLine();
         } catch (final IOException ex) {
             return false;
         } finally {
