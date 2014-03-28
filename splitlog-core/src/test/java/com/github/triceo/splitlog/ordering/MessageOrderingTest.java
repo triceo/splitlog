@@ -32,7 +32,7 @@ public class MessageOrderingTest {
 
     private final File target = MessageOrderingTest.createTempCopy(new File(
             "src/test/resources/com/github/triceo/splitlog/ordering/", "ordering.log"));
-    private final LogWriter writer = new LogWriter(this.target);
+    private final LogWriter writer = LogWriter.forFile(this.target);
     private LogWatch watch;
 
     @Before

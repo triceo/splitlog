@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,18 +18,36 @@ import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 
+/**
+ * Write a message to a given log file.
+ * 
+ * This class is designed in such a way that it would be literally impossible
+ * for two threads to attempt to write the same file at the same time.
+ * 
+ */
 public class LogWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWriter.class);
+    private static final Map<File, LogWriter> WRITERS = new HashMap<File, LogWriter>();
     private final File target;
+    private boolean isDestroyed = false;
     private final ExecutorService e = Executors.newSingleThreadExecutor();
 
-    public LogWriter(final File target) {
+    public static synchronized LogWriter forFile(final File f) {
+        if (!LogWriter.WRITERS.containsKey(f)) {
+            LogWriter.WRITERS.put(f, new LogWriter(f));
+        }
+        return LogWriter.WRITERS.get(f);
+    }
+
+    private LogWriter(final File target) {
         this.target = target;
     }
 
-    public void destroy() {
+    public synchronized void destroy() {
+        LogWriter.WRITERS.remove(this.target);
         this.e.shutdownNow();
+        this.isDestroyed = true;
     }
 
     /**
@@ -101,6 +121,9 @@ public class LogWriter {
     }
 
     private synchronized boolean actuallyWrite(final String line) {
+        if (this.isDestroyed) {
+            return false;
+        }
         BufferedWriter w = null;
         try {
             w = new BufferedWriter(new FileWriter(this.target, true));

@@ -102,7 +102,7 @@ public abstract class DefaultFollowerBaseTest {
             throw new IllegalStateException("Cannot create temp files.", e);
         }
         // prepare writer
-        this.writer = new LogWriter(toWrite);
+        this.writer = LogWriter.forFile(toWrite);
         // and start the log watch
         this.logwatch = this.getBuilder().build();
         // this will write an initial message to the log
