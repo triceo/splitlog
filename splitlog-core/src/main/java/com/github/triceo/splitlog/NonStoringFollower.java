@@ -70,7 +70,8 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         }
     }
 
-    private void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
+    // notifications must be mutually exclusive
+    private synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
         final MessageDeliveryNotificationSource source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);

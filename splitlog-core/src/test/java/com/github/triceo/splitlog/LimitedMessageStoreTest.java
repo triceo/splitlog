@@ -47,7 +47,7 @@ public class LimitedMessageStoreTest extends DefaultFollowerBaseTest {
             @Override
             public void run() {
                 while (!Thread.interrupted()) {
-                    LimitedMessageStoreTest.this.getWriter().writeWithoutWaiting(UUID.randomUUID().toString());
+                    LimitedMessageStoreTest.this.getWriter().writeNow(UUID.randomUUID().toString());
                 }
             }
         });

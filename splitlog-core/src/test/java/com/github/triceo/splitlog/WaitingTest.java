@@ -75,7 +75,7 @@ public class WaitingTest extends DefaultFollowerBaseTest {
             tasks.put(task, expectedValue);
         }
         for (int i = 0; i < WaitingTest.TOTAL_MESSAGES; i++) {
-            this.getWriter().writeWithoutWaiting("<" + String.valueOf(i) + ">");
+            this.getWriter().writeNow("<" + String.valueOf(i) + ">");
         }
         for (final Future<Message> task : tasks.keySet()) {
             final Message accepted = task.get();

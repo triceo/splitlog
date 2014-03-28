@@ -106,7 +106,7 @@ public abstract class DefaultFollowerBaseTest {
         // and start the log watch
         this.logwatch = this.getBuilder().build();
         // this will write an initial message to the log
-        this.writer.writeWithoutWaiting(DefaultFollowerBaseTest.INITIAL_MESSAGE);
+        this.writer.writeNow(DefaultFollowerBaseTest.INITIAL_MESSAGE);
         if (!this.getBuilder().isReadingFromBeginning()) {
             return;
         }
@@ -129,7 +129,7 @@ public abstract class DefaultFollowerBaseTest {
 
     @After
     public void destroyEverything() {
-        this.writer.destroy();
+        this.writer.dispose();
         if (!this.logwatch.isTerminated()) {
             this.logwatch.terminate();
         }

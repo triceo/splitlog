@@ -311,7 +311,8 @@ final class DefaultLogWatch implements LogWatch {
                 continue;
             }
             try {
-                DefaultLogWatch.LOGGER.debug("Will wait further {} milliseconds for tailer to be started.", remainingDelay);
+                DefaultLogWatch.LOGGER.debug("Will wait further {} milliseconds for tailer to be started.",
+                        remainingDelay);
                 Thread.sleep(remainingDelay);
             } catch (final InterruptedException e) {
                 // do nothing

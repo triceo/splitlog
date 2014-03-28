@@ -38,7 +38,7 @@ public class ThreadSafetyTest extends DefaultFollowerBaseTest {
             @Override
             public void run() {
                 while (!Thread.interrupted()) {
-                    ThreadSafetyTest.this.getWriter().writeWithoutWaiting(UUID.randomUUID().toString());
+                    ThreadSafetyTest.this.getWriter().writeNow(UUID.randomUUID().toString());
                 }
             }
         });
