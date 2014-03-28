@@ -8,11 +8,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.triceo.splitlog.api.ExceptionDescriptor;
+
 /**
  * A class that describes an exception instance.
  * 
  */
-public class ExceptionDescriptor {
+public class DefaultExceptionDescriptor implements ExceptionDescriptor {
 
     private static class Builder {
 
@@ -43,8 +45,8 @@ public class ExceptionDescriptor {
             for (int i = properlyOrdered.size() - 1; i >= 0; i--) {
                 final CauseLine cause = properlyOrdered.get(i);
                 final List<StackTraceElement> stackTrace = this.causes.get(cause);
-                previousException = new ExceptionDescriptor(cause.getClassName(), cause.getMessage(), stackTrace,
-                        previousException);
+                previousException = new DefaultExceptionDescriptor(cause.getClassName(), cause.getMessage(),
+                        stackTrace, previousException);
             }
             return previousException;
         }
@@ -77,76 +79,17 @@ public class ExceptionDescriptor {
         }
     }
 
-    private final StackTraceElement[] stackTrace;
-
-    private final String exceptionClassName, message;
     private final ExceptionDescriptor cause;
 
-    private ExceptionDescriptor(final String className, final String message, final List<StackTraceElement> elements,
-            final ExceptionDescriptor cause) {
+    private final String exceptionClassName, message;
+    private final StackTraceElement[] stackTrace;
+
+    private DefaultExceptionDescriptor(final String className, final String message,
+            final List<StackTraceElement> elements, final ExceptionDescriptor cause) {
         this.exceptionClassName = className;
         this.message = message;
         this.stackTrace = elements.toArray(new StackTraceElement[elements.size()]);
         this.cause = cause;
-    }
-
-    /**
-     * Returns the cause for this exception.
-     * 
-     * @return Exception data if {@link #isRootCause()} returns true, null
-     *         otherwise.
-     */
-    public ExceptionDescriptor getCause() {
-        return this.cause;
-    }
-
-    /**
-     * Best-effort attempt to provide an exception type for
-     * {@link #getExceptionClassName()}.
-     * 
-     * @return Exception type if found on classpath, null otherwise.
-     */
-    @SuppressWarnings("unchecked")
-    public Class<? extends Throwable> getExceptionClass() {
-        try {
-            return (Class<? extends Throwable>) Class.forName(this.getExceptionClassName());
-        } catch (final ClassNotFoundException e) {
-            // the exception in the log came from code that is not on known here
-            return null;
-        }
-    }
-
-    public String getExceptionClassName() {
-        return this.exceptionClassName;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
-
-    /**
-     * This method will create a brand new unmodifiable list every time it is
-     * called. Use with caution.
-     * 
-     * @return Unmodifiable representation of the stack trace.
-     */
-    public List<StackTraceElement> getStackTrace() {
-        return Collections.unmodifiableList(Arrays.asList(this.stackTrace));
-    }
-
-    public boolean isRootCause() {
-        return this.cause == null;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = (prime * result) + ((this.cause == null) ? 0 : this.cause.hashCode());
-        result = (prime * result) + ((this.exceptionClassName == null) ? 0 : this.exceptionClassName.hashCode());
-        result = (prime * result) + ((this.message == null) ? 0 : this.message.hashCode());
-        result = (prime * result) + Arrays.hashCode(this.stackTrace);
-        return result;
     }
 
     @Override
@@ -160,7 +103,7 @@ public class ExceptionDescriptor {
         if (this.getClass() != obj.getClass()) {
             return false;
         }
-        final ExceptionDescriptor other = (ExceptionDescriptor) obj;
+        final DefaultExceptionDescriptor other = (DefaultExceptionDescriptor) obj;
         if (this.cause == null) {
             if (other.cause != null) {
                 return false;
@@ -186,6 +129,53 @@ public class ExceptionDescriptor {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public ExceptionDescriptor getCause() {
+        return this.cause;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<? extends Throwable> getExceptionClass() {
+        try {
+            return (Class<? extends Throwable>) Class.forName(this.getExceptionClassName());
+        } catch (final ClassNotFoundException e) {
+            // the exception in the log came from code that is not on known here
+            return null;
+        }
+    }
+
+    @Override
+    public String getExceptionClassName() {
+        return this.exceptionClassName;
+    }
+
+    @Override
+    public String getMessage() {
+        return this.message;
+    }
+
+    @Override
+    public List<StackTraceElement> getStackTrace() {
+        return Collections.unmodifiableList(Arrays.asList(this.stackTrace));
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((this.cause == null) ? 0 : this.cause.hashCode());
+        result = (prime * result) + ((this.exceptionClassName == null) ? 0 : this.exceptionClassName.hashCode());
+        result = (prime * result) + ((this.message == null) ? 0 : this.message.hashCode());
+        result = (prime * result) + Arrays.hashCode(this.stackTrace);
+        return result;
+    }
+
+    @Override
+    public boolean isRootCause() {
+        return this.cause == null;
     }
 
     @Override

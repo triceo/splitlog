@@ -6,6 +6,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.api.Follower;
+
 /**
  * As followers are terminated via {@link #unfollow(Follower)} and then
  * discarded by GC, some messages will become unreachable. (No followers point

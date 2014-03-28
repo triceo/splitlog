@@ -8,6 +8,10 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageSeverity;
+import com.github.triceo.splitlog.api.MessageType;
+
 public class MessageTest {
 
     private Message buildMessage(final Collection<String> raw) {

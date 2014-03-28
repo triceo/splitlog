@@ -5,8 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
-import com.github.triceo.splitlog.splitters.TailSplitter;
 
 final public class MessageBuilder {
 
@@ -65,7 +66,8 @@ final public class MessageBuilder {
             // no ID acquired yet
             this.futureMessageId = MessageBuilder.MESSAGE_ID_GENERATOR.getAndIncrement();
         }
-        return new Message(this.futureMessageId, this.getLines(), this.getTimestamp(), splitter, this.previousMessage);
+        return new DefaultMessage(this.futureMessageId, this.getLines(), this.getTimestamp(), splitter,
+                this.previousMessage);
     }
 
     public synchronized Message buildFinal(final TailSplitter splitter) {
@@ -73,7 +75,7 @@ final public class MessageBuilder {
             // no ID acquired yet
             this.futureMessageId = MessageBuilder.MESSAGE_ID_GENERATOR.getAndIncrement();
         }
-        final Message msg = new Message(this.futureMessageId, this.getLines(), this.getTimestamp(), splitter,
+        final Message msg = new DefaultMessage(this.futureMessageId, this.getLines(), this.getTimestamp(), splitter,
                 this.previousMessage);
         // next message will have to acquire new ID
         this.futureMessageId = MessageBuilder.NO_MESSAGE_ID_SET;
@@ -93,7 +95,7 @@ final public class MessageBuilder {
             // no ID acquired yet
             this.futureMessageId = MessageBuilder.MESSAGE_ID_GENERATOR.getAndIncrement();
         }
-        final Message msg = new Message(this.futureMessageId, this.getFirstLine());
+        final Message msg = new DefaultMessage(this.futureMessageId, this.getFirstLine());
         // next message will have to acquire new ID
         this.futureMessageId = MessageBuilder.NO_MESSAGE_ID_SET;
         return msg;

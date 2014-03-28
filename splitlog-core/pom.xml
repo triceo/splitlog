@@ -7,15 +7,15 @@
   </parent>
   <artifactId>splitlog-core</artifactId>
   <name>splitlog-core: the client library</name>
-  <description>These are the core parts of splitlog. It is possible that this will remain the only module.</description>
+  <description>These are the core parts of splitlog. This is where the implementations of the public APIs live.</description>
   <dependencies>
+    <dependency>
+      <groupId>com.github.triceo.splitlog</groupId>
+      <artifactId>splitlog-api</artifactId>
+    </dependency>
     <dependency>
        <groupId>commons-io</groupId>
        <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-       <groupId>org.apache.commons</groupId>
-       <artifactId>commons-lang3</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

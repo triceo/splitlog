@@ -9,6 +9,9 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+
 /**
  * Data storage for a particular {@link LogWatch}.
  * 

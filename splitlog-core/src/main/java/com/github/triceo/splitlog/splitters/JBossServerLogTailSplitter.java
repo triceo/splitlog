@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.github.triceo.splitlog.MessageSeverity;
-import com.github.triceo.splitlog.MessageType;
+import com.github.triceo.splitlog.api.MessageSeverity;
+import com.github.triceo.splitlog.api.MessageType;
 
 /**
  * Provides a tail splitter capable of understanding the JBossAS server.log

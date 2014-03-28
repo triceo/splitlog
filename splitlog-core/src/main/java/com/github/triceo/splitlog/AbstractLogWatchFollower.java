@@ -5,7 +5,12 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.github.triceo.splitlog.formatters.MessageFormatter;
+import com.github.triceo.splitlog.api.CommonFollower;
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.MergingFollower;
+import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
+import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
 
 /**

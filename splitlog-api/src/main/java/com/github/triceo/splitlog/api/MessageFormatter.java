@@ -1,6 +1,4 @@
-package com.github.triceo.splitlog.formatters;
-
-import com.github.triceo.splitlog.Message;
+package com.github.triceo.splitlog.api;
 
 /**
  * Converts a message to a textual representation.

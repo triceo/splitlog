@@ -1,13 +1,8 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.api;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
-
-import com.github.triceo.splitlog.conditions.MessageCondition;
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
-import com.github.triceo.splitlog.formatters.MessageFormatter;
-import com.github.triceo.splitlog.ordering.MessageComparator;
 
 /**
  * Follower's primary function is to allow users to work with their portion of
@@ -40,6 +35,18 @@ public interface CommonFollower {
     /**
      * Retrieve messages that this follower has been notified of, if a certain
      * condition holds true for them, including tags. They will be in the order
+     * given.
+     * 
+     * @param condition
+     *            The condition.
+     * @return Messages we have been notified of, for which the condition holds
+     *         true.
+     */
+    SortedSet<Message> getMessages(final MessageCondition condition);
+
+    /**
+     * Retrieve messages that this follower has been notified of, if a certain
+     * condition holds true for them, including tags. They will be in the order
      * in which we have been notified of them.
      * 
      * @param condition
@@ -52,16 +59,21 @@ public interface CommonFollower {
     SortedSet<Message> getMessages(final MessageCondition condition, final MessageComparator order);
 
     /**
-     * Retrieve messages that this follower has been notified of, if a certain
-     * condition holds true for them, including tags. They will be in the order
-     * given.
+     * Merge this {@link CommonFollower} with another. This
+     * {@link CommonFollower} has a responsibility of notifying the resulting
+     * {@link MergingFollower} of every {@link Message} that it receives, until
+     * such time that {@link MergingFollower#separate(Follower)} is called on
+     * it.
      * 
-     * @param condition
-     *            The condition.
-     * @return Messages we have been notified of, for which the condition holds
-     *         true.
+     * @param f
+     *            To merge with.
+     * @return A new {@link MergingFollower}, that will merge both
+     *         {@link CommonFollower}s. If any of the {@link CommonFollower}s
+     *         already is a {@link MergingFollower}, the returned instance will
+     *         hold every merged {@link CommonFollower} individually and not
+     *         compose {@link MergingFollower}s.
      */
-    SortedSet<Message> getMessages(final MessageCondition condition);
+    MergingFollower mergeWith(CommonFollower f);
 
     /**
      * Mark the current location in the tail by a custom message.
@@ -146,18 +158,6 @@ public interface CommonFollower {
     boolean write(final OutputStream stream, final MessageComparator order, final MessageFormatter formatter);
 
     /**
-     * Will write to a stream the result of {@link #getMessages()}, using given
-     * {@link MessageFormatter}. Will close the stream.
-     * 
-     * @param stream
-     *            Target.
-     * @param formatter
-     *            Formatter to use to transform message into string.
-     * @return True if written, false otherwise.
-     */
-    boolean write(final OutputStream stream, final MessageFormatter formatter);
-
-    /**
      * Will write to a stream the result of
      * {@link #getMessages(MessageCondition)}, using a {@link MessageFormatter}
      * implementation of its own choosing. Will close the stream.
@@ -191,22 +191,6 @@ public interface CommonFollower {
 
     /**
      * Will write to a stream the result of
-     * {@link #getMessages(MessageCondition)}, using given
-     * {@link MessageFormatter}. Will close the stream.
-     * 
-     * @param stream
-     *            Target.
-     * @param condition
-     *            The condition to pass to
-     *            {@link #getMessages(MessageCondition)}.
-     * @param formatter
-     *            Formatter to use to transform message into string.
-     * @return True if written, false otherwise.
-     */
-    boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter);
-
-    /**
-     * Will write to a stream the result of
      * {@link #getMessages(MessageCondition, MessageComparator)}, using given
      * {@link MessageFormatter}. Will close the stream.
      * 
@@ -226,20 +210,31 @@ public interface CommonFollower {
         final MessageFormatter formatter);
 
     /**
-     * Merge this {@link CommonFollower} with another. This
-     * {@link CommonFollower} has a responsibility of notifying the resulting
-     * {@link MergingFollower} of every {@link Message} that it receives, until
-     * such time that {@link MergingFollower#separate(Follower)} is called on
-     * it.
+     * Will write to a stream the result of
+     * {@link #getMessages(MessageCondition)}, using given
+     * {@link MessageFormatter}. Will close the stream.
      * 
-     * @param f
-     *            To merge with.
-     * @return A new {@link MergingFollower}, that will merge both
-     *         {@link CommonFollower}s. If any of the {@link CommonFollower}s
-     *         already is a {@link MergingFollower}, the returned instance will
-     *         hold every merged {@link CommonFollower} individually and not
-     *         compose {@link MergingFollower}s.
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(MessageCondition)}.
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
      */
-    MergingFollower mergeWith(CommonFollower f);
+    boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter);
+
+    /**
+     * Will write to a stream the result of {@link #getMessages()}, using given
+     * {@link MessageFormatter}. Will close the stream.
+     * 
+     * @param stream
+     *            Target.
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final MessageFormatter formatter);
 
 }

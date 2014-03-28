@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog.ordering;
 
-import com.github.triceo.splitlog.Message;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageComparator;
 
 /**
  * Will sort messages in the order of increasing {@link Message#getDate()}.

@@ -15,6 +15,10 @@ import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+
 public abstract class DefaultFollowerBaseTest {
 
     private static final String INITIAL_MESSAGE = "INITIAL";

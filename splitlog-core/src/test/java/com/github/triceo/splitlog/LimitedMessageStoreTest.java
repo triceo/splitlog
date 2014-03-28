@@ -11,6 +11,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.Follower;
+
 /**
  * See <a href="https://github.com/triceo/splitlog/pull/15">Splitlog Pull
  * Request 15</a>.

@@ -1,9 +1,11 @@
 package com.github.triceo.splitlog.conditions;
 
-import com.github.triceo.splitlog.Follower;
-import com.github.triceo.splitlog.LogWatch;
-import com.github.triceo.splitlog.Message;
-import com.github.triceo.splitlog.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 /**
  * This will accept any message.

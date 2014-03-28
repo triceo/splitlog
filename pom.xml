@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.triceo.splitlog</groupId>
@@ -7,15 +8,27 @@
   <name>splitlog: watching your logs</name>
   <description>Tool to monitor log files from your Java applications as they fill.</description>
   <properties>
+    <splitlog.version>${project.version}</splitlog.version>
     <java.version>1.6</java.version>
     <surefire.version>2.17</surefire.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <modules>
+    <module>splitlog-api</module>
     <module>splitlog-core</module>
   </modules>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.github.triceo.splitlog</groupId>
+        <artifactId>splitlog-api</artifactId>
+        <version>${splitlog.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.triceo.splitlog</groupId>
+        <artifactId>splitlog-core</artifactId>
+        <version>${splitlog.version}</version>
+      </dependency>
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>

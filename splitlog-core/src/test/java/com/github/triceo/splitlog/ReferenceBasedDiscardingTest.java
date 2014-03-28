@@ -7,6 +7,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.Message;
+
 @RunWith(Parameterized.class)
 public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
 

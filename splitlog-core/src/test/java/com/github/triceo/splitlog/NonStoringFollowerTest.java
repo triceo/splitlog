@@ -15,6 +15,8 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 
 @RunWith(Parameterized.class)

@@ -22,9 +22,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.conditions.MessageCondition;
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
-import com.github.triceo.splitlog.splitters.TailSplitter;
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.TailSplitter;
 
 /**
  * Default log watch implementation which provides all the bells and whistles so

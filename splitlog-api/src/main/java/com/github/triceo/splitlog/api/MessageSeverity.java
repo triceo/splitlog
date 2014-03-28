@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.api;
 
 /**
  * How important the log file says the message is.
@@ -6,6 +6,6 @@ package com.github.triceo.splitlog;
  */
 public enum MessageSeverity {
 
-    ERROR, WARNING, INFO, DEBUG, TRACE, UNKNOWN;
+    DEBUG, ERROR, INFO, TRACE, UNKNOWN, WARNING;
 
 }

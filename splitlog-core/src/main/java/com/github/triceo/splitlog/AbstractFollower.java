@@ -11,10 +11,14 @@ import java.util.SortedSet;
 
 import org.apache.commons.io.IOUtils;
 
+import com.github.triceo.splitlog.api.CommonFollower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
+import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
-import com.github.triceo.splitlog.conditions.MessageCondition;
-import com.github.triceo.splitlog.formatters.MessageFormatter;
-import com.github.triceo.splitlog.ordering.MessageComparator;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
 /**

@@ -14,7 +14,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 public class WaitingTest extends DefaultFollowerBaseTest {
 
@@ -69,6 +73,7 @@ public class WaitingTest extends DefaultFollowerBaseTest {
                             final Follower source) {
                             return this.accept(evaluate, status);
                         }
+
                     }, WaitingTest.TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);
                 }
             });

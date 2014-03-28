@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.api;
 
 import java.util.Collection;
 
@@ -10,7 +10,7 @@ import java.util.Collection;
  * <ul>
  * <li>They receive all messages that their {@link #getMerged()} receive. It is
  * left to the discretion of users to
- * {@link #waitFor(com.github.triceo.splitlog.conditions.MessageDeliveryCondition)}
+ * {@link #waitFor(MessageDeliveryCondition)}
  * any message or just for messages from a particular
  * {@link MessageDeliveryNotificationSource}.</li>
  * <li>Their {@link #tag(String)} doesn't affect any tags in their
@@ -19,6 +19,13 @@ import java.util.Collection;
  * 
  */
 public interface MergingFollower extends CommonFollower {
+
+    /**
+     * Retrieve followers that are currently part of this merge.
+     * 
+     * @return Unmodifiable collections of followers in this merge.
+     */
+    Collection<? extends Follower> getMerged();
 
     /**
      * Whether or not this follower is still capable of receiving any new
@@ -42,12 +49,5 @@ public interface MergingFollower extends CommonFollower {
      *         already separate or never merged.
      */
     boolean separate(Follower f);
-
-    /**
-     * Retrieve followers that are currently part of this merge.
-     * 
-     * @return Unmodifiable collections of followers in this merge.
-     */
-    Collection<? extends Follower> getMerged();
 
 }

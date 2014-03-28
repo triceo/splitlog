@@ -3,6 +3,9 @@ package com.github.triceo.splitlog;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.MergingFollower;
+
 public class MergingTest extends DefaultFollowerBaseTest {
 
     @Test(expected = IllegalArgumentException.class)

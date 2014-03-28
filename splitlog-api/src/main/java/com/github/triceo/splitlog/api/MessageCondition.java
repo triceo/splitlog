@@ -1,9 +1,4 @@
-package com.github.triceo.splitlog.conditions;
-
-import com.github.triceo.splitlog.Follower;
-import com.github.triceo.splitlog.LogWatch;
-import com.github.triceo.splitlog.MergingFollower;
-import com.github.triceo.splitlog.Message;
+package com.github.triceo.splitlog.api;
 
 /**
  * Allows users to filter messages based on their own criteria.

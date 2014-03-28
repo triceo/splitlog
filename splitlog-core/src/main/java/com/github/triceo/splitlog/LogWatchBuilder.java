@@ -3,11 +3,13 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
-import com.github.triceo.splitlog.conditions.MessageCondition;
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
-import com.github.triceo.splitlog.splitters.TailSplitter;
 
 /**
  * Prepares an instance of {@link LogWatch}. Unless overriden by the user, the

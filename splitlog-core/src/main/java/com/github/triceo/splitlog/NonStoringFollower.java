@@ -8,9 +8,13 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.conditions.MessageCondition;
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
-import com.github.triceo.splitlog.ordering.MessageComparator;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 /**
  * This is a log follower that holds no message data, just the tags. For message

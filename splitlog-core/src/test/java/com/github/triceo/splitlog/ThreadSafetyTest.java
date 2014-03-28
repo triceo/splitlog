@@ -11,6 +11,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.Follower;
+
 public class ThreadSafetyTest extends DefaultFollowerBaseTest {
 
     private static final long TIMEOUT_MILLIS = 10000;

@@ -3,8 +3,8 @@ package com.github.triceo.splitlog.splitters;
 import java.util.Date;
 import java.util.List;
 
-import com.github.triceo.splitlog.MessageSeverity;
-import com.github.triceo.splitlog.MessageType;
+import com.github.triceo.splitlog.api.MessageSeverity;
+import com.github.triceo.splitlog.api.MessageType;
 
 final public class SimpleTailSplitter extends AbstractTailSplitter {
 

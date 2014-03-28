@@ -7,55 +7,39 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import com.github.triceo.splitlog.exceptions.ExceptionDescriptor;
+import com.github.triceo.splitlog.api.CommonFollower;
+import com.github.triceo.splitlog.api.ExceptionDescriptor;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageSeverity;
+import com.github.triceo.splitlog.api.MessageType;
+import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
-import com.github.triceo.splitlog.splitters.TailSplitter;
 
-/**
- * A set of lines from the watched file, that is likely to constitute a single
- * log message.
- */
-final public class Message {
+final public class DefaultMessage implements Message {
 
     private static final TailSplitter DEFAULT_SPLITTER = new SimpleTailSplitter();
 
-    private final long uniqueId;
-    private final TailSplitter splitter;
-    private final List<String> lines;
-    private final MessageSeverity severity;
-    private final MessageType type;
-    private final WeakReference<Message> previousMessage;
-    private final long millisecondsSinceJanuary1st1970;
     private final ExceptionDescriptor exceptionDescriptor;
+    private final List<String> lines;
+    private final long millisecondsSinceJanuary1st1970;
+    private final WeakReference<Message> previousMessage;
+    private final MessageSeverity severity;
+    private final TailSplitter splitter;
+    private final MessageType type;
+    private final long uniqueId;
 
     /**
-     * Will call {@link #Message(long, Collection, TailSplitter)} with
+     * Will call {@link #DefaultMessage(long, Collection, TailSplitter)} with
      * {@link #DEFAULT_SPLITTER}.
      * 
      * @param id
      *            Unique ID for the message. No other instance may have this ID,
      *            or else they will be considered equal.
      * @param raw
-     *            Message lines, expected without any pre-processing.
+     *            DefaultMessage lines, expected without any pre-processing.
      */
-    protected Message(final long id, final Collection<String> raw) {
-        this(id, raw, Message.DEFAULT_SPLITTER);
-    }
-
-    /**
-     * Will call {@link #Message(long, Collection, long, TailSplitter, Message)}
-     * with current time and no previous message.
-     * 
-     * @param id
-     *            Unique ID for the message. No other instance may have this ID,
-     *            or else they will be considered equal.
-     * @param raw
-     *            Message lines, expected without any pre-processing.
-     * @param splitter
-     *            Used to extract metadata out of the raw lines.
-     */
-    protected Message(final long id, final Collection<String> raw, final TailSplitter splitter) {
-        this(id, raw, System.currentTimeMillis(), splitter, null);
+    protected DefaultMessage(final long id, final Collection<String> raw) {
+        this(id, raw, DefaultMessage.DEFAULT_SPLITTER);
     }
 
     /**
@@ -65,22 +49,22 @@ final public class Message {
      *            Unique ID for the message. No other instance may have this ID,
      *            or else they will be considered equal.
      * @param raw
-     *            Message lines, expected without any pre-processing.
+     *            DefaultMessage lines, expected without any pre-processing.
      * @param timestamp
      *            In milliseconds since January 1st 1970. Will be overriden if
      *            {@link TailSplitter} can decode the timestamp from the log.
      * @param splitter
      *            Used to extract metadata out of the raw lines.
      * @param previousMessage
-     *            Message that preceded this one in the log file. Should not
-     *            include tags from {@link CommonFollower}.
+     *            DefaultMessage that preceded this one in the log file. Should
+     *            not include tags from {@link CommonFollower}.
      */
-    protected Message(final long id, final Collection<String> raw, final long timestamp, final TailSplitter splitter,
-            final Message previousMessage) {
+    protected DefaultMessage(final long id, final Collection<String> raw, final long timestamp,
+            final TailSplitter splitter, final Message previousMessage) {
         if ((raw == null) || raw.isEmpty()) {
-            throw new IllegalArgumentException("Message must not be null.");
+            throw new IllegalArgumentException("DefaultMessage must not be null.");
         } else if (splitter == null) {
-            throw new IllegalArgumentException("Message requires a TailSplitter.");
+            throw new IllegalArgumentException("DefaultMessage requires a TailSplitter.");
         }
         if (previousMessage == null) {
             this.previousMessage = null;
@@ -103,16 +87,20 @@ final public class Message {
     }
 
     /**
-     * Return a message that preceded this one in the same log stream.
+     * Will call
+     * {@link #DefaultMessage(long, Collection, long, TailSplitter, DefaultMessage)}
+     * with current time and no previous message.
      * 
-     * @return Null if there was no such message, the message already got GC'd,
-     *         or <code>{@link #getType()} == {@link MessageType#TAG}</code>.
+     * @param id
+     *            Unique ID for the message. No other instance may have this ID,
+     *            or else they will be considered equal.
+     * @param raw
+     *            DefaultMessage lines, expected without any pre-processing.
+     * @param splitter
+     *            Used to extract metadata out of the raw lines.
      */
-    public Message getPreviousMessage() {
-        if (this.previousMessage == null) {
-            return null;
-        }
-        return this.previousMessage.get();
+    protected DefaultMessage(final long id, final Collection<String> raw, final TailSplitter splitter) {
+        this(id, raw, System.currentTimeMillis(), splitter, null);
     }
 
     /**
@@ -125,9 +113,9 @@ final public class Message {
      * @param message
      *            The only line in the message.
      */
-    protected Message(final long id, final String message) {
+    protected DefaultMessage(final long id, final String message) {
         if ((message == null) || (message.length() == 0)) {
-            throw new IllegalArgumentException("Message must not be empty.");
+            throw new IllegalArgumentException("DefaultMessage must not be empty.");
         }
         this.uniqueId = id;
         this.previousMessage = null;
@@ -139,11 +127,6 @@ final public class Message {
         this.exceptionDescriptor = null;
     }
 
-    /**
-     * Two {@link Message}s are equal if and only if they have the same
-     * {@link #getUniqueId()}. This effectively means no two distinct ones will
-     * ever be equal.
-     */
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
@@ -155,59 +138,29 @@ final public class Message {
         if (this.getClass() != obj.getClass()) {
             return false;
         }
-        final Message other = (Message) obj;
+        final DefaultMessage other = (DefaultMessage) obj;
         if (this.uniqueId != other.uniqueId) {
             return false;
         }
         return true;
     }
 
-    /**
-     * Unique ID of the message, that can be used to compare messages in the
-     * order of their arrival into this tool.
-     * 
-     * @return ID of the message, guaranteed to be unique for every message, and
-     *         increasing from message to message.
-     */
-    public long getUniqueId() {
-        return this.uniqueId;
-    }
-
-    /**
-     * Get the date that this message was logged on.
-     * 
-     * @return Newly constructed instance of {@link Date} with the message log
-     *         timestamp.
-     */
+    @Override
     public Date getDate() {
         return new Date(this.millisecondsSinceJanuary1st1970);
     }
 
-    /**
-     * Get data about exception included in this message.
-     * 
-     * @return Exception data, if {@link #hasException()} returns true. Null in
-     *         any other case.
-     */
+    @Override
     public ExceptionDescriptor getExceptionDescriptor() {
         return this.exceptionDescriptor;
     }
 
-    /**
-     * Get each line of the message.
-     * 
-     * @return Unmodifiable representation of lines in this message, exactly as
-     *         were received.
-     */
+    @Override
     public List<String> getLines() {
         return this.lines;
     }
 
-    /**
-     * Get each line of the message, with metadata stripped out.
-     * 
-     * @return Unmodifiable representation of text of the message.
-     */
+    @Override
     public List<String> getLinesWithoutMetadata() {
         if (this.type == MessageType.TAG) {
             // nothing to split for tags
@@ -220,14 +173,30 @@ final public class Message {
         return Collections.unmodifiableList(stripped);
     }
 
+    @Override
+    public Message getPreviousMessage() {
+        if (this.previousMessage == null) {
+            return null;
+        }
+        return this.previousMessage.get();
+    }
+
+    @Override
     public MessageSeverity getSeverity() {
         return this.severity;
     }
 
+    @Override
     public MessageType getType() {
         return this.type;
     }
 
+    @Override
+    public long getUniqueId() {
+        return this.uniqueId;
+    }
+
+    @Override
     public boolean hasException() {
         return this.exceptionDescriptor != null;
     }

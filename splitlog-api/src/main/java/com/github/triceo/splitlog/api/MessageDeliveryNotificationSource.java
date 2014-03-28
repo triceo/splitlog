@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.api;
 
 /**
  * A tagging interface to mark classes that are allowed to send message delivery

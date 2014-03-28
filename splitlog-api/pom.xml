@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.github.triceo.splitlog</groupId>
+    <artifactId>splitlog-parent</artifactId>
+    <version>1.5.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>splitlog-api</artifactId>
+  <name>splitlog-api: the public APIs</name>
+  <description>These are the APIs of Splitlog where we are ready to commit to long-term stability.</description>
+  <dependencies>
+    <dependency>
+       <groupId>org.apache.commons</groupId>
+       <artifactId>commons-lang3</artifactId>
+    </dependency>
+  </dependencies>
+</project>

@@ -7,7 +7,12 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 final class MessageExchange {
 

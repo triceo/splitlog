@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog.formatters;
 
-import com.github.triceo.splitlog.Message;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageFormatter;
 
 /**
  * This formatter will output the message in a format specific to Splitlog. It

@@ -5,6 +5,8 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.Message;
+
 public class MessageStoreTest {
 
     private static final int NO_MESSAGE_ID = -1;

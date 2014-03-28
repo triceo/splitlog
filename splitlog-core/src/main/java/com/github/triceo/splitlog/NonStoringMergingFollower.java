@@ -8,9 +8,14 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.conditions.MessageCondition;
-import com.github.triceo.splitlog.conditions.MessageDeliveryCondition;
-import com.github.triceo.splitlog.ordering.MessageComparator;
+import com.github.triceo.splitlog.api.CommonFollower;
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 final class NonStoringMergingFollower extends AbstractMergingFollower {
 

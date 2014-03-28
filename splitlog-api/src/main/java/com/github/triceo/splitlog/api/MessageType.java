@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.api;
 
 /**
  * Type of message from the log.
@@ -10,16 +10,16 @@ public enum MessageType {
      */
     LOG,
     /**
-     * A line added by {@link Follower#tag(String)}.
+     * Line from the standard error output, that has been captured in the log.
      */
-    TAG,
+    STDERR,
     /**
      * Line from standard output, that has been captured in the log.
      */
     STDOUT,
     /**
-     * Line from the standard error output, that has been captured in the log.
+     * A line added by {@link Follower#tag(String)}.
      */
-    STDERR;
+    TAG;
 
 }
