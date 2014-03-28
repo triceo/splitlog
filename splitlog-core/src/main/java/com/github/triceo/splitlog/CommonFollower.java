@@ -1,7 +1,6 @@
 package com.github.triceo.splitlog;
 
 import java.io.OutputStream;
-import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
 
@@ -113,26 +112,29 @@ public interface CommonFollower {
     boolean write(final OutputStream stream);
 
     /**
-     * Will write to a stream the result of {@link #getMessages(Comparator)},
-     * using a {@link MessageFormatter} implementation of its own choosing. Will
-     * close the stream.
+     * Will write to a stream the result of
+     * {@link #getMessages(MessageComparator)}, using a {@link MessageFormatter}
+     * implementation of its own choosing. Will close the stream.
      * 
      * @param stream
      *            Target.
      * @param order
-     *            The comparator to pass to {@link #getMessages(Comparator)}.
+     *            The comparator to pass to
+     *            {@link #getMessages(MessageComparator)}.
      * @return True if written, false otherwise.
      */
     boolean write(final OutputStream stream, final MessageComparator order);
 
     /**
-     * Will write to a stream the result of {@link #getMessages(Comparator)},
-     * using given {@link MessageFormatter}. Will close the stream.
+     * Will write to a stream the result of
+     * {@link #getMessages(MessageComparator)}, using given
+     * {@link MessageFormatter}. Will close the stream.
      * 
      * @param stream
      *            Target.
      * @param order
-     *            The comparator to pass to {@link #getMessages(Comparator)}.
+     *            The comparator to pass to
+     *            {@link #getMessages(MessageComparator)}.
      * @param formatter
      *            Formatter to use to transform message into string.
      * @return True if written, false otherwise.
@@ -167,7 +169,7 @@ public interface CommonFollower {
 
     /**
      * Will write to a stream the result of
-     * {@link #getMessages(MessageCondition, Comparator)}, using a
+     * {@link #getMessages(MessageCondition, MessageComparator)}, using a
      * {@link MessageFormatter} implementation of its own choosing. Will close
      * the stream.
      * 
@@ -175,10 +177,10 @@ public interface CommonFollower {
      *            Target.
      * @param condition
      *            The condition to pass to
-     *            {@link #getMessages(MessageCondition, Comparator)}.
+     *            {@link #getMessages(MessageCondition, MessageComparator)}.
      * @param order
      *            The comparator to pass to
-     *            {@link #getMessages(MessageCondition, Comparator)}.
+     *            {@link #getMessages(MessageCondition, MessageComparator)}.
      * @return True if written, false otherwise.
      */
     boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order);
@@ -201,17 +203,17 @@ public interface CommonFollower {
 
     /**
      * Will write to a stream the result of
-     * {@link #getMessages(MessageCondition, Comparator)}, using given
+     * {@link #getMessages(MessageCondition, MessageComparator)}, using given
      * {@link MessageFormatter}. Will close the stream.
      * 
      * @param stream
      *            Target.
      * @param condition
      *            The condition to pass to
-     *            {@link #getMessages(MessageCondition, Comparator)}.
+     *            {@link #getMessages(MessageCondition, MessageComparator)}.
      * @param order
      *            The comparator to pass to
-     *            {@link #getMessages(MessageCondition, Comparator)}.
+     *            {@link #getMessages(MessageCondition, MessageComparator)}.
      * @param formatter
      *            Formatter to use to transform message into string.
      * @return True if written, false otherwise.
@@ -223,8 +225,8 @@ public interface CommonFollower {
      * Merge this {@link CommonFollower} with another. This
      * {@link CommonFollower} has a responsibility of notifying the resulting
      * {@link MergingFollower} of every {@link Message} that it receives, until
-     * such time that {@link MergingFollower#separate(CommonFollower)} is called
-     * on it.
+     * such time that {@link MergingFollower#separate(Follower)} is called on
+     * it.
      * 
      * @param f
      *            To merge with.

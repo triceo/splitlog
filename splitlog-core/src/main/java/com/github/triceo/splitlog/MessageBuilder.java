@@ -114,7 +114,7 @@ final public class MessageBuilder {
     /**
      * Add a bunch of lines that will become part of the message when built.
      * 
-     * @param line
+     * @param lines
      *            Add untreated, unprocessed lines retrieved from the log.
      * @return This.
      */
