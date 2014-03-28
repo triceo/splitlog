@@ -84,6 +84,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     synchronized void addLine(final String line) {
+        DefaultLogWatch.LOGGER.info("New line in file {}: '{}'", this.watchedFile, line);
         final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
         if (this.splitter.isStartingLine(line)) {
             // new message begins

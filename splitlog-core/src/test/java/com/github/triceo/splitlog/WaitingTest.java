@@ -53,8 +53,9 @@ public class WaitingTest extends DefaultFollowerBaseTest {
                 public Message call() {
                     final Follower follower = WaitingTest.this.getLogWatch().follow();
                     return follower.waitFor(new MessageDeliveryCondition() {
+
                         private boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
-                            return evaluate.toString().trim().endsWith(expectedValue);
+                            return evaluate.getLines().get(0).endsWith(expectedValue);
                         }
 
                         @Override

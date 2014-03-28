@@ -1,21 +1,67 @@
 package com.github.triceo.splitlog;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollowerTest.class);
+    private static final int MESSAGES_TO_WRITE = 10;
+
     public NonStoringFollowerTest(final LogWatchBuilder builder) {
         super(builder);
+    }
+
+    private void writeAndTest(final boolean closeBeforeWriting) {
+        final Follower follower = this.getLogWatch().follow();
+        final List<String> messages = new LinkedList<String>();
+        for (int i = 0; i < NonStoringFollowerTest.MESSAGES_TO_WRITE; i++) {
+            messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
+        }
+        messages.remove(messages.size() - 1); // last message will not be
+                                              // written
+        if (closeBeforeWriting) {
+            this.getLogWatch().unfollow(follower);
+        }
+        try {
+            final File f = File.createTempFile("splitlog-", ".log");
+            NonStoringFollowerTest.LOGGER.info("Will write into '{}'.", f);
+            follower.write(new FileOutputStream(f));
+            Assertions.assertThat(f).exists();
+            final List<String> lines = FileUtils.readLines(f, "UTF-8");
+            Assertions.assertThat(lines).isEqualTo(messages);
+        } catch (final Exception e) {
+            Assertions.fail("Couldn't write to file.");
+        } finally {
+            if (this.getLogWatch().isFollowedBy(follower)) {
+                this.getLogWatch().unfollow(follower);
+            }
+        }
+    }
+
+    @Test
+    public void testWriteMessages() {
+        this.writeAndTest(false);
+    }
+
+    @Test
+    public void testWriteMessagesAfterTerminated() {
+        this.writeAndTest(true);
     }
 
     @Test
@@ -141,7 +187,8 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     public void testWaitForAfterPreviousFailed() {
         final Follower follower = this.getLogWatch().follow();
         // this call will fail, since we're not writing anything
-        follower.waitFor(AllMessagesAcceptingCondition.INSTANCE, 1, TimeUnit.SECONDS);
+        final Message noMessage = follower.waitFor(AllMessagesAcceptingCondition.INSTANCE, 1, TimeUnit.SECONDS);
+        Assertions.assertThat(noMessage).isNull();
         // these calls should succeed
         final String message = "test";
         String result = this.getWriter().write(message, follower);

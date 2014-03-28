@@ -31,13 +31,14 @@ final class LogWatchTailerListener implements TailerListener {
 
     @Override
     public void handle(final Exception ex) {
-        LogWatchTailerListener.LOGGER.warn("Exception from the log tailer.", ex);
+        LogWatchTailerListener.LOGGER.warn("Exception from the log tailer for file " + this.watcher.getWatchedFile(),
+                ex);
     }
 
     @Override
     public void handle(final String line) {
         this.watcher.addLine(line);
-        LogWatchTailerListener.LOGGER.debug("Tailer handled message: '{}'.", line);
+        LogWatchTailerListener.LOGGER.debug("Tailer for {} handled line '{}'.", this.watcher.getWatchedFile(), line);
     }
 
     @Override
