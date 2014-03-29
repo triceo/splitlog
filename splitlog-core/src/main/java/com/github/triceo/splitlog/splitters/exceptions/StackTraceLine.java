@@ -1,6 +1,6 @@
 package com.github.triceo.splitlog.splitters.exceptions;
 
-class StackTraceLine implements ExceptionLine {
+final class StackTraceLine implements ExceptionLine {
 
     public enum Source {
 

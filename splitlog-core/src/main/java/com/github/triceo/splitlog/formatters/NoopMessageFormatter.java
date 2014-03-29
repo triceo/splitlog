@@ -8,7 +8,7 @@ import com.github.triceo.splitlog.api.MessageFormatter;
  * as possible. Some whitespace may still be mangled and line endings will be in
  * the format appropriate for the current environment.
  */
-public class NoopMessageFormatter implements MessageFormatter {
+public final class NoopMessageFormatter implements MessageFormatter {
 
     public static final MessageFormatter INSTANCE = new NoopMessageFormatter();
 

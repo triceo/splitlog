@@ -37,6 +37,8 @@ final class DefaultLogWatch implements LogWatch {
     private final LogWatchTailingManager tailing;
     private final LogWatchSweepingManager sweeping;
     private final LogWatchStorageManager messaging;
+    private MessageBuilder currentlyProcessedMessage;
+    private WeakReference<Message> previousAcceptedMessage;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
             final MessageCondition acceptanceCondition, final long delayBetweenReads, final long delayBetweenSweeps,
@@ -49,9 +51,6 @@ final class DefaultLogWatch implements LogWatch {
         this.sweeping = new LogWatchSweepingManager(this.messaging, delayBetweenSweeps);
         this.watchedFile = watchedFile;
     }
-
-    private MessageBuilder currentlyProcessedMessage = null;
-    private WeakReference<Message> previousAcceptedMessage;
 
     /**
      * <strong>This is not part of the public API.</strong> Purely for purposes
@@ -236,11 +235,15 @@ final class DefaultLogWatch implements LogWatch {
             return false;
         }
         this.isTerminated.set(true);
-        for (final AbstractLogWatchFollower chunk : new ArrayList<AbstractLogWatchFollower>(this.followers)) {
+        /*
+         * methods within the loop will remove from the original list; this
+         * copying prevents CMEs.
+         */
+        final List<AbstractLogWatchFollower> copyOfFollowers = new ArrayList<AbstractLogWatchFollower>(this.followers);
+        for (final AbstractLogWatchFollower chunk : copyOfFollowers) {
             this.unfollow(chunk);
         }
         this.sweeping.stop();
-        this.currentlyProcessedMessage = null;
         this.previousAcceptedMessage = null;
         return true;
     }
@@ -265,15 +268,16 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("DefaultLogWatch [");
-        if (this.watchedFile != null) {
-            builder.append("watchedFile=").append(this.watchedFile).append(", ");
-        }
-        if (this.isTerminated != null) {
-            builder.append("isTerminated=").append(this.isTerminated);
-        }
-        builder.append("]");
+        // properly size the builder
+        final String filename = this.watchedFile.toString();
+        final int length = 40 + filename.length();
+        final StringBuilder builder = new StringBuilder(length);
+        // build the string
+        builder.append("LogWatch [file=");
+        builder.append(filename);
+        builder.append(", terminated=");
+        builder.append(this.isTerminated);
+        builder.append(']');
         return builder.toString();
     }
 

@@ -45,6 +45,17 @@ final public class LogWatchBuilder {
     public static final long DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS = 5;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
 
+    private final File fileToWatch;
+    private int limitCapacityTo = Integer.MAX_VALUE;
+    private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
+    private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
+    private long delayBeforeTailingStarts = LogWatchBuilder.DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS;
+    private boolean readingFromBeginning = true;
+    private boolean closingBetweenReads;
+    // will accept all messages
+    private MessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
+    private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
+
     /**
      * Used to construct a {@link LogWatch} for a particular log file.
      * 
@@ -56,18 +67,6 @@ final public class LogWatchBuilder {
     public static LogWatchBuilder forFile(final File f) {
         return new LogWatchBuilder(f);
     }
-
-    private final File fileToWatch;
-    private int limitCapacityTo = Integer.MAX_VALUE;
-    private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
-    private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
-    private long delayBeforeTailingStarts = LogWatchBuilder.DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS;
-    private boolean readingFromBeginning = true;
-    private boolean closingBetweenReads = false;
-    // will accept all messages
-    private MessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
-
-    private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
     protected LogWatchBuilder(final File fileToWatch) {
         this.fileToWatch = fileToWatch;
@@ -137,50 +136,6 @@ final public class LogWatchBuilder {
     public LogWatchBuilder closingAfterReading() {
         this.closingBetweenReads = true;
         return this;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (this.getClass() != obj.getClass()) {
-            return false;
-        }
-        final LogWatchBuilder other = (LogWatchBuilder) obj;
-        if (this.bufferSize != other.bufferSize) {
-            return false;
-        }
-        if (this.closingBetweenReads != other.closingBetweenReads) {
-            return false;
-        }
-        if (this.delayBetweenReads != other.delayBetweenReads) {
-            return false;
-        }
-        if (this.fileToWatch == null) {
-            if (other.fileToWatch != null) {
-                return false;
-            }
-        } else if (!this.fileToWatch.equals(other.fileToWatch)) {
-            return false;
-        }
-        if (this.limitCapacityTo != other.limitCapacityTo) {
-            return false;
-        }
-        if (this.messageAcceptanceCondition == null) {
-            if (other.messageAcceptanceCondition != null) {
-                return false;
-            }
-        } else if (!this.messageAcceptanceCondition.equals(other.messageAcceptanceCondition)) {
-            return false;
-        }
-        if (this.readingFromBeginning != other.readingFromBeginning) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -255,21 +210,6 @@ final public class LogWatchBuilder {
         return this.bufferSize;
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = (prime * result) + this.bufferSize;
-        result = (prime * result) + (this.closingBetweenReads ? 1231 : 1237);
-        result = (prime * result) + (int) (this.delayBetweenReads ^ (this.delayBetweenReads >>> 32));
-        result = (prime * result) + ((this.fileToWatch == null) ? 0 : this.fileToWatch.hashCode());
-        result = (prime * result) + this.limitCapacityTo;
-        result = (prime * result)
-                + ((this.messageAcceptanceCondition == null) ? 0 : this.messageAcceptanceCondition.hashCode());
-        result = (prime * result) + (this.readingFromBeginning ? 1231 : 1237);
-        return result;
-    }
-
     /**
      * Change the default behavior of the future log watch so that the existing
      * contents of the file is ignored and only the future additions to the file
@@ -301,17 +241,12 @@ final public class LogWatchBuilder {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
-        if (this.fileToWatch != null) {
-            builder.append("fileToWatch=").append(this.fileToWatch).append(", ");
-        }
-        builder.append("limitCapacityTo=").append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+        builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
+                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
                 .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
                 .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-                .append(", ");
-        if (this.messageAcceptanceCondition != null) {
-            builder.append("messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
-        }
-        builder.append("]");
+                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+        builder.append(']');
         return builder.toString();
     }
 

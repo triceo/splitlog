@@ -8,7 +8,7 @@ import com.github.triceo.splitlog.api.MessageFormatter;
  * will strip metadata out of the original message and only include some of them
  * in the new output.
  */
-public class UnifyingMessageFormatter implements MessageFormatter {
+public final class UnifyingMessageFormatter implements MessageFormatter {
 
     public static final MessageFormatter INSTANCE = new UnifyingMessageFormatter();
 

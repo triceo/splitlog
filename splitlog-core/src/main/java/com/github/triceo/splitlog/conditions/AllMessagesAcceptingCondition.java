@@ -10,7 +10,7 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 /**
  * This will accept any message.
  */
-public class AllMessagesAcceptingCondition implements MessageCondition, MessageDeliveryCondition {
+public final class AllMessagesAcceptingCondition implements MessageCondition, MessageDeliveryCondition {
 
     public static final AllMessagesAcceptingCondition INSTANCE = new AllMessagesAcceptingCondition();
 

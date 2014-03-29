@@ -66,12 +66,19 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("Follower [");
-        if (this.watch != null) {
-            builder.append("watch=").append(this.watch).append(", ");
+        // properly size the builder
+        final String watch = this.watch.toString();
+        final int length = 35 + watch.length();
+        final StringBuilder builder = new StringBuilder(length);
+        // build
+        builder.append("Follower [watch=");
+        builder.append(watch);
+        if (this.isFollowing()) {
+            builder.append(", following");
+        } else {
+            builder.append(", not following");
         }
-        builder.append("isFollowing()=").append(this.isFollowing()).append("]");
+        builder.append(']');
         return builder.toString();
     }
 

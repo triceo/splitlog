@@ -60,12 +60,19 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("MergingFollower [");
-        if (this.followers != null) {
-            builder.append("merges=").append(this.followers).append(", ");
+        // properly size the builder
+        final String merges = this.getMerged().toString();
+        final int length = 35 + merges.length();
+        final StringBuilder builder = new StringBuilder(length);
+        // build
+        builder.append("Follower [merges=");
+        builder.append(merges);
+        if (this.isFollowing()) {
+            builder.append(", following");
+        } else {
+            builder.append(", not following");
         }
-        builder.append("isFollowing()=").append(this.isFollowing()).append("]");
+        builder.append(']');
         return builder.toString();
     }
 
