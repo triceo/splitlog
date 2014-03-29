@@ -23,9 +23,9 @@ final class MessageExchange {
 
     public void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
         final MessageDeliveryNotificationSource source) {
-        MessageExchange.LOGGER.info("Notified of message {} in state {} from {}.", msg, status, source);
+        MessageExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         if (this.messageBlockingCondition == null) {
-            MessageExchange.LOGGER.debug("Not waiting for message {} in state {} from {}.", msg, status, source);
+            MessageExchange.LOGGER.debug("Not waiting for message '{}' in state {} from {}.", msg, status, source);
             // this does nothing with the message
             return;
         }
@@ -41,12 +41,12 @@ final class MessageExchange {
         } else {
             throw new IllegalStateException(source + " is not a valid message notification source.");
         }
-        MessageExchange.LOGGER.debug("Accepted message {} in state {} from {}.", msg, status, source);
+        MessageExchange.LOGGER.debug("Accepted message '{}' in state {} from {}.", msg, status, source);
         this.messageBlockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);
         } catch (final InterruptedException e) {
-            MessageExchange.LOGGER.warn("Failed to notify Follower of message {} in state {} from {}.", msg, status,
+            MessageExchange.LOGGER.warn("Failed to notify Follower of message '{}' in state {} from {}.", msg, status,
                     source, e);
         }
     }
@@ -60,6 +60,7 @@ final class MessageExchange {
         final TimeUnit unit) {
         this.messageBlockingCondition = condition;
         try {
+            LOGGER.info("Thread blocked waiting for message to pass condition {}.", condition);
             if (timeout < 0) {
                 return this.messageExchanger.exchange(null);
             } else {
@@ -70,6 +71,7 @@ final class MessageExchange {
         } catch (final InterruptedException e) {
             return null;
         } finally { // just in case
+            LOGGER.info("Thread unblocked.", condition);
             this.messageBlockingCondition = null;
         }
     }
