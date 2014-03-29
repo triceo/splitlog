@@ -43,45 +43,16 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    protected void notifyOfAcceptedMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.ACCEPTED, source);
-        for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
-            mf.notifyOfAcceptedMessage(msg, this);
-        }
-    }
-
-    @Override
-    protected void notifyOfIncomingMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.INCOMING, source);
-        for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
-            mf.notifyOfIncomingMessage(msg, this);
-        }
-    }
-
-    @Override
-    protected void notifyOfRejectedMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.REJECTED, source);
-        for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
-            mf.notifyOfRejectedMessage(msg, this);
-        }
-    }
-
-    @Override
-    protected void notifyOfUndeliveredMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.UNDELIVERED, source);
-        for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
-            mf.notifyOfUndeliveredMessage(msg, this);
-        }
-    }
-
-    // notifications must be mutually exclusive
-    private synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
+    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
         final MessageDeliveryNotificationSource source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
         this.exchange.notifyOfMessage(msg, status, source);
+        for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
+            mf.notifyOfMessage(msg, status, this);
+        }
     }
 
     /**

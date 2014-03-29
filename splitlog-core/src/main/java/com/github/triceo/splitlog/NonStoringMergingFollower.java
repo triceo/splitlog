@@ -64,27 +64,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
-    protected void notifyOfAcceptedMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.ACCEPTED, source);
-    }
-
-    @Override
-    protected void notifyOfIncomingMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.INCOMING, source);
-    }
-
-    @Override
-    protected void notifyOfRejectedMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.REJECTED, source);
-    }
-
-    @Override
-    protected void notifyOfUndeliveredMessage(final Message msg, final MessageDeliveryNotificationSource source) {
-        this.notifyOfMessage(msg, MessageDeliveryStatus.UNDELIVERED, source);
-    }
-
-    // notifications must be mutually exclusive
-    private synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
+    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
         final MessageDeliveryNotificationSource source) {
         if (!this.getMerged().contains(source)) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
