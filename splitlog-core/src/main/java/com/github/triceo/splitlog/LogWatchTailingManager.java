@@ -66,12 +66,12 @@ final class LogWatchTailingManager {
         final long delay = needsToWait ? this.delayedTailerStartInMilliseconds : 0;
         this.tailer = this.e.schedule(t, delay, TimeUnit.MILLISECONDS);
         if (this.numberOfTimesThatTailerWasStarted.getAndIncrement() == 0) {
-            LogWatchTailingManager.LOGGER.debug("Scheduling log tailer for file '{}' with delay of {} milliseconds.",
-                    this.watch.getWatchedFile(), delay);
+            LogWatchTailingManager.LOGGER.debug("Scheduling log tailer for {} with delay of {} milliseconds.",
+                    this.watch, delay);
         } else {
             LogWatchTailingManager.LOGGER.debug(
-                    "Re-scheduling log tailer for file '{}' with delay of {} milliseconds.",
-                    this.watch.getWatchedFile(), delay);
+                    "Re-scheduling log tailer for {} with delay of {} milliseconds.",
+                    this.watch, delay);
         }
         return true;
     }

@@ -10,25 +10,20 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Has a sole responsibility of starting and stopping
- * {@link LogWatchMessageSweeper} thread when told so by the
+ * {@link LogWatchStorageSweeper} thread when told so by the
  * {@link DefaultLogWatch}.
  */
 final class LogWatchSweepingManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchSweepingManager.class);
-
     private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> currentlyRunningSweeper = null;
     private final long delayBetweenSweeps;
-    private final DefaultLogWatch watch;
+    private final LogWatchStorageManager messaging;
 
-    public LogWatchSweepingManager(final DefaultLogWatch watch, final long delayBetweenSweeps) {
-        this.watch = watch;
+    public LogWatchSweepingManager(final LogWatchStorageManager messaging, final long delayBetweenSweeps) {
+        this.messaging = messaging;
         this.delayBetweenSweeps = delayBetweenSweeps;
-    }
-
-    public long getDelayBetweenSweeps() {
-        return this.delayBetweenSweeps;
     }
 
     public boolean isRunning() {
@@ -45,11 +40,11 @@ final class LogWatchSweepingManager {
             return false;
         }
         final long delay = this.delayBetweenSweeps;
-        this.currentlyRunningSweeper = LogWatchSweepingManager.TIMER.scheduleWithFixedDelay(new LogWatchMessageSweeper(
-                this.watch), delay, delay, TimeUnit.MILLISECONDS);
-        LogWatchSweepingManager.LOGGER
-                .debug("Scheduled automated unreachable message sweep in log watch for file '{}' to run every {} millisecond(s).",
-                        this.watch.getWatchedFile(), delay);
+        this.currentlyRunningSweeper = LogWatchSweepingManager.TIMER.scheduleWithFixedDelay(new LogWatchStorageSweeper(
+                this.messaging), delay, delay, TimeUnit.MILLISECONDS);
+        LogWatchSweepingManager.LOGGER.debug(
+                "Scheduled automated unreachable message sweep in {} to run every {} millisecond(s).",
+                this.messaging.getLogWatch(), delay);
         return true;
     }
 

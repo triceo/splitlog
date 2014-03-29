@@ -44,7 +44,7 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
         w.unfollow(follower);
         follower = null;
         System.gc();
-        final long delay = w.getDelayBetweenSweeps() + 500;
+        final long delay = this.getBuilder().getDelayBetweenSweeps() + 500;
         try {
             Thread.sleep(delay);
         } catch (final InterruptedException e) {

@@ -3,15 +3,11 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,43 +30,38 @@ final class DefaultLogWatch implements LogWatch {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
 
-    private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
     private final File watchedFile;
-    /**
-     * These maps are weak; when a follower stops being used by user code, we do
-     * not want these IDs to prevent it from being GC'd. Yet, for as long as the
-     * follower is being used, we want to keep the IDs since the follower may
-     * still ask for the messages.
-     */
-    private final Map<Follower, Integer> startingMessageIds = new WeakHashMap<Follower, Integer>(),
-            endingMessageIds = new WeakHashMap<Follower, Integer>();
-
-    private final MessageStore messages;
-    private final MessageCondition acceptanceCondition;
     private final LogWatchTailingManager tailing;
     private final LogWatchSweepingManager sweeping;
+    private final LogWatchStorageManager messaging;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
             final MessageCondition acceptanceCondition, final long delayBetweenReads, final long delayBetweenSweeps,
             final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize,
             final long delayForTailerStart) {
-        this.acceptanceCondition = acceptanceCondition;
-        this.messages = new MessageStore(capacity);
         this.splitter = splitter;
+        this.messaging = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
                 reopenBetweenReads, bufferSize);
-        this.sweeping = new LogWatchSweepingManager(this, delayBetweenSweeps);
+        this.sweeping = new LogWatchSweepingManager(this.messaging, delayBetweenSweeps);
         this.watchedFile = watchedFile;
     }
 
     private MessageBuilder currentlyProcessedMessage = null;
     private WeakReference<Message> previousAcceptedMessage;
 
-    private int getNumberOfActiveFollowers() {
-        return this.numberOfActiveFollowers.get();
+    /**
+     * <strong>This is not part of the public API.</strong> Purely for purposes
+     * of testing the automated message sweep.
+     * 
+     * @return How many messages there currently are in the internal message
+     *         store.
+     */
+    int countMessagesInStorage() {
+        return this.messaging.getMessageStore().size();
     }
 
     synchronized void addLine(final String line) {
@@ -144,12 +135,7 @@ final class DefaultLogWatch implements LogWatch {
      */
     private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
-        final boolean messageAccepted = this.acceptanceCondition.accept(message, this);
-        if (messageAccepted) {
-            this.messages.add(message);
-        } else {
-            DefaultLogWatch.LOGGER.info("Filter rejected message '{}' from file {}.", message, this.watchedFile);
-        }
+        final boolean messageAccepted = this.messaging.registerMessage(message, this);
         for (final AbstractFollower f : this.followers) {
             if (messageAccepted) {
                 f.notifyOfAcceptedMessage(message, this);
@@ -165,105 +151,17 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     /**
-     * Return all messages that have been sent to the follower, from its start
-     * until either its termination or to this moment, whichever is relevant.
-     * 
-     * This method is synchronized so that the modification of the underlying
-     * message store in {@link #addLine(String)} and the reading of this store
-     * is mutually excluded. Otherwise, there is a possibility of message ID
-     * mess in the discarding case.
+     * Return all messages that have been sent to a given {@link Follower}, from
+     * its {@link #follow()} until either its {@link #unfollow(Follower)} or to
+     * this moment, whichever is relevant.
      * 
      * @param follower
      *            The follower in question.
      * @return Unmodifiable list of all the received messages, in the order
      *         received.
      */
-    protected synchronized List<Message> getAllMessages(final Follower follower) {
-        final int start = this.getStartingMessageId(follower);
-        // get the expected ending message ID
-        final int end = this.getEndingMessageId(follower);
-        if (start > end) {
-            /*
-             * in case some messages have been discarded, the actual start may
-             * get ahead of the expected end. this would have caused an
-             * exception within the message store, and so we handle it here and
-             * return an empty list. this is exactly correct, as if the end is
-             * before the first message in the store, there really is nothing to
-             * return.
-             */
-            return Collections.unmodifiableList(Collections.<Message> emptyList());
-        } else {
-            return Collections.unmodifiableList(this.messages.getFromRange(start, end + 1));
-        }
-    }
-
-    /**
-     * Get index of the last plus one message that the follower has access to.
-     * 
-     * @param follower
-     *            Tailer in question.
-     */
-    protected int getEndingMessageId(final Follower follower) {
-        return this.endingMessageIds.containsKey(follower) ? this.endingMessageIds.get(follower) : this.messages
-                .getLatestPosition();
-    }
-
-    /**
-     * If messages have been discarded, the original starting message ID will no
-     * longer be valid. therefore, we check for the actual starting ID.
-     * 
-     * @param follower
-     *            Tailer in question.
-     */
-    protected int getStartingMessageId(final Follower follower) {
-        return Math.max(this.messages.getFirstPosition(), this.startingMessageIds.get(follower));
-    }
-
-    /**
-     * Get access to the underlying message store.
-     * 
-     * This method is only intended to be used from within
-     * {@link LogWatchMessageSweeper}.
-     * 
-     * @return Message store used by this class.
-     */
-    MessageStore getMessageStore() {
-        return this.messages;
-    }
-
-    /**
-     * Will crawl the weak hash maps and make sure we always have the latest
-     * information on the availability of messages.
-     * 
-     * This method is only intended to be used from within
-     * {@link LogWatchMessageSweeper}.
-     * 
-     * @return ID of the very first message that is reachable by any follower in
-     *         this watch. -1 when there are no reachable messages.
-     */
-    synchronized int getFirstReachableMessageId() {
-        int minId = Integer.MAX_VALUE;
-        int valueCount = 0;
-        for (final Integer id : this.startingMessageIds.values()) {
-            minId = Math.min(minId, id);
-            valueCount++;
-        }
-        if (valueCount == 0) {
-            return -1;
-        } else {
-            return minId;
-        }
-    }
-
-    /**
-     * <strong>This is not part of the public API.</strong> Purely for purposes
-     * of testing the automated message sweep.
-     * 
-     * @return How many messages there currently are in the internal message
-     *         store.
-     */
-    synchronized int countMessagesInStorage() {
-        return this.messages.size();
+    protected List<Message> getAllMessages(final Follower follower) {
+        return this.messaging.getAllMessages(follower);
     }
 
     @Override
@@ -281,10 +179,6 @@ final class DefaultLogWatch implements LogWatch {
         return this.watchedFile;
     }
 
-    public long getDelayBetweenSweeps() {
-        return this.sweeping.getDelayBetweenSweeps();
-    }
-
     @Override
     public Follower follow() {
         final Follower f = this.followInternal(false);
@@ -294,7 +188,7 @@ final class DefaultLogWatch implements LogWatch {
 
     /**
      * First invocation of the method on an instance will trigger
-     * {@link LogWatchMessageSweeper} to be scheduled for periodical sweeping of
+     * {@link LogWatchStorageSweeper} to be scheduled for periodical sweeping of
      * unreachable messages.
      * 
      * @param boolean If the tailer needs a delayed start because of
@@ -307,12 +201,11 @@ final class DefaultLogWatch implements LogWatch {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
         this.sweeping.start();
-        final int startingMessageId = this.messages.getNextPosition();
         final AbstractLogWatchFollower follower = new NonStoringFollower(this);
         this.followers.add(follower);
-        this.startingMessageIds.put(follower, startingMessageId);
-        DefaultLogWatch.LOGGER.info("Registered {} for file '{}'.", follower, this.watchedFile);
-        if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
+        this.messaging.followerStarted(follower);
+        DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
+        if (this.followers.size() == 1) {
             this.tailing.start(needsToWait);
         }
         return follower;
@@ -333,7 +226,7 @@ final class DefaultLogWatch implements LogWatch {
 
     /**
      * Invoking this method will cause the running
-     * {@link LogWatchMessageSweeper} to be de-scheduled. Any currently present
+     * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
      * {@link Message}s will only be removed from memory when this watch
      * instance is removed from memory.
      */
@@ -355,14 +248,12 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean unfollow(final Follower follower) {
         if (this.followers.remove(follower)) {
+            this.messaging.followerTerminated(follower);
+            DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
             if (this.currentlyProcessedMessage != null) {
                 this.handleUndeliveredMessage((AbstractFollower) follower, this.currentlyProcessedMessage);
             }
-            DefaultLogWatch.LOGGER.info("Unregistered {} for file '{}'.", follower, this.watchedFile);
-            final int endingMessageId = this.messages.getLatestPosition();
-            this.endingMessageIds.put(follower, endingMessageId);
-            this.numberOfActiveFollowers.decrementAndGet();
-            if (this.getNumberOfActiveFollowers() == 0) {
+            if (this.followers.size() == 0) {
                 this.tailing.stop();
                 this.currentlyProcessedMessage = null;
             }
@@ -370,6 +261,20 @@ final class DefaultLogWatch implements LogWatch {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("DefaultLogWatch [");
+        if (this.watchedFile != null) {
+            builder.append("watchedFile=").append(this.watchedFile).append(", ");
+        }
+        if (this.isTerminated != null) {
+            builder.append("isTerminated=").append(this.isTerminated);
+        }
+        builder.append("]");
+        return builder.toString();
     }
 
 }
