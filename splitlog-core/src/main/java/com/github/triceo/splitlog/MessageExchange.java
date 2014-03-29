@@ -71,7 +71,7 @@ final class MessageExchange {
         } catch (final InterruptedException e) {
             return null;
         } finally { // just in case
-            LOGGER.info("Thread unblocked.", condition);
+            LOGGER.info("Thread unblocked.");
             this.messageBlockingCondition = null;
         }
     }
