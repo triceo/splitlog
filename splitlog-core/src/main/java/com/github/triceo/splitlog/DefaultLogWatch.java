@@ -7,7 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,7 +30,7 @@ final class DefaultLogWatch implements LogWatch {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
 
     private final TailSplitter splitter;
-    private final AtomicBoolean isTerminated = new AtomicBoolean(false);
+    private boolean isTerminated = false;
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
     private final File watchedFile;
     private final LogWatchTailingManager tailing;
@@ -158,7 +157,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean isTerminated() {
-        return this.isTerminated.get();
+        return this.isTerminated;
     }
 
     @Override
@@ -227,7 +226,7 @@ final class DefaultLogWatch implements LogWatch {
         if (this.isTerminated()) {
             return false;
         }
-        this.isTerminated.set(true);
+        this.isTerminated = true;
         /*
          * methods within the loop will remove from the original list; this
          * copying prevents CMEs.
