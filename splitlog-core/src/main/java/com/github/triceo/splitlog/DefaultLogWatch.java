@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,14 +33,12 @@ import com.github.triceo.splitlog.api.TailSplitter;
 final class DefaultLogWatch implements LogWatch {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
-    private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
 
     private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
     private final TailSplitter splitter;
     private final AtomicBoolean isTerminated = new AtomicBoolean(false);
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
     private final File watchedFile;
-    private final long delayBetweenSweeps;
     /**
      * These maps are weak; when a follower stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
@@ -56,6 +51,7 @@ final class DefaultLogWatch implements LogWatch {
     private final MessageStore messages;
     private final MessageCondition acceptanceCondition;
     private final LogWatchTailingManager tailing;
+    private final LogWatchSweepingManager sweeping;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
             final MessageCondition acceptanceCondition, final long delayBetweenReads, final long delayBetweenSweeps,
@@ -64,9 +60,9 @@ final class DefaultLogWatch implements LogWatch {
         this.acceptanceCondition = acceptanceCondition;
         this.messages = new MessageStore(capacity);
         this.splitter = splitter;
-        this.delayBetweenSweeps = delayBetweenSweeps;
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
                 reopenBetweenReads, bufferSize);
+        this.sweeping = new LogWatchSweepingManager(this, delayBetweenSweeps);
         this.watchedFile = watchedFile;
     }
 
@@ -286,9 +282,8 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     public long getDelayBetweenSweeps() {
-        return this.delayBetweenSweeps;
+        return this.sweeping.getDelayBetweenSweeps();
     }
-
 
     @Override
     public Follower follow() {
@@ -311,14 +306,7 @@ final class DefaultLogWatch implements LogWatch {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
-        if (this.currentlyRunningSweeper == null) {
-            final long delay = this.delayBetweenSweeps;
-            this.currentlyRunningSweeper = DefaultLogWatch.TIMER.scheduleWithFixedDelay(
-                    new LogWatchMessageSweeper(this), delay, delay, TimeUnit.MILLISECONDS);
-            DefaultLogWatch.LOGGER
-                    .debug("Scheduled automated unreachable message sweep in log watch for file '{}' to run every {} millisecond(s).",
-                            this.watchedFile, delay);
-        }
+        this.sweeping.start();
         final int startingMessageId = this.messages.getNextPosition();
         final AbstractLogWatchFollower follower = new NonStoringFollower(this);
         this.followers.add(follower);
@@ -346,8 +334,8 @@ final class DefaultLogWatch implements LogWatch {
     /**
      * Invoking this method will cause the running
      * {@link LogWatchMessageSweeper} to be de-scheduled. Any currently present
-     * messages will only be removed from memory when this watch instance is
-     * removed from memory.
+     * {@link Message}s will only be removed from memory when this watch
+     * instance is removed from memory.
      */
     @Override
     public synchronized boolean terminate() {
@@ -358,15 +346,11 @@ final class DefaultLogWatch implements LogWatch {
         for (final AbstractLogWatchFollower chunk : new ArrayList<AbstractLogWatchFollower>(this.followers)) {
             this.unfollow(chunk);
         }
-        this.currentlyRunningSweeper.cancel(false);
-        // remove references to stuff that is no longer useful
-        this.currentlyRunningSweeper = null;
+        this.sweeping.stop();
         this.currentlyProcessedMessage = null;
         this.previousAcceptedMessage = null;
         return true;
     }
-
-    private ScheduledFuture<?> currentlyRunningSweeper = null;
 
     @Override
     public synchronized boolean unfollow(final Follower follower) {
