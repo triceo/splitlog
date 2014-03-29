@@ -65,6 +65,17 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
     }
 
     @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("Follower [");
+        if (this.watch != null) {
+            builder.append("watch=").append(this.watch).append(", ");
+        }
+        builder.append("isFollowing()=").append(this.isFollowing()).append("]");
+        return builder.toString();
+    }
+
+    @Override
     public MergingFollower mergeWith(final CommonFollower f) {
         if (f == null) {
             throw new IllegalArgumentException("Cannot merge with null.");

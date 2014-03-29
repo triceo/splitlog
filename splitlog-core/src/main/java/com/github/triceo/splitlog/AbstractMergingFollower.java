@@ -59,6 +59,17 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
     }
 
     @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("MergingFollower [");
+        if (this.followers != null) {
+            builder.append("merges=").append(this.followers).append(", ");
+        }
+        builder.append("isFollowing()=").append(this.isFollowing()).append("]");
+        return builder.toString();
+    }
+
+    @Override
     public MergingFollower mergeWith(final CommonFollower f) {
         if (f == null) {
             throw new IllegalArgumentException("Cannot merge with null.");
