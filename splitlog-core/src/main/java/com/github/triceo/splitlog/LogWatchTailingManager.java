@@ -66,11 +66,10 @@ final class LogWatchTailingManager {
         final long delay = needsToWait ? this.delayedTailerStartInMilliseconds : 0;
         this.tailer = this.e.schedule(t, delay, TimeUnit.MILLISECONDS);
         if (this.numberOfTimesThatTailerWasStarted.getAndIncrement() == 0) {
-            LogWatchTailingManager.LOGGER.debug("Scheduling log tailer for {} with delay of {} milliseconds.",
+            LogWatchTailingManager.LOGGER.info("Scheduling log tailer for {} with delay of {} milliseconds.",
                     this.watch, delay);
         } else {
-            LogWatchTailingManager.LOGGER.debug(
-                    "Re-scheduling log tailer for {} with delay of {} milliseconds.",
+            LogWatchTailingManager.LOGGER.info("Re-scheduling log tailer for {} with delay of {} milliseconds.",
                     this.watch, delay);
         }
         return true;
@@ -90,10 +89,8 @@ final class LogWatchTailingManager {
         // forcibly terminate tailer
         this.tailer.cancel(true);
         this.tailer = null;
-        // cancel whatever message processing that was ongoing
-        LogWatchTailingManager.LOGGER.debug(
-                "Terminated log tailer for file '{}' as the last known Follower has just been terminated.",
-                this.watch.getWatchedFile());
+        LogWatchTailingManager.LOGGER.info(
+                "Terminated log tailer for {} as the last known Follower has just been terminated.", this.watch);
         return true;
     }
 

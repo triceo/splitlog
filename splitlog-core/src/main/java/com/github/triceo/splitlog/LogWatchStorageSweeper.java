@@ -33,19 +33,19 @@ final class LogWatchStorageSweeper implements Runnable {
         final MessageStore messages = this.toSweep.getMessageStore();
         final int minId = this.toSweep.getFirstReachableMessageId();
         LogWatchStorageSweeper.LOGGER.debug(
-                "Starting message sweep from log watch {}. First reachable message ID reportedly {}.",
+                "Starting message sweep from {}. First reachable message ID reportedly {}.",
                 this.toSweep.getLogWatch(), minId);
         if (minId < 0) {
-            LogWatchStorageSweeper.LOGGER.info("Sweeping all messages from log watch {} as none are reachable.",
+            LogWatchStorageSweeper.LOGGER.info("Sweeping all messages from {} as none are reachable.",
                     this.toSweep.getLogWatch());
             messages.discardBefore(messages.getNextPosition());
             return;
         } else if (messages.isEmpty()) {
-            LogWatchStorageSweeper.LOGGER.info("No messages in the log watch {}.", this.toSweep.getLogWatch());
+            LogWatchStorageSweeper.LOGGER.info("No messages in {}.", this.toSweep.getLogWatch());
             return;
         }
         final int num = messages.discardBefore(minId);
-        LogWatchStorageSweeper.LOGGER.info("Swept {} messages from log watch '{}'.", num, this.toSweep.getLogWatch());
+        LogWatchStorageSweeper.LOGGER.info("Swept {} messages from {}.", num, this.toSweep.getLogWatch());
     }
 
 }

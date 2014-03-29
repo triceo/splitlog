@@ -37,8 +37,10 @@ final class LogWatchTailerListener implements TailerListener {
 
     @Override
     public void handle(final String line) {
+        LogWatchTailerListener.LOGGER.info("Tailer for {} received line '{}'.", this.watcher.getWatchedFile(), line);
         this.watcher.addLine(line);
-        LogWatchTailerListener.LOGGER.info("Tailer for {} handled line '{}'.", this.watcher.getWatchedFile(), line);
+        LogWatchTailerListener.LOGGER.info("Tailer for {} done processing line '{}'.", this.watcher.getWatchedFile(),
+                line);
     }
 
     @Override

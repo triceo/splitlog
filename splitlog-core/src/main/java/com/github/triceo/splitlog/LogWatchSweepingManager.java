@@ -42,7 +42,7 @@ final class LogWatchSweepingManager {
         final long delay = this.delayBetweenSweeps;
         this.currentlyRunningSweeper = LogWatchSweepingManager.TIMER.scheduleWithFixedDelay(new LogWatchStorageSweeper(
                 this.messaging), delay, delay, TimeUnit.MILLISECONDS);
-        LogWatchSweepingManager.LOGGER.debug(
+        LogWatchSweepingManager.LOGGER.info(
                 "Scheduled automated unreachable message sweep in {} to run every {} millisecond(s).",
                 this.messaging.getLogWatch(), delay);
         return true;
@@ -59,6 +59,8 @@ final class LogWatchSweepingManager {
         }
         this.currentlyRunningSweeper.cancel(false);
         this.currentlyRunningSweeper = null;
+        LogWatchSweepingManager.LOGGER.info("Cancelled automated unreachable message sweep in {}.",
+                this.messaging.getLogWatch());
         return true;
     }
 

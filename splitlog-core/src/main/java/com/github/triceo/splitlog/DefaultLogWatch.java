@@ -136,17 +136,10 @@ final class DefaultLogWatch implements LogWatch {
         final Message message = messageBuilder.buildFinal(this.splitter);
         final boolean messageAccepted = this.messaging.registerMessage(message, this);
         for (final AbstractFollower f : this.followers) {
-            if (messageAccepted) {
-                f.notifyOfMessage(message, MessageDeliveryStatus.ACCEPTED, this);
-            } else {
-                f.notifyOfMessage(message, MessageDeliveryStatus.REJECTED, this);
-            }
+            f.notifyOfMessage(message, messageAccepted ? MessageDeliveryStatus.ACCEPTED
+                    : MessageDeliveryStatus.REJECTED, this);
         }
-        if (messageAccepted) {
-            return message;
-        } else {
-            return null;
-        }
+        return messageAccepted ? message : null;
     }
 
     /**
@@ -250,20 +243,19 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized boolean unfollow(final Follower follower) {
-        if (this.followers.remove(follower)) {
-            this.messaging.followerTerminated(follower);
-            DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
-            if (this.currentlyProcessedMessage != null) {
-                this.handleUndeliveredMessage((AbstractFollower) follower, this.currentlyProcessedMessage);
-            }
-            if (this.followers.size() == 0) {
-                this.tailing.stop();
-                this.currentlyProcessedMessage = null;
-            }
-            return true;
-        } else {
+        if (!this.followers.remove(follower)) {
             return false;
         }
+        this.messaging.followerTerminated(follower);
+        DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
+        if (this.currentlyProcessedMessage != null) {
+            this.handleUndeliveredMessage((AbstractFollower) follower, this.currentlyProcessedMessage);
+        }
+        if (this.followers.size() == 0) {
+            this.tailing.stop();
+            this.currentlyProcessedMessage = null;
+        }
+        return true;
     }
 
     @Override
