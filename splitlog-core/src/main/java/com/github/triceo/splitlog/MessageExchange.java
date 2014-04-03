@@ -11,8 +11,8 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageSource;
 
 final class MessageExchange {
 
@@ -21,8 +21,7 @@ final class MessageExchange {
     private MessageDeliveryCondition messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
-    public void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
-        final MessageDeliveryNotificationSource source) {
+    public void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
         MessageExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         if (this.messageBlockingCondition == null) {
             MessageExchange.LOGGER.debug("Not waiting for message '{}' in state {} from {}.", msg, status, source);
@@ -60,7 +59,7 @@ final class MessageExchange {
         final TimeUnit unit) {
         this.messageBlockingCondition = condition;
         try {
-            LOGGER.info("Thread blocked waiting for message to pass condition {}.", condition);
+            MessageExchange.LOGGER.info("Thread blocked waiting for message to pass condition {}.", condition);
             if (timeout < 0) {
                 return this.messageExchanger.exchange(null);
             } else {
@@ -71,7 +70,7 @@ final class MessageExchange {
         } catch (final InterruptedException e) {
             return null;
         } finally { // just in case
-            LOGGER.info("Thread unblocked.");
+            MessageExchange.LOGGER.info("Thread unblocked.");
             this.messageBlockingCondition = null;
         }
     }

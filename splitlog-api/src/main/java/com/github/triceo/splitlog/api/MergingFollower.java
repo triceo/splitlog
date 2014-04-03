@@ -10,8 +10,7 @@ import java.util.Collection;
  * <ul>
  * <li>They receive all messages that their {@link #getMerged()} receive. It is
  * left to the discretion of users to {@link #waitFor(MessageDeliveryCondition)}
- * any message or just for messages from a particular
- * {@link MessageDeliveryNotificationSource}.</li>
+ * any message or just for messages from a particular {@link MessageSource}.</li>
  * <li>Their {@link #tag(String)} doesn't affect any tags in their
  * {@link #getMerged()}. They will always be added on top and not propagated.</li>
  * </ul>

@@ -8,9 +8,9 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageFormatter;
+import com.github.triceo.splitlog.api.MessageSource;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
@@ -56,7 +56,7 @@ abstract class AbstractFollower implements CommonFollower {
      * @throws IllegalArgumentException
      *             In case the source is a class that should not access to this.
      */
-    abstract void notifyOfMessage(Message msg, MessageDeliveryStatus status, MessageDeliveryNotificationSource source);
+    abstract void notifyOfMessage(Message msg, MessageDeliveryStatus status, MessageSource source);
 
     /**
      * Provide the default formatter for messages in this follower.
