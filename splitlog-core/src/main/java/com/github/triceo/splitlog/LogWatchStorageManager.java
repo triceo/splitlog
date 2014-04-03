@@ -144,8 +144,8 @@ final class LogWatchStorageManager {
         if (source != this.logWatch) {
             throw new IllegalStateException("Sources don't match.");
         }
-        final boolean messageAccepted = this.acceptanceCondition
-                .accept(message, MessageDeliveryStatus.ACCEPTED, source);
+        final boolean messageAccepted = this.acceptanceCondition.accept(message, MessageDeliveryStatus.UNDECIDED,
+                source);
         if (messageAccepted) {
             LogWatchStorageManager.LOGGER.info("Filter accepted message '{}' from {}.", message, source);
             this.messages.add(message);
