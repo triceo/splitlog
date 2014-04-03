@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
@@ -289,12 +288,12 @@ final public class LogWatchBuilder {
      * Specify the delay between when the log tailing is requested and when it
      * is actually started.
      * 
-     * In order for {@link LogWatch#follow(MessageDeliveryCondition)} to
-     * actually work, we need the tailer to start after we are already waiting.
-     * But the waiting will block the thread, making it impossible to start the
-     * tailer. Therefore, we schedule the tailer on a different thread before we
-     * start waiting and we delay the actual execution by this amount, so that
-     * the waiting has time to start.
+     * In order for {@link LogWatch#follow(MessageCondition)} to actually work,
+     * we need the tailer to start after we are already waiting. But the waiting
+     * will block the thread, making it impossible to start the tailer.
+     * Therefore, we schedule the tailer on a different thread before we start
+     * waiting and we delay the actual execution by this amount, so that the
+     * waiting has time to start.
      * 
      * @param length
      *            Length of time.

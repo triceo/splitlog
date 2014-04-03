@@ -82,7 +82,7 @@ public interface CommonFollower {
      *            Condition that needs to be true for the method to unblock.
      * @return Null if the method unblocked due to some other reason.
      */
-    Message waitFor(MessageDeliveryCondition condition);
+    Message waitFor(MessageCondition condition);
 
     /**
      * Will block until a message arrives, for which the condition is true. If
@@ -96,7 +96,7 @@ public interface CommonFollower {
      *            Unit of time.
      * @return Null if the method unblocked due to some other reason.
      */
-    Message waitFor(MessageDeliveryCondition condition, long timeout, TimeUnit unit);
+    Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using a

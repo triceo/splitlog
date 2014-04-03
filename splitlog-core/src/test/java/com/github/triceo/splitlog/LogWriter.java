@@ -19,7 +19,7 @@ import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 /**
@@ -80,7 +80,7 @@ public class LogWriter {
     public String write(final String line, final Follower follower) {
         this.writeDelayed(line);
         // wait until the last part of the string is finally present
-        final Message result = follower.waitFor(new MessageDeliveryCondition() {
+        final Message result = follower.waitFor(new MessageCondition() {
 
             private boolean accept(final Message receivedMessage, final MessageDeliveryStatus status) {
                 final String lastLine = receivedMessage.getLines().get(receivedMessage.getLines().size() - 1);
@@ -111,7 +111,7 @@ public class LogWriter {
      * This method will schedule the write operation, but it will not actually
      * be ececuted until {@link #DELAY_BEFORE_WRITE_MILLIS} milliseconds later.
      * This is so that the subsequent
-     * {@link CommonFollower#waitFor(MessageDeliveryCondition)}s have a chance
+     * {@link CommonFollower#waitFor(MessageCondition)}s have a chance
      * to be registered.
      * 
      * @param line

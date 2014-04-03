@@ -12,6 +12,7 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 final class LogWatchStorageManager {
 
@@ -143,7 +144,8 @@ final class LogWatchStorageManager {
         if (source != this.logWatch) {
             throw new IllegalStateException("Sources don't match.");
         }
-        final boolean messageAccepted = this.acceptanceCondition.accept(message, source);
+        final boolean messageAccepted = this.acceptanceCondition
+                .accept(message, MessageDeliveryStatus.ACCEPTED, source);
         if (messageAccepted) {
             LogWatchStorageManager.LOGGER.info("Filter accepted message '{}' from {}.", message, source);
             this.messages.add(message);

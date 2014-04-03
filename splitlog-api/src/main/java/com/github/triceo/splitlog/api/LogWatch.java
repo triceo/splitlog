@@ -20,20 +20,19 @@ public interface LogWatch extends MessageSource {
 
     /**
      * Begin watching for new messages from this point in time, immediately
-     * calling {@link CommonFollower#waitFor(MessageDeliveryCondition)} - this
-     * way, no messages can be missed between the actual start of the tailer and
-     * the first wait. .
+     * calling {@link CommonFollower#waitFor(MessageCondition)} - this way, no
+     * messages can be missed between the actual start of the tailer and the
+     * first wait. .
      * 
      * @param waitFor
      *            Condition to pass to the follower.
      * @return The new follower and the result of the wait call.
      */
-    Pair<Follower, Message> follow(MessageDeliveryCondition waitFor);
+    Pair<Follower, Message> follow(MessageCondition waitFor);
 
     /**
      * Begin watching for new messages from this point in time, immediately
-     * calling
-     * {@link CommonFollower#waitFor(MessageDeliveryCondition, long, TimeUnit)}
+     * calling {@link CommonFollower#waitFor(MessageCondition, long, TimeUnit)}
      * - this way, no messages can be missed between the actual start of the
      * tailer and the first wait. .
      * 
@@ -45,7 +44,7 @@ public interface LogWatch extends MessageSource {
      *            The time unit for the above.
      * @return The new follower and the result of the wait call.
      */
-    Pair<Follower, Message> follow(MessageDeliveryCondition waitFor, long howLong, TimeUnit unit);
+    Pair<Follower, Message> follow(MessageCondition waitFor, long howLong, TimeUnit unit);
 
     /**
      * The file that is being tracked by this class.

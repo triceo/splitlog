@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageSource;
 
@@ -18,7 +18,7 @@ final class MessageExchange {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageExchange.class);
 
-    private MessageDeliveryCondition messageBlockingCondition = null;
+    private MessageCondition messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
     public void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
@@ -55,8 +55,8 @@ final class MessageExchange {
      * an already set condition. That condition will later be unset by the
      * notify*() method calls from the tailing thread.
      */
-    public synchronized Message waitForMessage(final MessageDeliveryCondition condition, final long timeout,
-        final TimeUnit unit) {
+    public synchronized Message
+        waitForMessage(final MessageCondition condition, final long timeout, final TimeUnit unit) {
         this.messageBlockingCondition = condition;
         try {
             MessageExchange.LOGGER.info("Thread blocked waiting for message to pass condition {}.", condition);

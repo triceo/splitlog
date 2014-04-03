@@ -6,32 +6,31 @@ package com.github.triceo.splitlog.api;
 public interface MessageCondition {
 
     /**
-     * Evaluate a message against a user-provided condition, taking into account
-     * where that message comes from.
-     * 
-     * Will be executed by {@link MergingFollower}s as they're notified of
-     * {@link Message}s by {@link Follower}s.
+     * Evaluate a message against a user-provided condition when the message has
+     * been received from a {@link Follower}. This will happen when the message
+     * condition evaluation happens within {@link MergingFollower}.
      * 
      * @param evaluate
      *            The message to evaluate.
+     * @param status
+     *            Current processing status of the message.
      * @param source
-     *            Where does this message come from.
+     *            The notifying object.
      * @return True if message matches.
      */
-    boolean accept(Message evaluate, Follower source);
+    boolean accept(Message evaluate, MessageDeliveryStatus status, Follower source);
 
     /**
-     * Evaluate a message against a user-provided condition, taking into account
-     * where that message comes from.
-     * 
-     * Will be executed by {@link Follower}s as they're notified of
-     * {@link Message}s by {@link LogWatch}.
+     * Evaluate a message against a user-provided condition when the message has
+     * been received from a {@link LogWatch}.
      * 
      * @param evaluate
      *            The message to evaluate.
+     * @param status
+     *            Current processing status of the message.
      * @param source
-     *            Where does this message come from.
+     *            The notifying object.
      * @return True if message matches.
      */
-    boolean accept(Message evaluate, LogWatch source);
+    boolean accept(Message evaluate, MessageDeliveryStatus status, LogWatch source);
 }

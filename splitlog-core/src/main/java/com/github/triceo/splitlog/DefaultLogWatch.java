@@ -17,7 +17,6 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.TailSplitter;
 
@@ -183,7 +182,7 @@ final class DefaultLogWatch implements LogWatch {
      * unreachable messages.
      * 
      * @param boolean If the tailer needs a delayed start because of
-     *        {@link #follow(MessageDeliveryCondition)}, as explained in
+     *        {@link #follow(MessageCondition)}, as explained in
      *        {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
      * @return The follower that follows this log watch from now on.
      */
@@ -203,14 +202,13 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MessageDeliveryCondition waitFor) {
+    public Pair<Follower, Message> follow(final MessageCondition waitFor) {
         final Follower f = this.followInternal(true);
         return ImmutablePair.of(f, f.waitFor(waitFor));
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MessageDeliveryCondition waitFor, final long howLong,
-        final TimeUnit unit) {
+    public Pair<Follower, Message> follow(final MessageCondition waitFor, final long howLong, final TimeUnit unit) {
         final Follower f = this.followInternal(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }

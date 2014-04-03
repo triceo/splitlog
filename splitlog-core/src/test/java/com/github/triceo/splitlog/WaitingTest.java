@@ -17,7 +17,7 @@ import org.junit.Test;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageDeliveryCondition;
+import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 public class WaitingTest extends DefaultFollowerBaseTest {
@@ -56,7 +56,7 @@ public class WaitingTest extends DefaultFollowerBaseTest {
                 @Override
                 public Message call() {
                     final Follower follower = WaitingTest.this.getLogWatch().follow();
-                    return follower.waitFor(new MessageDeliveryCondition() {
+                    return follower.waitFor(new MessageCondition() {
 
                         private boolean accept(final Message evaluate, final MessageDeliveryStatus status) {
                             return evaluate.getLines().get(0).endsWith(expectedValue);
