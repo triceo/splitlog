@@ -156,12 +156,12 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean isTerminated() {
+    public synchronized boolean isTerminated() {
         return this.isTerminated;
     }
 
     @Override
-    public boolean isFollowedBy(final Follower follower) {
+    public synchronized boolean isFollowedBy(final Follower follower) {
         return this.followers.contains(follower);
     }
 
@@ -266,8 +266,11 @@ final class DefaultLogWatch implements LogWatch {
         // build the string
         builder.append("LogWatch [file=");
         builder.append(filename);
-        builder.append(", terminated=");
-        builder.append(this.isTerminated);
+        if (this.isTerminated()) {
+            builder.append(", terminated");
+        } else {
+            builder.append(", running");
+        }
         builder.append(']');
         return builder.toString();
     }
