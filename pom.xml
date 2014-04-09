@@ -151,7 +151,6 @@
             <id>fail-on-pmd</id>
             <goals>
               <goal>check</goal>
-              <goal>cpd-check</goal>
             </goals>
           </execution>
         </executions>

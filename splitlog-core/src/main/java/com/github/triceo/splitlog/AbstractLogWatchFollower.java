@@ -42,7 +42,7 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
     protected Set<Message> getTags() {
         return this.tags;
     }
-    
+
     protected AbstractLogWatchFollower(final DefaultLogWatch watch) {
         this.watch = watch;
     }
@@ -87,19 +87,12 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
 
     @Override
     public String toString() {
-        // properly size the builder
-        final String watch = this.watch.toString();
-        final int length = 35 + watch.length();
-        final StringBuilder builder = new StringBuilder(length);
-        // build
-        builder.append("Follower [watch=");
-        builder.append(watch);
-        if (this.isFollowing()) {
-            builder.append(", following");
-        } else {
-            builder.append(", not following");
+        final StringBuilder builder = new StringBuilder();
+        builder.append("Follower [");
+        if (this.watch != null) {
+            builder.append("watch=").append(this.watch).append(", ");
         }
-        builder.append(']');
+        builder.append("isFollowing()=").append(this.isFollowing()).append("]");
         return builder.toString();
     }
 
