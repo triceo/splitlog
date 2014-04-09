@@ -1,14 +1,27 @@
 package com.github.triceo.splitlog;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import org.apache.commons.io.IOUtils;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.MergingFollower;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
@@ -74,6 +87,44 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
         }
         builder.append(']');
         return builder.toString();
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order,
+        final MessageFormatter formatter) {
+        if (stream == null) {
+            throw new IllegalArgumentException("Stream may not be null.");
+        } else if (condition == null) {
+            throw new IllegalArgumentException("Condition may not be null.");
+        } else if (order == null) {
+            throw new IllegalArgumentException("Comparator may not be null.");
+        }
+        /*
+         * assemble messages per-follower, so that we can properly retrieve
+         * their source
+         */
+        final SortedSet<Message> messages = new TreeSet<Message>(order);
+        final Map<Message, String> messagesToText = new HashMap<Message, String>();
+        for (final Follower f : this.getMerged()) {
+            for (final Message m : f.getMessages(condition)) {
+                messages.add(m);
+                messagesToText.put(m, formatter.format(m, f.getFollowed().getWatchedFile()));
+            }
+        }
+        // and now write them in their original order
+        BufferedWriter w = null;
+        try {
+            w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
+            for (final Message msg : messages) {
+                w.write(messagesToText.get(msg));
+                w.newLine();
+            }
+            return true;
+        } catch (final IOException ex) {
+            return false;
+        } finally {
+            IOUtils.closeQuietly(w);
+        }
     }
 
     @Override

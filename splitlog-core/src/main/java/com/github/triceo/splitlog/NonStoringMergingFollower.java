@@ -38,7 +38,6 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
                 sorted.add(m);
             }
         }
-        sorted.addAll(this.getTags());
         return Collections.unmodifiableSortedSet(sorted);
     }
 

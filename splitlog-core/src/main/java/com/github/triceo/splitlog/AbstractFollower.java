@@ -1,15 +1,7 @@
 package com.github.triceo.splitlog;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.SortedSet;
-
-import org.apache.commons.io.IOUtils;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -27,7 +19,7 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * for {@link LogWatch} of notifying the follower of new messages. Every
  * follower implementation, such as {@link NonStoringFollower}, needs to extend
  * this class.
- * 
+ *
  * Will use {@link #getDefaultFormatter()} as default message formatter. Will
  * use {@value #DEFAULT_CONDITION} as a default in getMessages() and write()
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
@@ -37,8 +29,6 @@ abstract class AbstractFollower implements CommonFollower {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final MessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
-
-    private final Set<Message> tags = new LinkedHashSet<Message>();
 
     @Override
     public SortedSet<Message> getMessages() {
@@ -50,24 +40,13 @@ abstract class AbstractFollower implements CommonFollower {
         return this.getMessages(AbstractFollower.DEFAULT_CONDITION, order);
     }
 
-    @Override
-    public Message tag(final String tagLine) {
-        final Message message = new MessageBuilder(tagLine).buildTag();
-        this.tags.add(message);
-        return message;
-    }
-
-    protected Set<Message> getTags() {
-        return Collections.unmodifiableSet(this.tags);
-    }
-
     /**
      * Notify the follower of a new message in the watched log. Must never be
      * called by users, just from the library code.
-     * 
+     *
      * Implementors are encouraged to synchronize these operations, to preserve
      * the original order of messages.
-     * 
+     *
      * @param msg
      *            The message.
      * @param status
@@ -81,7 +60,7 @@ abstract class AbstractFollower implements CommonFollower {
 
     /**
      * Provide the default formatter for messages in this follower.
-     * 
+     *
      * @return Formatter to use on messages.
      */
     protected abstract MessageFormatter getDefaultFormatter();
@@ -99,31 +78,6 @@ abstract class AbstractFollower implements CommonFollower {
     @Override
     public boolean write(final OutputStream stream, final MessageFormatter formatter) {
         return this.write(stream, AbstractFollower.DEFAULT_CONDITION, formatter);
-    }
-
-    @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order,
-        final MessageFormatter formatter) {
-        if (stream == null) {
-            throw new IllegalArgumentException("Stream may not be null.");
-        } else if (condition == null) {
-            throw new IllegalArgumentException("Condition may not be null.");
-        } else if (order == null) {
-            throw new IllegalArgumentException("Comparator may not be null.");
-        }
-        BufferedWriter w = null;
-        try {
-            w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
-            for (final Message msg : this.getMessages(condition, order)) {
-                w.write(formatter.format(msg));
-                w.newLine();
-            }
-            return true;
-        } catch (final IOException ex) {
-            return false;
-        } finally {
-            IOUtils.closeQuietly(w);
-        }
     }
 
     @Override

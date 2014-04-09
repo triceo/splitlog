@@ -1,5 +1,7 @@
 package com.github.triceo.splitlog.formatters;
 
+import java.io.File;
+
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageFormatter;
 
@@ -17,7 +19,7 @@ public final class NoopMessageFormatter implements MessageFormatter {
     }
 
     @Override
-    public String format(final Message m) {
+    public String format(final Message m, final File source) {
         final StringBuilder sb = new StringBuilder();
         for (final String line : m.getLines()) {
             sb.append(line);

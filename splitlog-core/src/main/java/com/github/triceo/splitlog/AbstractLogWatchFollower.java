@@ -1,14 +1,23 @@
 package com.github.triceo.splitlog;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
+
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.MergingFollower;
+import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryNotificationSource;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
@@ -18,7 +27,7 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * for {@link LogWatch} of notifying the follower of new messages. Every
  * follower implementation, such as {@link NonStoringFollower}, needs to extend
  * this class.
- * 
+ *
  * Will use {@value #DEFAULT_FORMATTER} as default message formatter. Will use
  * {@value #DEFAULT_CONDITION} as a default in getMessages() and write()
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
@@ -26,11 +35,23 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  */
 abstract class AbstractLogWatchFollower extends AbstractFollower implements MessageDeliveryNotificationSource, Follower {
 
+    private final Set<Message> tags = new LinkedHashSet<Message>();
     private final DefaultLogWatch watch;
     private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
 
+    protected Set<Message> getTags() {
+        return this.tags;
+    }
+    
     protected AbstractLogWatchFollower(final DefaultLogWatch watch) {
         this.watch = watch;
+    }
+
+    @Override
+    public Message tag(final String tagLine) {
+        final Message message = new MessageBuilder(tagLine).buildTag();
+        this.tags.add(message);
+        return message;
     }
 
     @Override
@@ -80,6 +101,31 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Mess
         }
         builder.append(']');
         return builder.toString();
+    }
+
+    @Override
+    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order,
+        final MessageFormatter formatter) {
+        if (stream == null) {
+            throw new IllegalArgumentException("Stream may not be null.");
+        } else if (condition == null) {
+            throw new IllegalArgumentException("Condition may not be null.");
+        } else if (order == null) {
+            throw new IllegalArgumentException("Comparator may not be null.");
+        }
+        BufferedWriter w = null;
+        try {
+            w = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
+            for (final Message msg : this.getMessages(condition, order)) {
+                w.write(formatter.format(msg, this.getFollowed().getWatchedFile()));
+                w.newLine();
+            }
+            return true;
+        } catch (final IOException ex) {
+            return false;
+        } finally {
+            IOUtils.closeQuietly(w);
+        }
     }
 
     @Override
