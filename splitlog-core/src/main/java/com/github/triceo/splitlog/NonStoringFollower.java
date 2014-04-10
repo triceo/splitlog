@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.ordering.MessageComparator;
 /**
  * This is a log follower that holds no message data, just the tags. For message
  * data, it will always turn to the underlying {@link LogWatch}.
- * 
+ *
  * This class assumes that LogWatch and user code are the only two threads that
  * use it. Never use one instance of this class from two or more user threads.
  * Otherwise, unpredictable behavior from waitFor() methods is possible.
@@ -33,7 +33,12 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     @Override
     public SortedSet<Message> getMessages(final MessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> messages = new TreeSet<Message>(order);
-        messages.addAll(this.getWatch().getAllMessages(this));
+        for (final Message msg : this.getWatch().getAllMessages(this)) {
+            if (!condition.accept(msg, this)) {
+                continue;
+            }
+            messages.add(msg);
+        }
         messages.addAll(this.getTags());
         return Collections.unmodifiableSortedSet(messages);
     }

@@ -16,9 +16,62 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.MessageCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
+
+    private static final class NothingAcceptingMessageCondition implements MessageCondition {
+
+        @Override
+        public boolean accept(final Message evaluate, final Follower source) {
+            return false;
+        }
+
+        @Override
+        public boolean accept(final Message evaluate, final LogWatch source) {
+            return false;
+        }
+
+    }
+
+    private static final class TestStartingMessageCondition implements MessageCondition {
+
+        private boolean accept(final Message evaluate) {
+            return (evaluate.getLines().get(0).startsWith("test"));
+        }
+
+        @Override
+        public boolean accept(final Message evaluate, final Follower source) {
+            return this.accept(evaluate);
+        }
+
+        @Override
+        public boolean accept(final Message evaluate, final LogWatch source) {
+            return this.accept(evaluate);
+        }
+
+    }
+
+    private static final class NumberEndingMessageCondition implements MessageCondition {
+
+        private boolean accept(final Message evaluate) {
+            final String line = evaluate.getLines().get(0);
+            final char endingCharacter = line.charAt(line.length() - 1);
+            return Character.isDigit(endingCharacter);
+        }
+
+        @Override
+        public boolean accept(final Message evaluate, final Follower source) {
+            return this.accept(evaluate);
+        }
+
+        @Override
+        public boolean accept(final Message evaluate, final LogWatch source) {
+            return this.accept(evaluate);
+        }
+
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollowerTest.class);
     private static final int MESSAGES_TO_WRITE = 10;
@@ -34,7 +87,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
             messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
         }
         messages.remove(messages.size() - 1); // last message will not be
-                                              // written
+        // written
         if (closeBeforeWriting) {
             this.getLogWatch().unfollow(follower);
         }
@@ -81,13 +134,27 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(result).isEqualTo(message2part2);
         result = this.getWriter().write(message3part1 + "\r\n" + message3part2, follower);
         Assertions.assertThat(result).isEqualTo(message3part2);
-        // now validate the results
-        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
+        // now validate the results with the default condition
+        List<Message> messages = new LinkedList<Message>(follower.getMessages());
         Assertions.assertThat(messages.size()).isEqualTo(5);
         Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
         Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message2part1);
         Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message2part2);
         Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(message3part1);
+        // now validate a condition that will accept all messages
+        messages = new LinkedList<Message>(follower.getMessages(new TestStartingMessageCondition()));
+        Assertions.assertThat(messages.size()).isEqualTo(5);
+        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
+        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message2part1);
+        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message2part2);
+        Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(message3part1);
+        // now validate a condition that will only accept messages ending with a
+        // numeric digit
+        messages = new LinkedList<Message>(follower.getMessages(new NumberEndingMessageCondition()));
+        Assertions.assertThat(messages.size()).isEqualTo(3);
+        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message2part1);
+        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message2part2);
+        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message3part1);
         // final part of the message, message3part2, will remain unflushed
         this.getLogWatch().unfollow(follower);
         Assertions.assertThat(follower.isFollowing()).isFalse();
@@ -116,13 +183,20 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         follower.tag(tag2);
         result = this.getWriter().write(message3, follower);
         Assertions.assertThat(result).isEqualTo(message3);
-        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
+        // make sure all messages are present with the default condition
+        List<Message> messages = new LinkedList<Message>(follower.getMessages());
         Assertions.assertThat(messages.size()).isEqualTo(5);
         Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(tag0);
         Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
         Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(tag1);
         Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message2);
         Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(tag2);
+        // make sure just the tags are present witn nothing-accepting condition
+        messages = new LinkedList<Message>(follower.getMessages(new NothingAcceptingMessageCondition()));
+        Assertions.assertThat(messages.size()).isEqualTo(3);
+        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(tag0);
+        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(tag1);
+        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(tag2);
     }
 
     @Test
@@ -164,23 +238,23 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     @Test
     public void testTermination() {
         Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch terminated immediately after starting.")
-                .isFalse();
+        .isFalse();
         final Follower follower1 = this.getLogWatch().follow();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
-                .as("Follower terminated immediately after starting.").isTrue();
+        .as("Follower terminated immediately after starting.").isTrue();
         final Follower follower2 = this.getLogWatch().follow();
         Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isTrue();
         Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
-                .as("Follower terminated without termination.").isTrue();
+        .as("Follower terminated without termination.").isTrue();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
-                .as("Follower not terminated after termination.").isFalse();
+        .as("Follower not terminated after termination.").isFalse();
         Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isTrue();
         Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
-                .as("Follower not terminated after termination.").isFalse();
+        .as("Follower not terminated after termination.").isFalse();
         Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch not terminated after termination.")
-                .isTrue();
+        .isTrue();
     }
 
     @Test
