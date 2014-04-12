@@ -37,6 +37,7 @@ final class DefaultLogWatch implements LogWatch {
     private final LogWatchTailingManager tailing;
     private final LogWatchSweepingManager sweeping;
     private final LogWatchStorageManager messaging;
+    private final MessageMetricManager metrics = new MessageMetricManager();
     private MessageBuilder currentlyProcessedMessage;
     private WeakReference<Message> previousAcceptedMessage;
 
@@ -55,7 +56,7 @@ final class DefaultLogWatch implements LogWatch {
     /**
      * <strong>This is not part of the public API.</strong> Purely for purposes
      * of testing the automated message sweep.
-     * 
+     *
      * @return How many messages there currently are in the internal message
      *         store.
      */
@@ -92,7 +93,7 @@ final class DefaultLogWatch implements LogWatch {
     /**
      * Notify {@link Follower}s of a message that is
      * {@link MessageDeliveryStatus#INCOMING}.
-     * 
+     *
      * @param messageBuilder
      *            Builder to use to construct the message.
      * @return The message that was the subject of notifications.
@@ -108,7 +109,7 @@ final class DefaultLogWatch implements LogWatch {
     /**
      * Notify {@link Follower} of a message that could not be delivered fully as
      * the Follower terminated.
-     * 
+     *
      * @param follower
      *            The follower that was terminated.
      * @param messageBuilder
@@ -126,7 +127,7 @@ final class DefaultLogWatch implements LogWatch {
      * Notify {@link Follower}s of a message that is either
      * {@link MessageDeliveryStatus#ACCEPTED} or
      * {@link MessageDeliveryStatus#REJECTED}.
-     * 
+     *
      * @param messageBuilder
      *            Builder to use to construct the message.
      * @return The message that was the subject of notifications; null if
@@ -146,7 +147,7 @@ final class DefaultLogWatch implements LogWatch {
      * Return all messages that have been sent to a given {@link Follower}, from
      * its {@link #follow()} until either its {@link #unfollow(Follower)} or to
      * this moment, whichever is relevant.
-     * 
+     *
      * @param follower
      *            The follower in question.
      * @return Unmodifiable list of all the received messages, in the order
@@ -182,7 +183,7 @@ final class DefaultLogWatch implements LogWatch {
      * First invocation of the method on an instance will trigger
      * {@link LogWatchStorageSweeper} to be scheduled for periodical sweeping of
      * unreachable messages.
-     * 
+     *
      * @param boolean If the tailer needs a delayed start because of
      *        {@link #follow(MessageCondition)}, as explained in
      *        {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
@@ -276,33 +277,28 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public <T extends Number> MessageMetric<T> measure(MessageMeasure<T> measure, String id) {
-        // TODO Auto-generated method stub
-        return null;
+    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+        return this.metrics.measure(measure, id);
     }
 
     @Override
-    public MessageMetric<? extends Number> getMetric(String id) {
-        // TODO Auto-generated method stub
-        return null;
+    public MessageMetric<? extends Number> getMetric(final String id) {
+        return this.metrics.getMetric(id);
     }
 
     @Override
-    public String getMetricId(MessageMetric<? extends Number> measure) {
-        // TODO Auto-generated method stub
-        return null;
+    public String getMetricId(final MessageMetric<? extends Number> measure) {
+        return this.metrics.getMetricId(measure);
     }
 
     @Override
-    public boolean terminateMeasuring(String id) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean terminateMeasuring(final String id) {
+        return this.metrics.terminateMeasuring(id);
     }
 
     @Override
-    public boolean terminateMeasuring(MessageMeasure<? extends Number> measure) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean terminateMeasuring(final MessageMeasure<? extends Number> measure) {
+        return this.metrics.terminateMeasuring(measure);
     }
 
 }

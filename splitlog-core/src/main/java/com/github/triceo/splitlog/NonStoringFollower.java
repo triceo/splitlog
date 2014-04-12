@@ -30,6 +30,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MessageExchange exchange = new MessageExchange();
+    private final MessageMetricManager metrics = new MessageMetricManager();
 
     public NonStoringFollower(final DefaultLogWatch watch) {
         super(watch);
@@ -49,8 +50,23 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
+    public MessageMetric<? extends Number> getMetric(final String id) {
+        return this.metrics.getMetric(id);
+    }
+
+    @Override
+    public String getMetricId(final MessageMetric<? extends Number> measure) {
+        return this.metrics.getMetricId(measure);
+    }
+
+    @Override
+    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+        return this.metrics.measure(measure, id);
+    }
+
+    @Override
     synchronized void
-    notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+        notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
@@ -59,6 +75,16 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
             mf.notifyOfMessage(msg, status, this);
         }
+    }
+
+    @Override
+    public boolean terminateMeasuring(final MessageMeasure<? extends Number> measure) {
+        return this.metrics.terminateMeasuring(measure);
+    }
+
+    @Override
+    public boolean terminateMeasuring(final String id) {
+        return this.metrics.terminateMeasuring(id);
     }
 
     /**
@@ -80,36 +106,6 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
         return this.exchange.waitForMessage(condition, timeout, unit);
-    }
-
-    @Override
-    public <T extends Number> MessageMetric<T> measure(MessageMeasure<T> measure, String id) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public MessageMetric<? extends Number> getMetric(String id) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String getMetricId(MessageMetric<? extends Number> measure) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean terminateMeasuring(String id) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean terminateMeasuring(MessageMeasure<? extends Number> measure) {
-        // TODO Auto-generated method stub
-        return false;
     }
 
 }
