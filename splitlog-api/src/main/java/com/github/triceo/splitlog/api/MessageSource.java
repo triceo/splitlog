@@ -5,6 +5,6 @@ package com.github.triceo.splitlog.api;
  * notifications to {@link CommonFollower}s.
  * 
  */
-public interface MessageSource {
+public interface MessageSource extends MessageMetricProducer {
 
 }

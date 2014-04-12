@@ -18,6 +18,8 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageMeasure;
+import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.TailSplitter;
 
 /**
@@ -271,6 +273,36 @@ final class DefaultLogWatch implements LogWatch {
         }
         builder.append(']');
         return builder.toString();
+    }
+
+    @Override
+    public <T extends Number> MessageMetric<T> measure(MessageMeasure<T> measure, String id) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MessageMetric<? extends Number> getMetric(String id) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getMetricId(MessageMetric<? extends Number> measure) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean terminateMeasuring(String id) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean terminateMeasuring(MessageMeasure<? extends Number> measure) {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }
