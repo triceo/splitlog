@@ -10,6 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
@@ -39,7 +40,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private final MessageMetricManager metrics = new MessageMetricManager();
 
     public NonStoringFollower(final DefaultLogWatch watch,
-            final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
+        final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number>> pair : measuresHandedDown) {
             this.measure(pair.getValue(), pair.getKey(), false);
@@ -47,10 +48,10 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    public SortedSet<Message> getMessages(final MessageCondition condition, final MessageComparator order) {
+    public SortedSet<Message> getMessages(final IndependentMessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> messages = new TreeSet<Message>(order);
         for (final Message msg : this.getWatch().getAllMessages(this)) {
-            if (!condition.accept(msg, MessageDeliveryStatus.ACCEPTED, this)) {
+            if (!condition.accept(msg)) {
                 continue;
             }
             messages.add(msg);
@@ -70,7 +71,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     private <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id,
-        final boolean checkIfFollowing) {
+            final boolean checkIfFollowing) {
         if (checkIfFollowing && !this.isFollowing()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
@@ -83,8 +84,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    synchronized void
-        notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final LogWatch source) {
+    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final LogWatch source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }

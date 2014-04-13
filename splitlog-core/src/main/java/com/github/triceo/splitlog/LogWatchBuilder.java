@@ -3,10 +3,10 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageStoreCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
@@ -53,7 +53,7 @@ final public class LogWatchBuilder {
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads;
     // will accept all messages
-    private MessageStoreCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
+    private IndependentMessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
     /**
@@ -88,7 +88,7 @@ final public class LogWatchBuilder {
      *
      * @return The condition.
      */
-    public MessageStoreCondition getMessageAcceptanceCondition() {
+    public IndependentMessageCondition getMessageAcceptanceCondition() {
         return this.messageAcceptanceCondition;
     }
 
@@ -101,7 +101,7 @@ final public class LogWatchBuilder {
      *            The condition.
      * @return This.
      */
-    public LogWatchBuilder withMessageAcceptanceCondition(final MessageStoreCondition condition) {
+    public LogWatchBuilder withMessageAcceptanceCondition(final IndependentMessageCondition condition) {
         if (condition == null) {
             throw new IllegalArgumentException("Message acceptance condition must not be null.");
         }
@@ -242,10 +242,10 @@ final public class LogWatchBuilder {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
         builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-        .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-        .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-        .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-        .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
         builder.append(']');
         return builder.toString();
     }

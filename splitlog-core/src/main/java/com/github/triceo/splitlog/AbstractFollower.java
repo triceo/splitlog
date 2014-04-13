@@ -4,10 +4,10 @@ import java.io.OutputStream;
 import java.util.SortedSet;
 
 import com.github.triceo.splitlog.api.CommonFollower;
+import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
-import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
@@ -26,7 +26,7 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 abstract class AbstractFollower implements CommonFollower {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
-    private static final MessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
+    private static final IndependentMessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
 
     @Override
     public SortedSet<Message> getMessages() {
@@ -51,7 +51,7 @@ abstract class AbstractFollower implements CommonFollower {
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition) {
+    public boolean write(final OutputStream stream, final IndependentMessageCondition condition) {
         return this.write(stream, condition, this.getDefaultFormatter());
     }
 
@@ -61,7 +61,7 @@ abstract class AbstractFollower implements CommonFollower {
     }
 
     @Override
-    public SortedSet<Message> getMessages(final MessageCondition condition) {
+    public SortedSet<Message> getMessages(final IndependentMessageCondition condition) {
         return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
     }
 
@@ -76,12 +76,14 @@ abstract class AbstractFollower implements CommonFollower {
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order) {
+    public boolean write(final OutputStream stream, final IndependentMessageCondition condition,
+        final MessageComparator order) {
         return this.write(stream, condition, order, this.getDefaultFormatter());
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter) {
+    public boolean write(final OutputStream stream, final IndependentMessageCondition condition,
+        final MessageFormatter formatter) {
         return this.write(stream, condition, AbstractFollower.DEFAULT_COMPARATOR, formatter);
     }
 

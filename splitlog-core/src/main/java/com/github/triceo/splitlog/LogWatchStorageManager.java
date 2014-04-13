@@ -9,14 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageStoreCondition;
 
 final class LogWatchStorageManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchStorageManager.class);
-    private final MessageStoreCondition acceptanceCondition;
+    private final IndependentMessageCondition acceptanceCondition;
     private final LogWatch logWatch;
     private final MessageStore messages;
     /**
@@ -29,7 +29,7 @@ final class LogWatchStorageManager {
             endingMessageIds = new WeakHashMap<Follower, Integer>();
 
     public LogWatchStorageManager(final LogWatch watch, final int capacity,
-            final MessageStoreCondition acceptanceCondition) {
+        final IndependentMessageCondition acceptanceCondition) {
         this.logWatch = watch;
         this.messages = new MessageStore(capacity);
         this.acceptanceCondition = acceptanceCondition;
@@ -144,7 +144,7 @@ final class LogWatchStorageManager {
         if (source != this.logWatch) {
             throw new IllegalStateException("Sources don't match.");
         }
-        final boolean messageAccepted = this.acceptanceCondition.accept(message, source);
+        final boolean messageAccepted = this.acceptanceCondition.accept(message);
         if (messageAccepted) {
             LogWatchStorageManager.LOGGER.info("Filter accepted message '{}' from {}.", message, source);
             this.messages.add(message);

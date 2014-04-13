@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageCondition;
@@ -26,11 +27,11 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
-    public SortedSet<Message> getMessages(final MessageCondition condition, final MessageComparator order) {
+    public SortedSet<Message> getMessages(final IndependentMessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {
-                if (!condition.accept(m, MessageDeliveryStatus.ACCEPTED, f)) {
+                if (!condition.accept(m)) {
                     continue;
                 }
                 sorted.add(m);

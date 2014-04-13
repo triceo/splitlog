@@ -16,13 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MessageStoreCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 
 /**
@@ -46,9 +46,9 @@ final class DefaultLogWatch implements LogWatch {
     private WeakReference<Message> previousAcceptedMessage;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-        final MessageStoreCondition acceptanceCondition, final long delayBetweenReads,
-            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-            final int bufferSize, final long delayForTailerStart) {
+            final IndependentMessageCondition acceptanceCondition, final long delayBetweenReads,
+        final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+        final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.messaging = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,

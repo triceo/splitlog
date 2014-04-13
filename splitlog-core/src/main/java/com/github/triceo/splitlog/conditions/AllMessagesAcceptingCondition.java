@@ -5,12 +5,12 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageStoreCondition;
+import com.github.triceo.splitlog.api.IndependentMessageCondition;
 
 /**
  * This will accept any message.
  */
-public final class AllMessagesAcceptingCondition implements MessageCondition, MessageStoreCondition {
+public final class AllMessagesAcceptingCondition implements MessageCondition, IndependentMessageCondition {
 
     public static final AllMessagesAcceptingCondition INSTANCE = new AllMessagesAcceptingCondition();
 
@@ -19,18 +19,18 @@ public final class AllMessagesAcceptingCondition implements MessageCondition, Me
     }
 
     @Override
-    public boolean accept(final Message evaluate, final LogWatch source) {
+    public boolean accept(final Message evaluate) {
         return true;
     }
 
     @Override
     public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
-        return true;
+        return this.accept(evaluate);
     }
 
     @Override
     public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-        return true;
+        return this.accept(evaluate);
     }
 
 }
