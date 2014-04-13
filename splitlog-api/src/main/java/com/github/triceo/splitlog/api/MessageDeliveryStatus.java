@@ -12,7 +12,7 @@ public enum MessageDeliveryStatus {
     ACCEPTED,
     /**
      * Message not yet fully read. Is purely temporary and will be replaced
-     * later, by either {@link #UNDECIDED} or {@link #UNDELIVERED}.
+     * later, by either {@link #UNDECIDED} or {@link #INCOMPLETE}.
      */
     INCOMING,
     /**
@@ -24,6 +24,6 @@ public enum MessageDeliveryStatus {
      * {@link Follower} terminated before this message could be read fully.
      * Terminal state.
      */
-    UNDELIVERED;
+    INCOMPLETE;
 
 }

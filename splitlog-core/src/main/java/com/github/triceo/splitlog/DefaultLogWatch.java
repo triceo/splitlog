@@ -124,8 +124,8 @@ final class DefaultLogWatch implements LogWatch {
     private synchronized Message handleUndeliveredMessage(final AbstractLogWatchFollower follower,
         final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        follower.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
-        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
+        follower.notifyOfMessage(message, MessageDeliveryStatus.INCOMPLETE, this);
+        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.INCOMPLETE, this);
         return message;
     }
 
