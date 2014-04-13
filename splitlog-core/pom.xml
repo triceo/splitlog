@@ -47,7 +47,6 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <attach>true</attach>
-          <finalName>splitlog-${project.parent.version}</finalName>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
