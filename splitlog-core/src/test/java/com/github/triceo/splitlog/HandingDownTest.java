@@ -39,17 +39,17 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
     @Test
     public void testDuplicates() {
         final LogWatch watch = this.getLogWatch();
-        Assertions.assertThat(watch.beHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID)).isTrue();
-        Assertions.assertThat(watch.beHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID2)).isFalse();
-        Assertions.assertThat(watch.beHandingDown(HandingDownTest.MEASURE2, HandingDownTest.ID)).isFalse();
+        Assertions.assertThat(watch.startHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID)).isTrue();
+        Assertions.assertThat(watch.startHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID2)).isFalse();
+        Assertions.assertThat(watch.startHandingDown(HandingDownTest.MEASURE2, HandingDownTest.ID)).isFalse();
     }
 
     @Test
     public void testHandDown() {
         final LogWatch watch = this.getLogWatch();
-        final Follower noHandDowns = watch.follow(); // nothing is handed down
-        watch.beHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID);
-        final Follower handDown = watch.follow(); // this gets handed down one
+        final Follower noHandDowns = watch.startFollowing(); // nothing is handed down
+        watch.startHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID);
+        final Follower handDown = watch.startFollowing(); // this gets handed down one
         Assertions.assertThat(noHandDowns.getMetric(HandingDownTest.ID)).isNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID)).isNotNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID).getMeasure()).isEqualTo(HandingDownTest.MEASURE);
@@ -57,7 +57,7 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.ID)).isTrue();
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.ID)).isFalse();
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.MEASURE)).isFalse();
-        final Follower noHandDowns2 = watch.follow(); // nothing is handed down
+        final Follower noHandDowns2 = watch.startFollowing(); // nothing is handed down
         Assertions.assertThat(noHandDowns.getMetric(HandingDownTest.ID)).isNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID)).isNotNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID).getMeasure()).isEqualTo(HandingDownTest.MEASURE);
@@ -67,13 +67,13 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
     @Test(expected = IllegalArgumentException.class)
     public void testNullID() {
         final LogWatch watch = this.getLogWatch();
-        watch.beHandingDown(HandingDownTest.MEASURE, null);
+        watch.startHandingDown(HandingDownTest.MEASURE, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullMeasure() {
         final LogWatch watch = this.getLogWatch();
-        watch.beHandingDown(null, HandingDownTest.ID);
+        watch.startHandingDown(null, HandingDownTest.ID);
     }
 
 }

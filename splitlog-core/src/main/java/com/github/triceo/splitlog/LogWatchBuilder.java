@@ -242,10 +242,10 @@ final public class LogWatchBuilder {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
         builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+        .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+        .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+        .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+        .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
         builder.append(']');
         return builder.toString();
     }
@@ -289,12 +289,12 @@ final public class LogWatchBuilder {
      * Specify the delay between when the log tailing is requested and when it
      * is actually started.
      *
-     * In order for {@link LogWatch#follow(MidDeliveryMessageCondition)} to
-     * actually work, we need the tailer to start after we are already waiting.
-     * But the waiting will block the thread, making it impossible to start the
-     * tailer. Therefore, we schedule the tailer on a different thread before we
-     * start waiting and we delay the actual execution by this amount, so that
-     * the waiting has time to start.
+     * In order for {@link LogWatch#startFollowing(MidDeliveryMessageCondition)}
+     * to actually work, we need the tailer to start after we are already
+     * waiting. But the waiting will block the thread, making it impossible to
+     * start the tailer. Therefore, we schedule the tailer on a different thread
+     * before we start waiting and we delay the actual execution by this amount,
+     * so that the waiting has time to start.
      *
      * @param length
      *            Length of time.

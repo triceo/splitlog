@@ -26,30 +26,30 @@ public class MessageMetricManagerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testDuplicateId() {
         final MessageMetricManager manager = new MessageMetricManager();
-        manager.measure(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
-        manager.measure(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullId() {
-        new MessageMetricManager().measure(MessageMetricManagerTest.MEASURE, null);
+        new MessageMetricManager().startMeasuring(MessageMetricManagerTest.MEASURE, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullMeasure() {
-        new MessageMetricManager().measure(null, MessageMetricManagerTest.ID);
+        new MessageMetricManager().startMeasuring(null, MessageMetricManagerTest.ID);
     }
 
     @Test
     public void testProperRetrieval() {
         final MessageMetricManager manager = new MessageMetricManager();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
-        final MessageMetric<Integer> metric = manager.measure(MessageMetricManagerTest.MEASURE,
+        final MessageMetric<Integer> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE,
                 MessageMetricManagerTest.ID);
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isSameAs(metric);
         Assertions.assertThat(manager.getMetricId(metric)).isSameAs(MessageMetricManagerTest.ID);
-        Assertions.assertThat(manager.terminateMeasuring(MessageMetricManagerTest.ID)).isTrue();
-        Assertions.assertThat(manager.terminateMeasuring(metric)).isFalse();
+        Assertions.assertThat(manager.stopMeasuring(MessageMetricManagerTest.ID)).isTrue();
+        Assertions.assertThat(manager.stopMeasuring(metric)).isFalse();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
     }
@@ -59,19 +59,19 @@ public class MessageMetricManagerTest {
         final MessageMetricManager manager = new MessageMetricManager();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
         // terminate by ID
-        MessageMetric<Integer> metric = manager.measure(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
-        Assertions.assertThat(manager.terminateMeasuring(MessageMetricManagerTest.ID)).isTrue();
-        Assertions.assertThat(manager.terminateMeasuring(metric)).isFalse();
+        MessageMetric<Integer> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        Assertions.assertThat(manager.stopMeasuring(MessageMetricManagerTest.ID)).isTrue();
+        Assertions.assertThat(manager.stopMeasuring(metric)).isFalse();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
         // terminate by metric
-        metric = manager.measure(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
-        Assertions.assertThat(manager.terminateMeasuring(metric)).isTrue();
-        Assertions.assertThat(manager.terminateMeasuring(MessageMetricManagerTest.ID)).isFalse();
+        metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        Assertions.assertThat(manager.stopMeasuring(metric)).isTrue();
+        Assertions.assertThat(manager.stopMeasuring(MessageMetricManagerTest.ID)).isFalse();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
         // terminate all
-        metric = manager.measure(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
         manager.terminateMeasuring();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();

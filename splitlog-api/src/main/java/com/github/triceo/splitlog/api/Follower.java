@@ -9,8 +9,8 @@ public interface Follower extends CommonFollower, MessageSource {
     /**
      * Retrieve the log watch that is being followed.
      *
-     * @return The {@link LogWatch} whose {@link LogWatch#follow()} was called
-     *         to obtain reference to this follower.
+     * @return The {@link LogWatch} whose {@link LogWatch#startFollowing()} was
+     *         called to obtain reference to this follower.
      */
     LogWatch getFollowed();
 

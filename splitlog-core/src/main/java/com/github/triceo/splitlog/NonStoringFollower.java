@@ -75,11 +75,11 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         if (checkIfFollowing && !this.isFollowing()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
-        return this.metrics.measure(measure, id);
+        return this.metrics.startMeasuring(measure, id);
     }
 
     @Override
-    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+    public <T extends Number> MessageMetric<T> startMeasuring(final MessageMeasure<T> measure, final String id) {
         return this.measure(measure, id, true);
     }
 
@@ -98,13 +98,13 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    public boolean terminateMeasuring(final MessageMetric<? extends Number> metric) {
-        return this.metrics.terminateMeasuring(metric);
+    public boolean stopMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.stopMeasuring(metric);
     }
 
     @Override
-    public boolean terminateMeasuring(final String id) {
-        return this.metrics.terminateMeasuring(id);
+    public boolean stopMeasuring(final String id) {
+        return this.metrics.stopMeasuring(id);
     }
 
     /**
@@ -126,6 +126,16 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
         return this.exchange.waitForMessage(condition, timeout, unit);
+    }
+
+    @Override
+    public boolean isMeasuring(final String id) {
+        return this.metrics.isMeasuring(id);
+    }
+
+    @Override
+    public boolean isMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.isMeasuring(metric);
     }
 
 }

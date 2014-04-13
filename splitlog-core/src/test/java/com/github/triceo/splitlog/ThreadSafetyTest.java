@@ -44,7 +44,7 @@ public class ThreadSafetyTest extends DefaultFollowerBaseTest {
                 }
             }
         });
-        final Follower follower = this.getLogWatch().follow();
+        final Follower follower = this.getLogWatch().startFollowing();
         final Future<?> reader = this.es.submit(new Runnable() {
 
             @Override

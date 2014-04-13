@@ -16,7 +16,7 @@ public class CapacityBasedDiscardingTest extends DefaultFollowerBaseTest {
 
     @Test
     public void test() {
-        final Follower follower = this.getLogWatch().follow();
+        final Follower follower = this.getLogWatch().startFollowing();
         // tag before any messages
         final Message firstTag = follower.tag("test");
         DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag);

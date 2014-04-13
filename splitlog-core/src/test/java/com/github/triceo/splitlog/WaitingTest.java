@@ -55,7 +55,7 @@ public class WaitingTest extends DefaultFollowerBaseTest {
             final Future<Message> task = this.es.submit(new Callable<Message>() {
                 @Override
                 public Message call() {
-                    final Follower follower = WaitingTest.this.getLogWatch().follow();
+                    final Follower follower = WaitingTest.this.getLogWatch().startFollowing();
                     return follower.waitFor(new MidDeliveryMessageCondition() {
 
                         private boolean accept(final Message evaluate) {

@@ -27,7 +27,26 @@ final class MessageMetricManager implements MessageMetricProducer, MessageListen
     }
 
     @Override
-    public synchronized <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+    public boolean isMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.containsValue(metric);
+    }
+
+    @Override
+    public boolean isMeasuring(final String id) {
+        return this.metrics.containsKey(id);
+    }
+
+    @Override
+    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
+        final MessageSource source) {
+        for (final DefaultMessageMetric<? extends Number> metric : this.metrics.values()) {
+            metric.messageReceived(msg, status, source);
+        }
+    }
+
+    @Override
+    public synchronized <T extends Number> MessageMetric<T> startMeasuring(final MessageMeasure<T> measure,
+        final String id) {
         if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
         } else if (id == null) {
@@ -41,11 +60,15 @@ final class MessageMetricManager implements MessageMetricProducer, MessageListen
     }
 
     @Override
-    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
-        final MessageSource source) {
-        for (final DefaultMessageMetric<? extends Number> metric : this.metrics.values()) {
-            metric.messageReceived(msg, status, source);
-        }
+    public synchronized boolean stopMeasuring(final MessageMetric<? extends Number> measure) {
+        final String removed = this.metrics.removeValue(measure);
+        return (removed != null);
+    }
+
+    @Override
+    public synchronized boolean stopMeasuring(final String id) {
+        final MessageMetric<? extends Number> removed = this.metrics.remove(id);
+        return (removed != null);
     }
 
     /**
@@ -54,20 +77,8 @@ final class MessageMetricManager implements MessageMetricProducer, MessageListen
      */
     public synchronized void terminateMeasuring() {
         for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
-            this.terminateMeasuring(metricId);
+            this.stopMeasuring(metricId);
         }
-    }
-
-    @Override
-    public synchronized boolean terminateMeasuring(final MessageMetric<? extends Number> measure) {
-        final String removed = this.metrics.removeValue(measure);
-        return (removed != null);
-    }
-
-    @Override
-    public synchronized boolean terminateMeasuring(final String id) {
-        final MessageMetric<? extends Number> removed = this.metrics.remove(id);
-        return (removed != null);
     }
 
 }

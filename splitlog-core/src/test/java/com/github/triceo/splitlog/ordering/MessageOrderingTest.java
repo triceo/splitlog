@@ -48,7 +48,7 @@ public class MessageOrderingTest {
 
     @Test
     public void testOriginalOrdering() {
-        final Follower f = this.watch.follow();
+        final Follower f = this.watch.startFollowing();
         // will make sure all messages from the existing log file are ACCEPTED
         this.writer.write("test", f);
         // messages will be ordered exactly as they came in
@@ -58,12 +58,12 @@ public class MessageOrderingTest {
         Assertions.assertThat(messages.get(0).getUniqueId()).isEqualTo(0);
         Assertions.assertThat(messages.get(1).getUniqueId()).isEqualTo(1);
         Assertions.assertThat(messages.get(2).getUniqueId()).isEqualTo(2);
-        this.watch.unfollow(f);
+        this.watch.stopFollowing(f);
     }
 
     @Test
     public void testTimeBasedOrdering() {
-        final Follower f = this.watch.follow();
+        final Follower f = this.watch.startFollowing();
         // will make sure all messages from the existing log file are ACCEPTED
         this.writer.write("test", f);
         // messages will be ordered by their timestamp
@@ -75,6 +75,6 @@ public class MessageOrderingTest {
         Assertions.assertThat(messages.get(0).getUniqueId()).isEqualTo(4);
         Assertions.assertThat(messages.get(1).getUniqueId()).isEqualTo(6);
         Assertions.assertThat(messages.get(2).getUniqueId()).isEqualTo(5);
-        this.watch.unfollow(f);
+        this.watch.stopFollowing(f);
     }
 }

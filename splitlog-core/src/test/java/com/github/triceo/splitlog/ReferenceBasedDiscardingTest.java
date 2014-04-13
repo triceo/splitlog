@@ -20,7 +20,7 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
     @Test
     public void test() {
         final DefaultLogWatch w = (DefaultLogWatch) this.getLogWatch();
-        Follower follower = w.follow();
+        Follower follower = w.startFollowing();
         // tag before any messages
         final Message firstTag = follower.tag("test");
         DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag);
@@ -32,7 +32,7 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
         final Message secondTag = follower.tag("test2");
         DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, firstMessage, secondTag);
         // start second follower; this one will only track second+ messages
-        Follower follower2 = w.follow();
+        Follower follower2 = w.startFollowing();
         // send third message, receive second
         final String thirdMessage = "check3";
         this.getWriter().write(thirdMessage, follower2);
@@ -41,7 +41,7 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
          * remove all references to the first follower; the first message now
          * has no followers available and can be GC'd
          */
-        w.unfollow(follower);
+        w.stopFollowing(follower);
         follower = null;
         System.gc();
         final long delay = this.getBuilder().getDelayBetweenSweeps() + 500;
@@ -57,7 +57,7 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
          */
         DefaultFollowerBaseTest.assertProperOrder(follower2.getMessages(), secondMessage);
         // terminate following, make sure all the messages are cleared
-        w.unfollow(follower2);
+        w.stopFollowing(follower2);
         follower2 = null;
         System.gc();
         try {

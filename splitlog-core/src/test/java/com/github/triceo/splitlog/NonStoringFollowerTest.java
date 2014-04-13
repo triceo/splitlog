@@ -60,7 +60,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     }
 
     private void writeAndTest(final boolean closeBeforeWriting) {
-        final Follower follower = this.getLogWatch().follow();
+        final Follower follower = this.getLogWatch().startFollowing();
         final List<String> messages = new LinkedList<String>();
         for (int i = 0; i < NonStoringFollowerTest.MESSAGES_TO_WRITE; i++) {
             messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
@@ -68,7 +68,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         messages.remove(messages.size() - 1); // last message will not be
         // written
         if (closeBeforeWriting) {
-            this.getLogWatch().unfollow(follower);
+            this.getLogWatch().stopFollowing(follower);
         }
         try {
             final File f = File.createTempFile("splitlog-", ".log");
@@ -81,7 +81,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
             Assertions.fail("Couldn't write to file.");
         } finally {
             if (this.getLogWatch().isFollowedBy(follower)) {
-                this.getLogWatch().unfollow(follower);
+                this.getLogWatch().stopFollowing(follower);
             }
         }
     }
@@ -103,7 +103,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         final String message2part2 = "test2";
         final String message3part1 = "test3";
         final String message3part2 = "test4";
-        final Follower follower = this.getLogWatch().follow();
+        final Follower follower = this.getLogWatch().startFollowing();
         // test simple messages
         String result = this.getWriter().write(message1, follower);
         Assertions.assertThat(result).isEqualTo(message1);
@@ -135,7 +135,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message2part2);
         Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message3part1);
         // final part of the message, message3part2, will remain unflushed
-        this.getLogWatch().unfollow(follower);
+        this.getLogWatch().stopFollowing(follower);
         Assertions.assertThat(follower.isFollowing()).isFalse();
     }
 
@@ -147,7 +147,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         final String tag0 = "tag1";
         final String tag1 = "tag1";
         final String tag2 = "tag2";
-        final Follower follower = this.getLogWatch().follow();
+        final Follower follower = this.getLogWatch().startFollowing();
         follower.tag(tag0);
         String result = this.getWriter().write(message1, follower);
         Assertions.assertThat(result).isEqualTo(message1);
@@ -185,18 +185,18 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         final String message3 = "test3";
         final String message4 = "test4";
         final String message5 = "test5";
-        final Follower follower = this.getLogWatch().follow();
+        final Follower follower = this.getLogWatch().startFollowing();
         // make sure the messages are received by the first follower
         this.getWriter().write(message1, follower);
         String result = this.getWriter().write(message2, follower);
         Assertions.assertThat(result).isEqualTo(message2);
         Assertions.assertThat(follower.getMessages().size()).isEqualTo(1);
         // start a second follower, send some messages
-        final Follower nestedFollower = this.getLogWatch().follow();
+        final Follower nestedFollower = this.getLogWatch().startFollowing();
         result = this.getWriter().write(message3, follower);
         result = this.getWriter().write(message4, follower);
         Assertions.assertThat(result).isEqualTo(message4);
-        this.getLogWatch().unfollow(nestedFollower);
+        this.getLogWatch().stopFollowing(nestedFollower);
         // send another message, so the original follower has something extra
         Assertions.assertThat(nestedFollower.isFollowing()).isFalse();
         result = this.getWriter().write(message5, follower);
@@ -218,12 +218,12 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     public void testTermination() {
         Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch terminated immediately after starting.")
                 .isFalse();
-        final Follower follower1 = this.getLogWatch().follow();
+        final Follower follower1 = this.getLogWatch().startFollowing();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
                 .as("Follower terminated immediately after starting.").isTrue();
-        final Follower follower2 = this.getLogWatch().follow();
-        Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isTrue();
-        Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isFalse();
+        final Follower follower2 = this.getLogWatch().startFollowing();
+        Assertions.assertThat(this.getLogWatch().stopFollowing(follower1)).as("Wrong termination result.").isTrue();
+        Assertions.assertThat(this.getLogWatch().stopFollowing(follower1)).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
                 .as("Follower terminated without termination.").isTrue();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
@@ -238,7 +238,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testWaitForAfterPreviousFailed() {
-        final Follower follower = this.getLogWatch().follow();
+        final Follower follower = this.getLogWatch().startFollowing();
         // this call will fail, since we're not writing anything
         final Message noMessage = follower.waitFor(AllMessagesAcceptingCondition.INSTANCE, 1, TimeUnit.SECONDS);
         Assertions.assertThat(noMessage).isNull();
@@ -251,7 +251,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         final List<Message> messages = new LinkedList<Message>(follower.getMessages());
         Assertions.assertThat(messages.size()).isEqualTo(1);
         Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message);
-        this.getLogWatch().unfollow(follower);
+        this.getLogWatch().stopFollowing(follower);
     }
 
 }

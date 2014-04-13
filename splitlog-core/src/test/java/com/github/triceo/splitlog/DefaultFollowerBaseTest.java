@@ -118,14 +118,14 @@ public abstract class DefaultFollowerBaseTest {
          * both cases.
          */
         DefaultFollowerBaseTest.LOGGER.info("Initial message written.");
-        final Follower f = this.getLogWatch().follow();
+        final Follower f = this.getLogWatch().startFollowing();
         try {
             // give the follower some time to be notified of the message
             Thread.sleep(100);
         } catch (final InterruptedException e) {
             DefaultFollowerBaseTest.LOGGER.warn("Test wait failed.");
         }
-        this.getLogWatch().unfollow(f);
+        this.getLogWatch().stopFollowing(f);
         DefaultFollowerBaseTest.LOGGER.info("@Before finished.");
     }
 

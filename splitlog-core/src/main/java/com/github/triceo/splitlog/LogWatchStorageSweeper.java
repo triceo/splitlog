@@ -8,14 +8,14 @@ import org.slf4j.LoggerFactory;
 import com.github.triceo.splitlog.api.Follower;
 
 /**
- * As followers are terminated via {@link #unfollow(Follower)} and then
+ * As followers are terminated via {@link #stopFollowing(Follower)} and then
  * discarded by GC, some messages will become unreachable. (No followers point
  * to them any longer.)
- * 
+ *
  * The point of this class is to review the situation and discard whatever
  * messages are no longer reachable. Otherwise they'd be uselessly occupying
  * memory.
- * 
+ *
  * This class is intended to be run periodically by
  * {@link ScheduledExecutorService}.
  */

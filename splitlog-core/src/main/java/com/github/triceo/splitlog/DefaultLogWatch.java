@@ -46,9 +46,9 @@ final class DefaultLogWatch implements LogWatch {
     private WeakReference<Message> previousAcceptedMessage;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-        final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
-            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-            final int bufferSize, final long delayForTailerStart) {
+            final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
+        final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+        final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.messaging = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
@@ -153,8 +153,9 @@ final class DefaultLogWatch implements LogWatch {
 
     /**
      * Return all messages that have been sent to a given {@link Follower}, from
-     * its {@link #follow()} until either its {@link #unfollow(Follower)} or to
-     * this moment, whichever is relevant.
+     * its {@link #startFollowing()} until either its
+     * {@link #stopFollowing(Follower)} or to this moment, whichever is
+     * relevant.
      *
      * @param follower
      *            The follower in question.
@@ -181,8 +182,8 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public Follower follow() {
-        final Follower f = this.followInternal(false);
+    public Follower startFollowing() {
+        final Follower f = this.startFollowingActually(false);
         this.tailing.waitUntilStarted();
         return f;
     }
@@ -193,11 +194,11 @@ final class DefaultLogWatch implements LogWatch {
      * unreachable messages.
      *
      * @param boolean If the tailer needs a delayed start because of
-     *        {@link #follow(MidDeliveryMessageCondition)}, as explained in
-     *        {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
+     *        {@link #startFollowing(MidDeliveryMessageCondition)}, as explained
+     *        in {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
      * @return The follower that follows this log watch from now on.
      */
-    private synchronized Follower followInternal(final boolean needsToWait) {
+    private synchronized Follower startFollowingActually(final boolean needsToWait) {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
@@ -220,15 +221,15 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MidDeliveryMessageCondition waitFor) {
-        final Follower f = this.followInternal(true);
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor) {
+        final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor));
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MidDeliveryMessageCondition waitFor, final long howLong,
-        final TimeUnit unit) {
-        final Follower f = this.followInternal(true);
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor, final long howLong,
+            final TimeUnit unit) {
+        final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
 
@@ -250,7 +251,7 @@ final class DefaultLogWatch implements LogWatch {
          */
         final List<AbstractLogWatchFollower> copyOfFollowers = new ArrayList<AbstractLogWatchFollower>(this.followers);
         for (final AbstractLogWatchFollower chunk : copyOfFollowers) {
-            this.unfollow(chunk);
+            this.stopFollowing(chunk);
         }
         this.metrics.terminateMeasuring();
         this.handingDown.clear();
@@ -260,7 +261,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean unfollow(final Follower follower) {
+    public synchronized boolean stopFollowing(final Follower follower) {
         if (!this.followers.remove(follower)) {
             return false;
         }
@@ -295,11 +296,11 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+    public <T extends Number> MessageMetric<T> startMeasuring(final MessageMeasure<T> measure, final String id) {
         if (!this.isTerminated()) {
             throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
         }
-        return this.metrics.measure(measure, id);
+        return this.metrics.startMeasuring(measure, id);
     }
 
     @Override
@@ -313,17 +314,17 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean terminateMeasuring(final String id) {
-        return this.metrics.terminateMeasuring(id);
+    public boolean stopMeasuring(final String id) {
+        return this.metrics.stopMeasuring(id);
     }
 
     @Override
-    public boolean terminateMeasuring(final MessageMetric<? extends Number> metric) {
-        return this.metrics.terminateMeasuring(metric);
+    public boolean stopMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.stopMeasuring(metric);
     }
 
     @Override
-    public synchronized boolean beHandingDown(final MessageMeasure<? extends Number> measure, final String id) {
+    public synchronized boolean startHandingDown(final MessageMeasure<? extends Number> measure, final String id) {
         if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
         } else if (id == null) {
@@ -343,6 +344,26 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean stopHandingDown(final String id) {
         return (this.handingDown.remove(id) != null);
+    }
+
+    @Override
+    public boolean isMeasuring(final String id) {
+        return this.metrics.isMeasuring(id);
+    }
+
+    @Override
+    public boolean isMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.isMeasuring(metric);
+    }
+
+    @Override
+    public boolean isHandingDown(final MessageMeasure<? extends Number> measure) {
+        return this.handingDown.containsValue(measure);
+    }
+
+    @Override
+    public boolean isHandingDown(final String id) {
+        return this.handingDown.containsKey(id);
     }
 
 }

@@ -12,28 +12,57 @@ import org.apache.commons.lang3.tuple.Pair;
 public interface LogWatch extends MessageSource {
 
     /**
-     * Every new {@link Follower} from now on will immediately receive a new
-     * {@link MessageMetric} instance with a given ID that is using the given
-     * measure instance.
+     * The file that is being tracked by this class.
+     *
+     * @return Never null
+     */
+    File getWatchedFile();
+
+    /**
+     * Whether or not {@link #stopFollowing(Follower)} has been called for a
+     * given follower.
+     *
+     * @param follower
+     *            Tailer in question.
+     * @return True if it has.
+     */
+    boolean isFollowedBy(final Follower follower);
+
+    /**
+     * Whether or not particular {@link MessageMeasure} is being automatically
+     * handed down to new {@link Follower}s.
      *
      * @param measure
-     *            Measure to use in the newly created {@link MessageMetric}
-     *            instance.
-     * @param id
-     *            The ID to locate the {@link MessageMetric} using
-     *            {@link Follower#getMetric(String)}. No relation to the ID used
-     *            by {@link #measure(MessageMeasure, String)}.
-     * @return False if either the measure or the ID is already being handed
-     *         down.
+     *            Measure in question.
+     * @return True after {@link #startHandingDown(MessageMeasure, String)} has
+     *         been called and before {@link #stopHandingDown(MessageMeasure)}.
      */
-    boolean beHandingDown(final MessageMeasure<? extends Number> measure, final String id);
+    boolean isHandingDown(final MessageMeasure<? extends Number> measure);
+
+    /**
+     * Whether or not particular {@link MessageMeasure} is being automatically
+     * handed down to new {@link Follower}s.
+     *
+     * @param id
+     *            ID in question.
+     * @return True after {@link #startHandingDown(MessageMeasure, String)} has
+     *         been called and before {@link #stopHandingDown(String)}.
+     */
+    boolean isHandingDown(final String id);
+
+    /**
+     * Whether or not {@link #terminate()} has been called.
+     *
+     * @return True if it has.
+     */
+    boolean isTerminated();
 
     /**
      * Begin watching for new messages from this point in time.
      *
      * @return API for watching for messages.
      */
-    Follower follow();
+    Follower startFollowing();
 
     /**
      * Begin watching for new messages from this point in time, immediately
@@ -45,7 +74,7 @@ public interface LogWatch extends MessageSource {
      *            Condition to pass to the follower.
      * @return The new follower and the result of the wait call.
      */
-    Pair<Follower, Message> follow(MidDeliveryMessageCondition waitFor);
+    Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition waitFor);
 
     /**
      * Begin watching for new messages from this point in time, immediately
@@ -62,34 +91,36 @@ public interface LogWatch extends MessageSource {
      *            The time unit for the above.
      * @return The new follower and the result of the wait call.
      */
-    Pair<Follower, Message> follow(MidDeliveryMessageCondition waitFor, long howLong, TimeUnit unit);
+    Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition waitFor, long howLong, TimeUnit unit);
 
     /**
-     * The file that is being tracked by this class.
+     * Every new {@link Follower} from now on will immediately receive a new
+     * {@link MessageMetric} instance with a given ID that is using the given
+     * measure instance.
      *
-     * @return Never null
+     * @param measure
+     *            Measure to use in the newly created {@link MessageMetric}
+     *            instance.
+     * @param id
+     *            The ID to locate the {@link MessageMetric} using
+     *            {@link Follower#getMetric(String)}. No relation to the ID used
+     *            by {@link #startMeasuring(MessageMeasure, String)}.
+     * @return False if either the measure or the ID is already being handed
+     *         down.
      */
-    File getWatchedFile();
+    boolean startHandingDown(final MessageMeasure<? extends Number> measure, final String id);
 
     /**
-     * Whether or not {@link #unfollow(Follower)} has been called for a given
-     * follower.
+     * Stop particular follower from following.
      *
      * @param follower
-     *            Tailer in question.
-     * @return True if it has.
+     *            This follower will receive no more messages.
+     * @return True if terminated as a result, false if already terminated.
      */
-    boolean isFollowedBy(final Follower follower);
+    boolean stopFollowing(final Follower follower);
 
     /**
-     * Whether or not {@link #terminate()} has been called.
-     *
-     * @return True if it has.
-     */
-    boolean isTerminated();
-
-    /**
-     * Invalidate {@link #beHandingDown(MessageMeasure, String)}. No further
+     * Invalidate {@link #startHandingDown(MessageMeasure, String)}. No further
      * {@link Follower} will automatically receive {@link MessageMetric} using
      * this measure by default.
      *
@@ -101,14 +132,15 @@ public interface LogWatch extends MessageSource {
     boolean stopHandingDown(final MessageMeasure<? extends Number> measure);
 
     /**
-     * Invalidate {@link #beHandingDown(MessageMeasure, String)}. No further
+     * Invalidate {@link #startHandingDown(MessageMeasure, String)}. No further
      * {@link Follower} will automatically receive {@link MessageMetric} using
      * this measure by default.
      *
      * @param id
      *            The ID of the {@link MessageMeasure} to no longer be handing
      *            down to newly instantiated {@link Follower}s. No relation to
-     *            the ID used by {@link #measure(MessageMeasure, String)}.
+     *            the ID used by {@link #startMeasuring(MessageMeasure, String)}
+     *            .
      * @return False if it wasn't being handed down.
      */
     boolean stopHandingDown(final String id);
@@ -120,13 +152,4 @@ public interface LogWatch extends MessageSource {
      * @return True if terminated as a result, false if already terminated.
      */
     boolean terminate();
-
-    /**
-     * Stop particular follower from following.
-     *
-     * @param follower
-     *            This follower will receive no more messages.
-     * @return True if terminated as a result, false if already terminated.
-     */
-    boolean unfollow(final Follower follower);
 }

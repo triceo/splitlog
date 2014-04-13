@@ -11,10 +11,10 @@ public interface MessageMetricProducer {
      *
      * @param id
      *            The ID under which the metric has been requested in
-     *            {@link #measure(MessageMeasure, String)}.
+     *            {@link #startMeasuring(MessageMeasure, String)}.
      * @return Null if no such metric. Either not
-     *         {@link #measure(MessageMeasure, String)}'d or already
-     *         {@link #terminateMeasuring(MessageMetric)}'d.
+     *         {@link #startMeasuring(MessageMeasure, String)}'d or already
+     *         {@link #stopMeasuring(MessageMetric)}'d.
      */
     MessageMetric<? extends Number> getMetric(String id);
 
@@ -23,12 +23,32 @@ public interface MessageMetricProducer {
      *
      * @param measure
      *            The metric retrieved by
-     *            {@link #measure(MessageMeasure, String)}.
+     *            {@link #startMeasuring(MessageMeasure, String)}.
      * @return Null if no such metric. Either not
-     *         {@link #measure(MessageMeasure, String)}'d or already
-     *         {@link #terminateMeasuring(MessageMetric)}'d.
+     *         {@link #startMeasuring(MessageMeasure, String)}'d or already
+     *         {@link #stopMeasuring(MessageMetric)}'d.
      */
     String getMetricId(MessageMetric<? extends Number> measure);
+
+    /**
+     * Whether or not particular {@link MessageMetric} is active.
+     *
+     * @param metric
+     *            Metric in question.
+     * @return True after {@link #startMeasuring(MessageMeasure, String)} has
+     *         been called and before {@link #stopMeasuring(MessageMetric)}.
+     */
+    boolean isMeasuring(MessageMetric<? extends Number> metric);
+
+    /**
+     * Whether or not particular {@link MessageMetric} is active.
+     *
+     * @param id
+     *            ID of the metric in question.
+     * @return True after {@link #startMeasuring(MessageMeasure, String)} has
+     *         been called and before {@link #stopMeasuring(String)}.
+     */
+    boolean isMeasuring(String id);
 
     /**
      * Request that a message property be tracked from now on.
@@ -42,10 +62,10 @@ public interface MessageMetricProducer {
      * @return The metric to query for the value of the given property.
      * @throws IllegalArgumentException
      *             When a given ID has already been passed to
-     *             {@link #measure(MessageMeasure, String)} and not to
-     *             {@link #terminateMeasuring(String)} or equivalents.
+     *             {@link #startMeasuring(MessageMeasure, String)} and not to
+     *             {@link #stopMeasuring(String)} or equivalents.
      */
-    <T extends Number> MessageMetric<T> measure(MessageMeasure<T> measure, String id);
+    <T extends Number> MessageMetric<T> startMeasuring(MessageMeasure<T> measure, String id);
 
     /**
      * Will stop the metric from being notified of new {@link Message}s. From
@@ -55,7 +75,7 @@ public interface MessageMetricProducer {
      *            The metric in question.
      * @return True if stopped, false if unknown.
      */
-    boolean terminateMeasuring(MessageMetric<? extends Number> metric);
+    boolean stopMeasuring(MessageMetric<? extends Number> metric);
 
     /**
      * Will stop the metric from being notified of new {@link Message}s. From
@@ -65,6 +85,6 @@ public interface MessageMetricProducer {
      *            ID of the metric in question.
      * @return True if stopped, false if unknown.
      */
-    boolean terminateMeasuring(String id);
+    boolean stopMeasuring(String id);
 
 }
