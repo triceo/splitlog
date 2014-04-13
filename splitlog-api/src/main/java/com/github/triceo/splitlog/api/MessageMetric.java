@@ -30,7 +30,8 @@ public interface MessageMetric<T extends Number> {
      * Retrieve the value of this metric, which is a sum of the return values of
      * all of this metric's {@link MessageMeasure} invocations.
      *
-     * @return Whatever, depends on the measure.
+     * @return Whatever, depends on the measure. Initial value, before any
+     *         messages arrive, is null
      */
     T getValue();
 

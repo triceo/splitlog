@@ -13,6 +13,9 @@ class DefaultMessageMetric<T extends Number> implements MessageMetric<T> {
     private T value;
 
     public DefaultMessageMetric(final MessageMeasure<T> measure) {
+        if (measure == null) {
+            throw new IllegalArgumentException("Measure must not be null.");
+        }
         this.measure = measure;
     }
 

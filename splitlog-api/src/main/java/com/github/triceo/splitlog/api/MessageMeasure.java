@@ -2,9 +2,9 @@ package com.github.triceo.splitlog.api;
 
 /**
  * Used by {@link MessageMetric} to determine how much a {@link Message} is
- * worth. Users are discouraged from implementing these as stateful - storing
- * the {@link Message}s may prevent the internal memory manager from performing
- * efficiently.
+ * worth. Users are discouraged from implementing these as stateful - doing so
+ * will result in unpredictable behavior, as a single instance of the class can
+ * be shared across multiple {@link MessageMetric}s.
  *
  * @param <T>
  *            The value type returned by the metric.
