@@ -28,7 +28,7 @@ public class MessageMetricManager implements MessageMetricProducer {
 
     @Override
     public synchronized <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
-        if (this.metrics == null) {
+        if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
         } else if (id == null) {
             throw new IllegalArgumentException("ID may not be null.");
@@ -56,7 +56,7 @@ public class MessageMetricManager implements MessageMetricProducer {
     }
 
     @Override
-    public synchronized boolean terminateMeasuring(final MessageMeasure<? extends Number> measure) {
+    public synchronized boolean terminateMeasuring(final MessageMetric<? extends Number> measure) {
         final String removed = this.metrics.removeValue(measure);
         return (removed != null);
     }

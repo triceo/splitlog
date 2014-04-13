@@ -26,7 +26,7 @@ public class DefaultMessageMetricTest {
     public void testGetMeasure() {
         final MessageMetric<Integer> metric = new DefaultMessageMetric<Integer>(
                 DefaultMessageMetricTest.DEFAULT_MEASURE);
-        Assertions.assertThat(metric.getMeasure()).isEqualTo(DefaultMessageMetricTest.DEFAULT_MEASURE);
+        Assertions.assertThat(metric.getMeasure()).isSameAs(DefaultMessageMetricTest.DEFAULT_MEASURE);
     }
 
     @Test

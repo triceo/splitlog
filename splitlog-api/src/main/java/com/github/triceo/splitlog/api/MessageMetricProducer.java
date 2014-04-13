@@ -51,11 +51,11 @@ public interface MessageMetricProducer {
      * Will stop the metric from being notified of new {@link Message}s. From
      * this point on, the ID will become available for taking.
      *
-     * @param measure
+     * @param metric
      *            The metric in question.
      * @return True if stopped, false if unknown.
      */
-    boolean terminateMeasuring(MessageMeasure<? extends Number> measure);
+    boolean terminateMeasuring(MessageMetric<? extends Number> metric);
 
     /**
      * Will stop the metric from being notified of new {@link Message}s. From

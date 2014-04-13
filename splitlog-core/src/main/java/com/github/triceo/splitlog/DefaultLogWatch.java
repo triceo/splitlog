@@ -305,8 +305,8 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean terminateMeasuring(final MessageMeasure<? extends Number> measure) {
-        return this.metrics.terminateMeasuring(measure);
+    public boolean terminateMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.terminateMeasuring(metric);
     }
 
 }
