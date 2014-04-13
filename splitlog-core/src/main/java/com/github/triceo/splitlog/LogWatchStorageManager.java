@@ -11,13 +11,12 @@ import org.slf4j.LoggerFactory;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 
 final class LogWatchStorageManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchStorageManager.class);
-    private final MessageCondition acceptanceCondition;
+    private final SimpleMessageCondition acceptanceCondition;
     private final LogWatch logWatch;
     private final MessageStore messages;
     /**
@@ -29,7 +28,8 @@ final class LogWatchStorageManager {
     private final Map<Follower, Integer> startingMessageIds = new WeakHashMap<Follower, Integer>(),
             endingMessageIds = new WeakHashMap<Follower, Integer>();
 
-    public LogWatchStorageManager(final LogWatch watch, final int capacity, final MessageCondition acceptanceCondition) {
+    public LogWatchStorageManager(final LogWatch watch, final int capacity,
+            final SimpleMessageCondition acceptanceCondition) {
         this.logWatch = watch;
         this.messages = new MessageStore(capacity);
         this.acceptanceCondition = acceptanceCondition;
@@ -48,12 +48,12 @@ final class LogWatchStorageManager {
     /**
      * Return all messages that have been sent to the follower, from its start
      * until either its termination or to this moment, whichever is relevant.
-     * 
+     *
      * This method is synchronized so that the modification of the underlying
      * message store in {@link #addLine(String)} and the reading of this store
      * is mutually excluded. Otherwise, there is a possibility of message ID
      * mess in the discarding case.
-     * 
+     *
      * @param follower
      *            The follower in question.
      * @return Unmodifiable list of all the received messages, in the order
@@ -80,7 +80,7 @@ final class LogWatchStorageManager {
 
     /**
      * Get index of the last plus one message that the follower has access to.
-     * 
+     *
      * @param follower
      *            Tailer in question.
      */
@@ -92,10 +92,10 @@ final class LogWatchStorageManager {
     /**
      * Will crawl the weak hash maps and make sure we always have the latest
      * information on the availability of messages.
-     * 
+     *
      * This method is only intended to be used from within
      * {@link LogWatchStorageSweeper}.
-     * 
+     *
      * @return ID of the very first message that is reachable by any follower in
      *         this logWatch. -1 when there are no reachable messages.
      */
@@ -119,10 +119,10 @@ final class LogWatchStorageManager {
 
     /**
      * Get access to the underlying message store.
-     * 
+     *
      * This method is only intended to be used from within
      * {@link LogWatchStorageSweeper}.
-     * 
+     *
      * @return Message store used by this class.
      */
     protected MessageStore getMessageStore() {
@@ -132,7 +132,7 @@ final class LogWatchStorageManager {
     /**
      * If messages have been discarded, the original starting message ID will no
      * longer be valid. therefore, we check for the actual starting ID.
-     * 
+     *
      * @param follower
      *            Tailer in question.
      */
@@ -144,8 +144,7 @@ final class LogWatchStorageManager {
         if (source != this.logWatch) {
             throw new IllegalStateException("Sources don't match.");
         }
-        final boolean messageAccepted = this.acceptanceCondition.accept(message, MessageDeliveryStatus.UNDECIDED,
-                source);
+        final boolean messageAccepted = this.acceptanceCondition.accept(message);
         if (messageAccepted) {
             LogWatchStorageManager.LOGGER.info("Filter accepted message '{}' from {}.", message, source);
             this.messages.add(message);

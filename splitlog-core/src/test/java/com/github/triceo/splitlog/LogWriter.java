@@ -19,7 +19,7 @@ import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 
 /**
@@ -80,9 +80,9 @@ public class LogWriter {
     public String write(final String line, final Follower follower) {
         this.writeDelayed(line);
         // wait until the last part of the string is finally present
-        final Message result = follower.waitFor(new MessageCondition() {
+        final Message result = follower.waitFor(new MidDeliveryMessageCondition() {
 
-            private boolean accept(final Message receivedMessage, final MessageDeliveryStatus status) {
+            private boolean accept(final Message receivedMessage) {
                 final String lastLine = receivedMessage.getLines().get(receivedMessage.getLines().size() - 1);
                 final String textStr[] = line.split("\\r?\\n");
                 return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
@@ -90,12 +90,12 @@ public class LogWriter {
 
             @Override
             public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                return this.accept(evaluate, status);
+                return this.accept(evaluate);
             }
 
             @Override
             public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
-                return this.accept(evaluate, status);
+                return this.accept(evaluate);
             }
 
         }, LogWriter.WAIT_FOR_MESSAGE_MILLIS, TimeUnit.MILLISECONDS);
@@ -111,7 +111,7 @@ public class LogWriter {
      * This method will schedule the write operation, but it will not actually
      * be ececuted until {@link #DELAY_BEFORE_WRITE_MILLIS} milliseconds later.
      * This is so that the subsequent
-     * {@link CommonFollower#waitFor(MessageCondition)}s have a chance
+     * {@link CommonFollower#waitFor(MidDeliveryMessageCondition)}s have a chance
      * to be registered.
      * 
      * @param line

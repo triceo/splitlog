@@ -21,8 +21,9 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
-import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageFormatter;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
 abstract class AbstractMergingFollower extends AbstractFollower implements MergingFollower {
@@ -83,8 +84,8 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order,
-        final MessageFormatter formatter) {
+    public boolean write(final OutputStream stream, final SimpleMessageCondition condition,
+        final MessageComparator order, final MessageFormatter formatter) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");
         } else if (condition == null) {
@@ -136,5 +137,23 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
         }
         return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
+
+    /**
+     * Notify the follower of a new message in the watched log. Must never be
+     * called by users, just from the library code.
+     *
+     * Implementors are encouraged to synchronize these operations, to preserve
+     * the original order of messages.
+     *
+     * @param msg
+     *            The message.
+     * @param status
+     *            Status of the message.
+     * @param source
+     *            Where does the notification come from.
+     * @throws IllegalArgumentException
+     *             In case the source is a class that should not access to this.
+     */
+    abstract void notifyOfMessage(Message msg, MessageDeliveryStatus status, Follower source);
 
 }

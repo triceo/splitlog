@@ -18,10 +18,11 @@ import org.slf4j.LoggerFactory;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 
 /**
@@ -45,9 +46,9 @@ final class DefaultLogWatch implements LogWatch {
     private WeakReference<Message> previousAcceptedMessage;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final MessageCondition acceptanceCondition, final long delayBetweenReads, final long delayBetweenSweeps,
-            final boolean ignoreExistingContent, final boolean reopenBetweenReads, final int bufferSize,
-            final long delayForTailerStart) {
+        final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
+            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+            final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.messaging = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
@@ -103,7 +104,7 @@ final class DefaultLogWatch implements LogWatch {
      */
     private synchronized Message handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        for (final AbstractFollower f : this.followers) {
+        for (final AbstractLogWatchFollower f : this.followers) {
             f.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
         }
         this.metrics.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
@@ -120,11 +121,11 @@ final class DefaultLogWatch implements LogWatch {
      *            Builder to use to construct the message.
      * @return The message that was the subject of notifications.
      */
-    private synchronized Message handleUndeliveredMessage(final AbstractFollower follower,
+    private synchronized Message handleUndeliveredMessage(final AbstractLogWatchFollower follower,
         final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        follower.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
-        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
+        follower.notifyOfMessage(message, MessageDeliveryStatus.INCOMPLETE, this);
+        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.INCOMPLETE, this);
         return message;
     }
 
@@ -143,7 +144,7 @@ final class DefaultLogWatch implements LogWatch {
         final boolean messageAccepted = this.messaging.registerMessage(message, this);
         final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
                 : MessageDeliveryStatus.REJECTED;
-        for (final AbstractFollower f : this.followers) {
+        for (final AbstractLogWatchFollower f : this.followers) {
             f.notifyOfMessage(message, status, this);
         }
         this.metrics.notifyOfMessage(message, status, this);
@@ -192,7 +193,7 @@ final class DefaultLogWatch implements LogWatch {
      * unreachable messages.
      *
      * @param boolean If the tailer needs a delayed start because of
-     *        {@link #follow(MessageCondition)}, as explained in
+     *        {@link #follow(MidDeliveryMessageCondition)}, as explained in
      *        {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
      * @return The follower that follows this log watch from now on.
      */
@@ -219,13 +220,14 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MessageCondition waitFor) {
+    public Pair<Follower, Message> follow(final MidDeliveryMessageCondition waitFor) {
         final Follower f = this.followInternal(true);
         return ImmutablePair.of(f, f.waitFor(waitFor));
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MessageCondition waitFor, final long howLong, final TimeUnit unit) {
+    public Pair<Follower, Message> follow(final MidDeliveryMessageCondition waitFor, final long howLong,
+        final TimeUnit unit) {
         final Follower f = this.followInternal(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
@@ -265,7 +267,7 @@ final class DefaultLogWatch implements LogWatch {
         this.messaging.followerTerminated(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
         if (this.currentlyProcessedMessage != null) {
-            this.handleUndeliveredMessage((AbstractFollower) follower, this.currentlyProcessedMessage);
+            this.handleUndeliveredMessage((AbstractLogWatchFollower) follower, this.currentlyProcessedMessage);
         }
         if (this.followers.size() == 0) {
             this.tailing.stop();

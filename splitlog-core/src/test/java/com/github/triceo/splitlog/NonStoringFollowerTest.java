@@ -16,63 +16,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
-    private static final class NothingAcceptingMessageCondition implements MessageCondition {
+    private static final class NothingAcceptingMessageCondition implements SimpleMessageCondition {
 
         @Override
-        public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
-            return false;
-        }
-
-        @Override
-        public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
+        public boolean accept(final Message evaluate) {
             return false;
         }
 
     }
 
-    private static final class TestStartingMessageCondition implements MessageCondition {
+    private static final class TestStartingMessageCondition implements SimpleMessageCondition {
 
-        private boolean accept(final Message evaluate) {
+        @Override
+        public boolean accept(final Message evaluate) {
             return (evaluate.getLines().get(0).startsWith("test"));
         }
 
-        @Override
-        public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
-            return this.accept(evaluate);
-        }
-
-        @Override
-        public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-            return this.accept(evaluate);
-        }
-
     }
 
-    private static final class NumberEndingMessageCondition implements MessageCondition {
+    private static final class NumberEndingMessageCondition implements SimpleMessageCondition {
 
-        private boolean accept(final Message evaluate) {
+        @Override
+        public boolean accept(final Message evaluate) {
             final String line = evaluate.getLines().get(0);
             final char endingCharacter = line.charAt(line.length() - 1);
             return Character.isDigit(endingCharacter);
-        }
-
-        @Override
-        public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
-            return this.accept(evaluate);
-        }
-
-        @Override
-        public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-            return this.accept(evaluate);
         }
 
     }
@@ -242,23 +217,23 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     @Test
     public void testTermination() {
         Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch terminated immediately after starting.")
-        .isFalse();
+                .isFalse();
         final Follower follower1 = this.getLogWatch().follow();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
-        .as("Follower terminated immediately after starting.").isTrue();
+                .as("Follower terminated immediately after starting.").isTrue();
         final Follower follower2 = this.getLogWatch().follow();
         Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isTrue();
         Assertions.assertThat(this.getLogWatch().unfollow(follower1)).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
-        .as("Follower terminated without termination.").isTrue();
+                .as("Follower terminated without termination.").isTrue();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
-        .as("Follower not terminated after termination.").isFalse();
+                .as("Follower not terminated after termination.").isFalse();
         Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isTrue();
         Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
-        .as("Follower not terminated after termination.").isFalse();
+                .as("Follower not terminated after termination.").isFalse();
         Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch not terminated after termination.")
-        .isTrue();
+                .isTrue();
     }
 
     @Test

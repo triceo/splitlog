@@ -7,10 +7,8 @@ import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
-import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageFormatter;
-import com.github.triceo.splitlog.api.MessageSource;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
@@ -28,7 +26,7 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 abstract class AbstractFollower implements CommonFollower {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
-    private static final MessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
+    private static final SimpleMessageCondition DEFAULT_CONDITION = AllMessagesAcceptingCondition.INSTANCE;
 
     @Override
     public SortedSet<Message> getMessages() {
@@ -39,24 +37,6 @@ abstract class AbstractFollower implements CommonFollower {
     public SortedSet<Message> getMessages(final MessageComparator order) {
         return this.getMessages(AbstractFollower.DEFAULT_CONDITION, order);
     }
-
-    /**
-     * Notify the follower of a new message in the watched log. Must never be
-     * called by users, just from the library code.
-     *
-     * Implementors are encouraged to synchronize these operations, to preserve
-     * the original order of messages.
-     *
-     * @param msg
-     *            The message.
-     * @param status
-     *            Status of the message.
-     * @param source
-     *            Where does the notification come from.
-     * @throws IllegalArgumentException
-     *             In case the source is a class that should not access to this.
-     */
-    abstract void notifyOfMessage(Message msg, MessageDeliveryStatus status, MessageSource source);
 
     /**
      * Provide the default formatter for messages in this follower.
@@ -71,7 +51,7 @@ abstract class AbstractFollower implements CommonFollower {
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition) {
+    public boolean write(final OutputStream stream, final SimpleMessageCondition condition) {
         return this.write(stream, condition, this.getDefaultFormatter());
     }
 
@@ -81,7 +61,7 @@ abstract class AbstractFollower implements CommonFollower {
     }
 
     @Override
-    public SortedSet<Message> getMessages(final MessageCondition condition) {
+    public SortedSet<Message> getMessages(final SimpleMessageCondition condition) {
         return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
     }
 
@@ -96,12 +76,14 @@ abstract class AbstractFollower implements CommonFollower {
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageComparator order) {
+    public boolean write(final OutputStream stream, final SimpleMessageCondition condition,
+        final MessageComparator order) {
         return this.write(stream, condition, order, this.getDefaultFormatter());
     }
 
     @Override
-    public boolean write(final OutputStream stream, final MessageCondition condition, final MessageFormatter formatter) {
+    public boolean write(final OutputStream stream, final SimpleMessageCondition condition,
+        final MessageFormatter formatter) {
         return this.write(stream, condition, AbstractFollower.DEFAULT_COMPARATOR, formatter);
     }
 
