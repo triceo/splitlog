@@ -2,7 +2,9 @@ package com.github.triceo.splitlog.api;
 
 /**
  * Allows users to track various statistics on classes implementing
- * {@link MessageMetricProducer}.
+ * {@link MessageMetricProducer}. These classes are intended for measuring only,
+ * and will therefore not store the {@link Message}s that have passed through
+ * them.
  *
  * @param <T>
  *            Type of the value that the metric is measuring.

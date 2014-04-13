@@ -8,7 +8,7 @@ public interface MessageMetricProducer {
 
     /**
      * Retrieve the metric for a particular ID.
-     * 
+     *
      * @param id
      *            The ID under which the metric has been requested in
      *            {@link #measure(MessageMeasure, String)}.
@@ -20,7 +20,7 @@ public interface MessageMetricProducer {
 
     /**
      * Retrieve the ID for a particular measure.
-     * 
+     *
      * @param measure
      *            The metric retrieved by
      *            {@link #measure(MessageMeasure, String)}.
@@ -34,7 +34,9 @@ public interface MessageMetricProducer {
      * Request that a message property be tracked from now on.
      *
      * @param measure
-     *            The class that measures the given property.
+     *            The class that measures the given property. It is highly
+     *            recommended that a measure instance be exclusive to each
+     *            metric.
      * @param id
      *            Unique identifier by which to locate the metric later.
      * @return The metric to query for the value of the given property.

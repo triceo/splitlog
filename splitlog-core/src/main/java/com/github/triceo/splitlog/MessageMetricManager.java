@@ -1,5 +1,7 @@
 package com.github.triceo.splitlog;
 
+import java.util.HashSet;
+
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
@@ -44,12 +46,21 @@ public class MessageMetricManager implements MessageMetricProducer {
         }
     }
 
+    /**
+     * Will immediately terminate every measurement that hasn't yet been terminated.
+     */
+    public synchronized void terminateMeasuring() {
+        for (String metricId: new HashSet<String>(this.metrics.keySet())) {
+            this.terminateMeasuring(metricId);
+        }
+    }
+
     @Override
     public synchronized boolean terminateMeasuring(final MessageMeasure<? extends Number> measure) {
         final String removed = this.metrics.removeValue(measure);
         return (removed != null);
     }
-
+    
     @Override
     public synchronized boolean terminateMeasuring(final String id) {
         final MessageMetric<? extends Number> removed = this.metrics.remove(id);

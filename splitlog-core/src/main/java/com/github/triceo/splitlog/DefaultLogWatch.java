@@ -240,6 +240,7 @@ final class DefaultLogWatch implements LogWatch {
         for (final AbstractLogWatchFollower chunk : copyOfFollowers) {
             this.unfollow(chunk);
         }
+        this.metrics.terminateMeasuring();
         this.sweeping.stop();
         this.previousAcceptedMessage = null;
         return true;
@@ -282,6 +283,9 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+        if (!this.isTerminated()) {
+            throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
+        }
         return this.metrics.measure(measure, id);
     }
 

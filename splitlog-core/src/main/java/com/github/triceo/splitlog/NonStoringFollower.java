@@ -24,6 +24,11 @@ import com.github.triceo.splitlog.api.MessageSource;
  * This class assumes that LogWatch and user code are the only two threads that
  * use it. Never use one instance of this class from two or more user threads.
  * Otherwise, unpredictable behavior from waitFor() methods is possible.
+ *
+ * Metrics within will never be terminated (and thus removed) unless done by the
+ * user. Not even when no longer {@link #isFollowing()}.
+ * 
+ * FIXME maybe we should do something about that ^^^^
  */
 final class NonStoringFollower extends AbstractLogWatchFollower {
 
@@ -61,6 +66,9 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+        if (!this.isFollowing()) {
+            throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
+        }
         return this.metrics.measure(measure, id);
     }
 
