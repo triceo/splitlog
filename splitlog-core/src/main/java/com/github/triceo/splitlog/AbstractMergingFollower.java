@@ -18,12 +18,12 @@ import org.apache.commons.io.IOUtils;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageFormatter;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
 abstract class AbstractMergingFollower extends AbstractFollower implements MergingFollower {
@@ -84,7 +84,7 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
     }
 
     @Override
-    public boolean write(final OutputStream stream, final IndependentMessageCondition condition,
+    public boolean write(final OutputStream stream, final SimpleMessageCondition condition,
         final MessageComparator order, final MessageFormatter formatter) {
         if (stream == null) {
             throw new IllegalArgumentException("Stream may not be null.");

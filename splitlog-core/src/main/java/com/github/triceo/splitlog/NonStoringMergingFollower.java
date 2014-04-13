@@ -10,11 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
-import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 
 final class NonStoringMergingFollower extends AbstractMergingFollower {
 
@@ -27,7 +27,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
-    public SortedSet<Message> getMessages(final IndependentMessageCondition condition, final MessageComparator order) {
+    public SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {
@@ -45,7 +45,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
      * the instance while another thread is already waiting.
      */
     @Override
-    public Message waitFor(final MessageCondition condition) {
+    public Message waitFor(final MidDeliveryMessageCondition condition) {
         return this.exchange.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
     }
 
@@ -54,7 +54,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
      * the instance while another thread is already waiting.
      */
     @Override
-    public Message waitFor(final MessageCondition condition, final long timeout, final TimeUnit unit) {
+    public Message waitFor(final MidDeliveryMessageCondition condition, final long timeout, final TimeUnit unit) {
         if (timeout < 1) {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }

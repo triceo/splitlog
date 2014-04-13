@@ -3,14 +3,14 @@ package com.github.triceo.splitlog.conditions;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.IndependentMessageCondition;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 
 /**
  * This will accept any message.
  */
-public final class AllMessagesAcceptingCondition implements MessageCondition, IndependentMessageCondition {
+public final class AllMessagesAcceptingCondition implements MidDeliveryMessageCondition, SimpleMessageCondition {
 
     public static final AllMessagesAcceptingCondition INSTANCE = new AllMessagesAcceptingCondition();
 

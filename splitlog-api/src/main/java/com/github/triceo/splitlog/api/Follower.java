@@ -15,6 +15,18 @@ public interface Follower extends CommonFollower, MessageSource {
     LogWatch getFollowed();
 
     /**
+     * Whether or not this follower is still capable of receiving messages from
+     * {@link LogWatch}. It is suggested that the reference to this follower be
+     * thrown away immediately after the user has processed the results of
+     * {@link #getMessages()} or {@link #getMessages(SimpleMessageCondition)}.
+     * {@link LogWatch} may then be able to free the memory occupied by those
+     * messages.
+     *
+     * @return True if following.
+     */
+    boolean isFollowing();
+
+    /**
      * Mark the current location in the tail by a custom message.
      *
      * In case the messages before and after the tag should be discarded in the
@@ -31,17 +43,5 @@ public interface Follower extends CommonFollower, MessageSource {
      * @return The tag message that was recorded.
      */
     Message tag(String tagLine);
-
-    /**
-     * Whether or not this follower is still capable of receiving messages from
-     * {@link LogWatch}. It is suggested that the reference to this follower be
-     * thrown away immediately after the user has processed the results of
-     * {@link #getMessages()} or
-     * {@link #getMessages(IndependentMessageCondition)}. {@link LogWatch} may
-     * then be able to free the memory occupied by those messages.
-     *
-     * @return True if following.
-     */
-    boolean isFollowing();
 
 }

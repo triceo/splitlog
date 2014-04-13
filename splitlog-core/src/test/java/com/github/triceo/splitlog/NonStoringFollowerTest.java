@@ -16,14 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.IndependentMessageCondition;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
-    private static final class NothingAcceptingMessageCondition implements IndependentMessageCondition {
+    private static final class NothingAcceptingMessageCondition implements SimpleMessageCondition {
 
         @Override
         public boolean accept(final Message evaluate) {
@@ -32,7 +32,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
     }
 
-    private static final class TestStartingMessageCondition implements IndependentMessageCondition {
+    private static final class TestStartingMessageCondition implements SimpleMessageCondition {
 
         @Override
         public boolean accept(final Message evaluate) {
@@ -41,7 +41,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
     }
 
-    private static final class NumberEndingMessageCondition implements IndependentMessageCondition {
+    private static final class NumberEndingMessageCondition implements SimpleMessageCondition {
 
         @Override
         public boolean accept(final Message evaluate) {

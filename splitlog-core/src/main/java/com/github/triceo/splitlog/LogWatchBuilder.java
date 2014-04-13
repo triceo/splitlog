@@ -3,10 +3,10 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
@@ -53,7 +53,7 @@ final public class LogWatchBuilder {
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads;
     // will accept all messages
-    private IndependentMessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
+    private SimpleMessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
     /**
@@ -88,20 +88,20 @@ final public class LogWatchBuilder {
      *
      * @return The condition.
      */
-    public IndependentMessageCondition getMessageAcceptanceCondition() {
+    public SimpleMessageCondition getMessageAcceptanceCondition() {
         return this.messageAcceptanceCondition;
     }
 
     /**
      * Only the messages for which
-     * {@link MessageCondition#accept(Message, LogWatch)} is true will be
-     * registered by the future log watch.
+     * {@link MidDeliveryMessageCondition#accept(Message, LogWatch)} is true
+     * will be registered by the future log watch.
      *
      * @param condition
      *            The condition.
      * @return This.
      */
-    public LogWatchBuilder withMessageAcceptanceCondition(final IndependentMessageCondition condition) {
+    public LogWatchBuilder withMessageAcceptanceCondition(final SimpleMessageCondition condition) {
         if (condition == null) {
             throw new IllegalArgumentException("Message acceptance condition must not be null.");
         }
@@ -242,10 +242,10 @@ final public class LogWatchBuilder {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
         builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+        .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+        .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+        .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+        .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
         builder.append(']');
         return builder.toString();
     }
@@ -289,12 +289,12 @@ final public class LogWatchBuilder {
      * Specify the delay between when the log tailing is requested and when it
      * is actually started.
      *
-     * In order for {@link LogWatch#follow(MessageCondition)} to actually work,
-     * we need the tailer to start after we are already waiting. But the waiting
-     * will block the thread, making it impossible to start the tailer.
-     * Therefore, we schedule the tailer on a different thread before we start
-     * waiting and we delay the actual execution by this amount, so that the
-     * waiting has time to start.
+     * In order for {@link LogWatch#follow(MidDeliveryMessageCondition)} to
+     * actually work, we need the tailer to start after we are already waiting.
+     * But the waiting will block the thread, making it impossible to start the
+     * tailer. Therefore, we schedule the tailer on a different thread before we
+     * start waiting and we delay the actual execution by this amount, so that
+     * the waiting has time to start.
      *
      * @param length
      *            Length of time.

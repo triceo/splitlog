@@ -3,7 +3,7 @@ package com.github.triceo.splitlog.api;
 /**
  * Allows users to either accept or reject a message in various situations.
  */
-public interface IndependentMessageCondition {
+public interface SimpleMessageCondition {
 
     /**
      * Evaluate a message against a user-provided condition.

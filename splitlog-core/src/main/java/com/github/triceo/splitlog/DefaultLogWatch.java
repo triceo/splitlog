@@ -16,13 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.IndependentMessageCondition;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 
 /**
@@ -46,9 +46,9 @@ final class DefaultLogWatch implements LogWatch {
     private WeakReference<Message> previousAcceptedMessage;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final IndependentMessageCondition acceptanceCondition, final long delayBetweenReads,
-        final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-        final int bufferSize, final long delayForTailerStart) {
+        final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
+            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+            final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.messaging = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
@@ -193,7 +193,7 @@ final class DefaultLogWatch implements LogWatch {
      * unreachable messages.
      *
      * @param boolean If the tailer needs a delayed start because of
-     *        {@link #follow(MessageCondition)}, as explained in
+     *        {@link #follow(MidDeliveryMessageCondition)}, as explained in
      *        {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
      * @return The follower that follows this log watch from now on.
      */
@@ -220,13 +220,14 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MessageCondition waitFor) {
+    public Pair<Follower, Message> follow(final MidDeliveryMessageCondition waitFor) {
         final Follower f = this.followInternal(true);
         return ImmutablePair.of(f, f.waitFor(waitFor));
     }
 
     @Override
-    public Pair<Follower, Message> follow(final MessageCondition waitFor, final long howLong, final TimeUnit unit) {
+    public Pair<Follower, Message> follow(final MidDeliveryMessageCondition waitFor, final long howLong,
+        final TimeUnit unit) {
         final Follower f = this.followInternal(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }

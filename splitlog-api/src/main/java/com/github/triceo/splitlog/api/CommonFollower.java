@@ -42,7 +42,7 @@ public interface CommonFollower {
      * @return Messages we have been notified of, for which the condition holds
      *         true, and tags.
      */
-    SortedSet<Message> getMessages(final IndependentMessageCondition condition);
+    SortedSet<Message> getMessages(final SimpleMessageCondition condition);
 
     /**
      * Retrieve messages that this follower has been notified of, if a certain
@@ -56,7 +56,7 @@ public interface CommonFollower {
      * @return Messages we have been notified of, for which the condition holds
      *         true, and tags.
      */
-    SortedSet<Message> getMessages(final IndependentMessageCondition condition, final MessageComparator order);
+    SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order);
 
     /**
      * Merge this {@link CommonFollower} with another. This
@@ -82,7 +82,7 @@ public interface CommonFollower {
      *            Condition that needs to be true for the method to unblock.
      * @return Null if the method unblocked due to some other reason.
      */
-    Message waitFor(MessageCondition condition);
+    Message waitFor(MidDeliveryMessageCondition condition);
 
     /**
      * Will block until a message arrives, for which the condition is true. If
@@ -96,7 +96,7 @@ public interface CommonFollower {
      *            Unit of time.
      * @return Null if the method unblocked due to some other reason.
      */
-    Message waitFor(MessageCondition condition, long timeout, TimeUnit unit);
+    Message waitFor(MidDeliveryMessageCondition condition, long timeout, TimeUnit unit);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using a
@@ -140,81 +140,6 @@ public interface CommonFollower {
     boolean write(final OutputStream stream, final MessageComparator order, final MessageFormatter formatter);
 
     /**
-     * Will write to a stream the result of
-     * {@link #getMessages(IndependentMessageCondition)}, using a
-     * {@link MessageFormatter} implementation of its own choosing. Will close
-     * the stream.
-     *
-     * @param stream
-     *            Target.
-     * @param condition
-     *            The condition to pass to
-     *            {@link #getMessages(IndependentMessageCondition)}.
-     * @return True if written, false otherwise.
-     */
-    boolean write(final OutputStream stream, final IndependentMessageCondition condition);
-
-    /**
-     * Will write to a stream the result of
-     * {@link #getMessages(IndependentMessageCondition, MessageComparator)},
-     * using a {@link MessageFormatter} implementation of its own choosing. Will
-     * close the stream.
-     *
-     * @param stream
-     *            Target.
-     * @param condition
-     *            The condition to pass to
-     *            {@link #getMessages(IndependentMessageCondition, MessageComparator)}
-     *            .
-     * @param order
-     *            The comparator to pass to
-     *            {@link #getMessages(IndependentMessageCondition, MessageComparator)}
-     *            .
-     * @return True if written, false otherwise.
-     */
-    boolean
-        write(final OutputStream stream, final IndependentMessageCondition condition, final MessageComparator order);
-
-    /**
-     * Will write to a stream the result of
-     * {@link #getMessages(IndependentMessageCondition, MessageComparator)},
-     * using given {@link MessageFormatter}. Will close the stream.
-     *
-     * @param stream
-     *            Target.
-     * @param condition
-     *            The condition to pass to
-     *            {@link #getMessages(IndependentMessageCondition, MessageComparator)}
-     *            .
-     * @param order
-     *            The comparator to pass to
-     *            {@link #getMessages(IndependentMessageCondition, MessageComparator)}
-     *            .
-     * @param formatter
-     *            Formatter to use to transform message into string.
-     * @return True if written, false otherwise.
-     */
-    boolean write(final OutputStream stream, final IndependentMessageCondition condition,
-        final MessageComparator order, final MessageFormatter formatter);
-
-    /**
-     * Will write to a stream the result of
-     * {@link #getMessages(IndependentMessageCondition)}, using given
-     * {@link MessageFormatter}. Will close the stream.
-     *
-     * @param stream
-     *            Target.
-     * @param condition
-     *            The condition to pass to
-     *            {@link #getMessages(IndependentMessageCondition)}.
-     * @param formatter
-     *            Formatter to use to transform message into string.
-     * @return True if written, false otherwise.
-     */
-    boolean write(final OutputStream stream, final IndependentMessageCondition condition,
-        final MessageFormatter formatter);
-
-    /**
      * Will write to a stream the result of {@link #getMessages()}, using given
      * {@link MessageFormatter}. Will close the stream.
      *
@@ -225,5 +150,78 @@ public interface CommonFollower {
      * @return True if written, false otherwise.
      */
     boolean write(final OutputStream stream, final MessageFormatter formatter);
+
+    /**
+     * Will write to a stream the result of
+     * {@link #getMessages(SimpleMessageCondition)}, using a
+     * {@link MessageFormatter} implementation of its own choosing. Will close
+     * the stream.
+     *
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(SimpleMessageCondition)}.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final SimpleMessageCondition condition);
+
+    /**
+     * Will write to a stream the result of
+     * {@link #getMessages(SimpleMessageCondition, MessageComparator)}, using a
+     * {@link MessageFormatter} implementation of its own choosing. Will close
+     * the stream.
+     *
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(SimpleMessageCondition, MessageComparator)}
+     *            .
+     * @param order
+     *            The comparator to pass to
+     *            {@link #getMessages(SimpleMessageCondition, MessageComparator)}
+     *            .
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final SimpleMessageCondition condition, final MessageComparator order);
+
+    /**
+     * Will write to a stream the result of
+     * {@link #getMessages(SimpleMessageCondition, MessageComparator)}, using
+     * given {@link MessageFormatter}. Will close the stream.
+     *
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(SimpleMessageCondition, MessageComparator)}
+     *            .
+     * @param order
+     *            The comparator to pass to
+     *            {@link #getMessages(SimpleMessageCondition, MessageComparator)}
+     *            .
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final SimpleMessageCondition condition, final MessageComparator order,
+        final MessageFormatter formatter);
+
+    /**
+     * Will write to a stream the result of
+     * {@link #getMessages(SimpleMessageCondition)}, using given
+     * {@link MessageFormatter}. Will close the stream.
+     *
+     * @param stream
+     *            Target.
+     * @param condition
+     *            The condition to pass to
+     *            {@link #getMessages(SimpleMessageCondition)}.
+     * @param formatter
+     *            Formatter to use to transform message into string.
+     * @return True if written, false otherwise.
+     */
+    boolean write(final OutputStream stream, final SimpleMessageCondition condition, final MessageFormatter formatter);
 
 }
