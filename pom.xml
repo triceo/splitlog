@@ -146,6 +146,10 @@
             </rulesets>
           </configuration>
         </plugin>
+        <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.4</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
