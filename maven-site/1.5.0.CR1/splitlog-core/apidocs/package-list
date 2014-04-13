@@ -1,0 +1,6 @@
+com.github.triceo.splitlog
+com.github.triceo.splitlog.conditions
+com.github.triceo.splitlog.formatters
+com.github.triceo.splitlog.ordering
+com.github.triceo.splitlog.splitters
+com.github.triceo.splitlog.splitters.exceptions
