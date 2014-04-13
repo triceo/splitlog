@@ -1,5 +1,7 @@
 package com.github.triceo.splitlog.api;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Allows users to track various statistics on classes implementing
  * {@link MessageMetricProducer}. These classes are intended for measuring only,
@@ -34,5 +36,31 @@ public interface MessageMetric<T extends Number> {
      *         messages arrive, is null
      */
     T getValue();
+
+    /**
+     * Will block until a message arrives, for which the condition is true. If
+     * none arrives before the timeout, it unblocks anyway.
+     *
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @return The message that made the metric pass the condition. Null if the
+     *         method unblocked due to some other reason.
+     */
+    Message waitFor(MessageMetricCondition<T> condition);
+
+    /**
+     * Will block until a message arrives, for which the condition is true. If
+     * none arrives before the timeout, it unblocks anyway.
+     *
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @param timeout
+     *            Time before forcibly aborting.
+     * @param unit
+     *            Unit of time.
+     * @return The message that made the metric pass the condition. Null if the
+     *         method unblocked due to some other reason.
+     */
+    Message waitFor(MessageMetricCondition<T> condition, long timeout, TimeUnit unit);
 
 }
