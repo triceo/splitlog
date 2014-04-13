@@ -285,7 +285,7 @@
       </build>
     </profile>
   </profiles>
-  <url>http://triceo.github.io/splitlog/</url>
+  <url>http://triceo.github.io/splitlog/maven-site/${project.version}/</url>
   <scm>
     <url>https://github.com/triceo/splitlog</url>
     <connection>scm:git:https://github.com/triceo/splitlog.git</connection>
