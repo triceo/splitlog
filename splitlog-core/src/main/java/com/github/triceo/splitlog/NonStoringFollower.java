@@ -1,10 +1,12 @@
 package com.github.triceo.splitlog;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +39,11 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private final MessageExchange exchange = new MessageExchange();
     private final MessageMetricManager metrics = new MessageMetricManager();
 
-    public NonStoringFollower(final DefaultLogWatch watch) {
+    public NonStoringFollower(final DefaultLogWatch watch, final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
         super(watch);
+        for (Pair<String, MessageMeasure<? extends Number>> pair : measuresHandedDown) {
+            this.measure(pair.getValue(), pair.getKey());
+        }
     }
 
     @Override

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -38,6 +40,7 @@ final class DefaultLogWatch implements LogWatch {
     private final LogWatchSweepingManager sweeping;
     private final LogWatchStorageManager messaging;
     private final MessageMetricManager metrics = new MessageMetricManager();
+    private final BidiMap<String, MessageMeasure<? extends Number>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number>>();
     private MessageBuilder currentlyProcessedMessage;
     private WeakReference<Message> previousAcceptedMessage;
 
@@ -198,11 +201,18 @@ final class DefaultLogWatch implements LogWatch {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
         this.sweeping.start();
-        final AbstractLogWatchFollower follower = new NonStoringFollower(this);
+        // assemble list of metrics to be handing down and then the follower
+        final List<Pair<String, MessageMeasure<? extends Number>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number>>>();
+        for (final BidiMap.Entry<String, MessageMeasure<? extends Number>> entry : this.handingDown.entrySet()) {
+            pairs.add(ImmutablePair.<String, MessageMeasure<? extends Number>> of(entry.getKey(), entry.getValue()));
+        }
+        final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
+        // register the follower
         this.followers.add(follower);
         this.messaging.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
         if (this.followers.size() == 1) {
+            // we have listeners, let's start tailing
             this.tailing.start(needsToWait);
         }
         return follower;
@@ -241,6 +251,7 @@ final class DefaultLogWatch implements LogWatch {
             this.unfollow(chunk);
         }
         this.metrics.terminateMeasuring();
+        this.handingDown.clear();
         this.sweeping.stop();
         this.previousAcceptedMessage = null;
         return true;
@@ -307,6 +318,29 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public boolean terminateMeasuring(final MessageMetric<? extends Number> metric) {
         return this.metrics.terminateMeasuring(metric);
+    }
+
+    @Override
+    public synchronized boolean beHandingDown(final MessageMeasure<? extends Number> measure, final String id) {
+        if (measure == null) {
+            throw new IllegalArgumentException("Measure may not be null.");
+        } else if (id == null) {
+            throw new IllegalArgumentException("ID may not be null.");
+        } else if (this.handingDown.containsKey(id) || this.handingDown.containsValue(measure)) {
+            return false;
+        }
+        this.handingDown.put(id, measure);
+        return true;
+    }
+
+    @Override
+    public synchronized boolean stopHandingDown(final MessageMeasure<? extends Number> measure) {
+        return (this.handingDown.removeValue(measure) != null);
+    }
+
+    @Override
+    public synchronized boolean stopHandingDown(final String id) {
+        return (this.handingDown.remove(id) != null);
     }
 
 }

@@ -12,6 +12,23 @@ import org.apache.commons.lang3.tuple.Pair;
 public interface LogWatch extends MessageSource {
 
     /**
+     * Every new {@link Follower} from now on will immediately receive a new
+     * {@link MessageMetric} instance with a given ID that is using the given
+     * measure instance.
+     *
+     * @param measure
+     *            Measure to use in the newly created {@link MessageMetric}
+     *            instance.
+     * @param id
+     *            The ID to locate the {@link MessageMetric} using
+     *            {@link Follower#getMetric(String)}. No relation to the ID used
+     *            by {@link #measure(MessageMeasure, String)}.
+     * @return False if either the measure or the ID is already being handed
+     *         down.
+     */
+    boolean beHandingDown(final MessageMeasure<? extends Number> measure, final String id);
+
+    /**
      * Begin watching for new messages from this point in time.
      *
      * @return API for watching for messages.
@@ -69,6 +86,31 @@ public interface LogWatch extends MessageSource {
      * @return True if it has.
      */
     boolean isTerminated();
+
+    /**
+     * Invalidate {@link #beHandingDown(MessageMeasure, String)}. No further
+     * {@link Follower} will automatically receive {@link MessageMetric} using
+     * this measure by default.
+     *
+     * @param measure
+     *            The measure to no longer be handing down to newly instantiated
+     *            {@link Follower}s.
+     * @return False if it wasn't being handed down.
+     */
+    boolean stopHandingDown(final MessageMeasure<? extends Number> measure);
+
+    /**
+     * Invalidate {@link #beHandingDown(MessageMeasure, String)}. No further
+     * {@link Follower} will automatically receive {@link MessageMetric} using
+     * this measure by default.
+     *
+     * @param id
+     *            The ID of the {@link MessageMeasure} to no longer be handing
+     *            down to newly instantiated {@link Follower}s. No relation to
+     *            the ID used by {@link #measure(MessageMeasure, String)}.
+     * @return False if it wasn't being handed down.
+     */
+    boolean stopHandingDown(final String id);
 
     /**
      * Stop all followers from following and free resources. Will terminate
