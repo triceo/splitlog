@@ -29,7 +29,7 @@ import com.github.triceo.splitlog.api.MessageSource;
  *
  * Metrics within will never be terminated (and thus removed) unless done by the
  * user. Not even when no longer {@link #isFollowing()}.
- * 
+ *
  * FIXME maybe we should do something about that ^^^^
  */
 final class NonStoringFollower extends AbstractLogWatchFollower {
@@ -39,10 +39,11 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private final MessageExchange exchange = new MessageExchange();
     private final MessageMetricManager metrics = new MessageMetricManager();
 
-    public NonStoringFollower(final DefaultLogWatch watch, final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
+    public NonStoringFollower(final DefaultLogWatch watch,
+            final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
         super(watch);
-        for (Pair<String, MessageMeasure<? extends Number>> pair : measuresHandedDown) {
-            this.measure(pair.getValue(), pair.getKey());
+        for (final Pair<String, MessageMeasure<? extends Number>> pair : measuresHandedDown) {
+            this.measure(pair.getValue(), pair.getKey(), false);
         }
     }
 
@@ -69,17 +70,22 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         return this.metrics.getMetricId(measure);
     }
 
-    @Override
-    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
-        if (!this.isFollowing()) {
+    private <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id,
+        final boolean checkIfFollowing) {
+        if (checkIfFollowing && !this.isFollowing()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
         return this.metrics.measure(measure, id);
     }
 
     @Override
+    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+        return this.measure(measure, id, true);
+    }
+
+    @Override
     synchronized void
-    notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+        notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
