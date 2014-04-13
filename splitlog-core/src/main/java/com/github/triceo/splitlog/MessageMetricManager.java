@@ -12,7 +12,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 import com.github.triceo.splitlog.api.MessageSource;
 
-public class MessageMetricManager implements MessageMetricProducer {
+public class MessageMetricManager implements MessageMetricProducer, MessageListener<MessageSource> {
 
     private final BidiMap<String, DefaultMessageMetric<? extends Number>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number>>();
 
@@ -40,17 +40,20 @@ public class MessageMetricManager implements MessageMetricProducer {
         return metric;
     }
 
-    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
-        for (DefaultMessageMetric<? extends Number> metric : this.metrics.values()) {
-            metric.notifyOfMessage(msg, status, source);
+    @Override
+    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
+        final MessageSource source) {
+        for (final DefaultMessageMetric<? extends Number> metric : this.metrics.values()) {
+            metric.messageReceived(msg, status, source);
         }
     }
 
     /**
-     * Will immediately terminate every measurement that hasn't yet been terminated.
+     * Will immediately terminate every measurement that hasn't yet been
+     * terminated.
      */
     public synchronized void terminateMeasuring() {
-        for (String metricId: new HashSet<String>(this.metrics.keySet())) {
+        for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
             this.terminateMeasuring(metricId);
         }
     }
@@ -60,7 +63,7 @@ public class MessageMetricManager implements MessageMetricProducer {
         final String removed = this.metrics.removeValue(measure);
         return (removed != null);
     }
-    
+
     @Override
     public synchronized boolean terminateMeasuring(final String id) {
         final MessageMetric<? extends Number> removed = this.metrics.remove(id);

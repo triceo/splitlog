@@ -40,7 +40,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private final MessageMetricManager metrics = new MessageMetricManager();
 
     public NonStoringFollower(final DefaultLogWatch watch,
-            final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
+        final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number>> pair : measuresHandedDown) {
             this.measure(pair.getValue(), pair.getKey(), false);
@@ -71,7 +71,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     private <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id,
-        final boolean checkIfFollowing) {
+            final boolean checkIfFollowing) {
         if (checkIfFollowing && !this.isFollowing()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
@@ -84,16 +84,17 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final LogWatch source) {
+    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
+        final LogWatch source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
-        this.exchange.notifyOfMessage(msg, status, source);
+        this.exchange.messageReceived(msg, status, source);
         for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
-            mf.notifyOfMessage(msg, status, this);
+            mf.messageReceived(msg, status, this);
         }
-        this.metrics.notifyOfMessage(msg, status, source);
+        this.metrics.messageReceived(msg, status, source);
     }
 
     @Override

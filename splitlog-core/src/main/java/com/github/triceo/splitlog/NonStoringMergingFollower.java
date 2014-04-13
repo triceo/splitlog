@@ -62,12 +62,12 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
-    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final Follower source) {
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final Follower source) {
         if (!this.getMerged().contains(source)) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         NonStoringMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
-        this.exchange.notifyOfMessage(msg, status, source);
+        this.exchange.messageReceived(msg, status, source);
     }
 
 }

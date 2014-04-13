@@ -46,12 +46,12 @@ public class DefaultMessageMetricTest {
                 DefaultMessageMetricTest.DEFAULT_MEASURE);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(0);
         Assertions.assertThat(metric.getValue()).isNull();
-        metric.notifyOfMessage(null, null, null); // shouldn't use nulls, but in
+        metric.messageReceived(null, null, null); // shouldn't use nulls, but in
         // this test, it doesn't
         // matter
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(1);
         Assertions.assertThat(metric.getValue()).isEqualTo(1);
-        metric.notifyOfMessage(null, null, null);
+        metric.messageReceived(null, null, null);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(2);
         Assertions.assertThat(metric.getValue()).isEqualTo(3);
     }
@@ -66,21 +66,21 @@ public class DefaultMessageMetricTest {
         final DefaultMessageMetric<Integer> metric = new DefaultMessageMetric<Integer>(
                 DefaultMessageMetricTest.DEFAULT_MEASURE);
         Assertions.assertThat(metric.getValue()).isNull();
-        metric.notifyOfMessage(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, null);
+        metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, null);
         Assertions.assertThat(metric.getValue()).isEqualTo(1);
         final Future<Message> expected = this.e.schedule(new Callable<Message>() {
 
             @Override
             public Message call() throws Exception {
                 // this message will only increase the metric
-                metric.notifyOfMessage(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
+                metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
                         null);
                 // this message will put metric over threshold
                 final Message m = DefaultMessageMetricTest.MESSAGE.buildFinal();
-                metric.notifyOfMessage(m, MessageDeliveryStatus.ACCEPTED, null);
+                metric.messageReceived(m, MessageDeliveryStatus.ACCEPTED, null);
                 // and this message will, once again, do nothing; nothing else
                 // is waiting
-                metric.notifyOfMessage(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
+                metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
                         null);
                 return m;
             }

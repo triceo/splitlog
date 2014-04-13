@@ -14,14 +14,15 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageSource;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 
-final class MessageExchange {
+final class MessageExchange implements MessageListener<MessageSource> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageExchange.class);
 
     private MidDeliveryMessageCondition messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
-    public void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+    @Override
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
         MessageExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         if (this.messageBlockingCondition == null) {
             MessageExchange.LOGGER.debug("Not waiting for message '{}' in state {} from {}.", msg, status, source);
