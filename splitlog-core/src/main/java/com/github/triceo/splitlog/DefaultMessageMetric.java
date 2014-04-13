@@ -9,7 +9,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageSource;
 
-class DefaultMessageMetric<T extends Number> implements MessageMetric<T>, MessageListener<MessageSource> {
+final class DefaultMessageMetric<T extends Number> implements MessageMetric<T>, MessageListener<MessageSource> {
 
     private final MessageMetricExchange<T> exchange = new MessageMetricExchange<T>(this);
     private final MessageMeasure<T> measure;

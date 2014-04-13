@@ -12,7 +12,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 import com.github.triceo.splitlog.api.MessageSource;
 
-public class MessageMetricManager implements MessageMetricProducer, MessageListener<MessageSource> {
+final class MessageMetricManager implements MessageMetricProducer, MessageListener<MessageSource> {
 
     private final BidiMap<String, DefaultMessageMetric<? extends Number>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number>>();
 
