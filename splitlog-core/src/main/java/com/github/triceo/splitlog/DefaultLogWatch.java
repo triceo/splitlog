@@ -103,6 +103,7 @@ final class DefaultLogWatch implements LogWatch {
         for (final AbstractFollower f : this.followers) {
             f.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
         }
+        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
         return message;
     }
 
@@ -120,6 +121,7 @@ final class DefaultLogWatch implements LogWatch {
         final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         follower.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
+        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
         return message;
     }
 
@@ -136,10 +138,12 @@ final class DefaultLogWatch implements LogWatch {
     private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
         final boolean messageAccepted = this.messaging.registerMessage(message, this);
+        final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
+                : MessageDeliveryStatus.REJECTED;
         for (final AbstractFollower f : this.followers) {
-            f.notifyOfMessage(message, messageAccepted ? MessageDeliveryStatus.ACCEPTED
-                    : MessageDeliveryStatus.REJECTED, this);
+            f.notifyOfMessage(message, status, this);
         }
+        this.metrics.notifyOfMessage(message, status, this);
         return messageAccepted ? message : null;
     }
 

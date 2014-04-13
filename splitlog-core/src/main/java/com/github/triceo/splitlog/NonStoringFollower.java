@@ -66,7 +66,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     synchronized void
-        notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+    notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
@@ -75,6 +75,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
             mf.notifyOfMessage(msg, status, this);
         }
+        this.metrics.notifyOfMessage(msg, status, source);
     }
 
     @Override

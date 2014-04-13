@@ -22,7 +22,7 @@ public interface MessageMetric<T extends Number> {
      *
      * @return A number >= 0.
      */
-    long countMessages();
+    long getMessageCount();
 
     /**
      * Retrieve the value of this metric, which is a sum of the return values of
