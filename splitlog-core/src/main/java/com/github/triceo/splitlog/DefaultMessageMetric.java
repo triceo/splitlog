@@ -33,6 +33,7 @@ class DefaultMessageMetric<T extends Number> implements MessageMetric<T> {
 
     synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
         this.value = this.measure.update(this, msg, status, source);
+        this.messageCount++;
     }
 
 }
