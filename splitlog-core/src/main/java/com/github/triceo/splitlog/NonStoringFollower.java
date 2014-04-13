@@ -17,7 +17,6 @@ import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MessageSource;
 
 /**
  * This is a log follower that holds no message data, just the tags. For message
@@ -85,7 +84,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     synchronized void
-        notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+        notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final LogWatch source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }

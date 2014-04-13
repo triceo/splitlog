@@ -22,6 +22,7 @@ import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
@@ -137,4 +138,22 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
         return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
 
+    /**
+     * Notify the follower of a new message in the watched log. Must never be
+     * called by users, just from the library code.
+     *
+     * Implementors are encouraged to synchronize these operations, to preserve
+     * the original order of messages.
+     *
+     * @param msg
+     *            The message.
+     * @param status
+     *            Status of the message.
+     * @param source
+     *            Where does the notification come from.
+     * @throws IllegalArgumentException
+     *             In case the source is a class that should not access to this.
+     */
+    abstract void notifyOfMessage(Message msg, MessageDeliveryStatus status, Follower source);
+    
 }

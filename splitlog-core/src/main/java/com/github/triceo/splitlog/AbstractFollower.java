@@ -8,9 +8,7 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageCondition;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageFormatter;
-import com.github.triceo.splitlog.api.MessageSource;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
@@ -39,24 +37,6 @@ abstract class AbstractFollower implements CommonFollower {
     public SortedSet<Message> getMessages(final MessageComparator order) {
         return this.getMessages(AbstractFollower.DEFAULT_CONDITION, order);
     }
-
-    /**
-     * Notify the follower of a new message in the watched log. Must never be
-     * called by users, just from the library code.
-     *
-     * Implementors are encouraged to synchronize these operations, to preserve
-     * the original order of messages.
-     *
-     * @param msg
-     *            The message.
-     * @param status
-     *            Status of the message.
-     * @param source
-     *            Where does the notification come from.
-     * @throws IllegalArgumentException
-     *             In case the source is a class that should not access to this.
-     */
-    abstract void notifyOfMessage(Message msg, MessageDeliveryStatus status, MessageSource source);
 
     /**
      * Provide the default formatter for messages in this follower.

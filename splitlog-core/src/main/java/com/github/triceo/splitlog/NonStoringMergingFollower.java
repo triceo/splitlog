@@ -14,7 +14,6 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageSource;
 
 final class NonStoringMergingFollower extends AbstractMergingFollower {
 
@@ -62,8 +61,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
-    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status,
-        final MessageSource source) {
+    synchronized void notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final Follower source) {
         if (!this.getMerged().contains(source)) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }

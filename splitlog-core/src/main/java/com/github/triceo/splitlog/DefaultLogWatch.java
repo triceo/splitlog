@@ -103,7 +103,7 @@ final class DefaultLogWatch implements LogWatch {
      */
     private synchronized Message handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        for (final AbstractFollower f : this.followers) {
+        for (final AbstractLogWatchFollower f : this.followers) {
             f.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
         }
         this.metrics.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
@@ -120,7 +120,7 @@ final class DefaultLogWatch implements LogWatch {
      *            Builder to use to construct the message.
      * @return The message that was the subject of notifications.
      */
-    private synchronized Message handleUndeliveredMessage(final AbstractFollower follower,
+    private synchronized Message handleUndeliveredMessage(final AbstractLogWatchFollower follower,
         final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         follower.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
@@ -143,7 +143,7 @@ final class DefaultLogWatch implements LogWatch {
         final boolean messageAccepted = this.messaging.registerMessage(message, this);
         final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
                 : MessageDeliveryStatus.REJECTED;
-        for (final AbstractFollower f : this.followers) {
+        for (final AbstractLogWatchFollower f : this.followers) {
             f.notifyOfMessage(message, status, this);
         }
         this.metrics.notifyOfMessage(message, status, this);
@@ -265,7 +265,7 @@ final class DefaultLogWatch implements LogWatch {
         this.messaging.followerTerminated(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
         if (this.currentlyProcessedMessage != null) {
-            this.handleUndeliveredMessage((AbstractFollower) follower, this.currentlyProcessedMessage);
+            this.handleUndeliveredMessage((AbstractLogWatchFollower) follower, this.currentlyProcessedMessage);
         }
         if (this.followers.size() == 0) {
             this.tailing.stop();
