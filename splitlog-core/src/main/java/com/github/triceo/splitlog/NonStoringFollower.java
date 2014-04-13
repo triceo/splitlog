@@ -1,10 +1,12 @@
 package com.github.triceo.splitlog;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +15,8 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageMeasure;
+import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageSource;
 
 /**
@@ -22,15 +26,25 @@ import com.github.triceo.splitlog.api.MessageSource;
  * This class assumes that LogWatch and user code are the only two threads that
  * use it. Never use one instance of this class from two or more user threads.
  * Otherwise, unpredictable behavior from waitFor() methods is possible.
+ *
+ * Metrics within will never be terminated (and thus removed) unless done by the
+ * user. Not even when no longer {@link #isFollowing()}.
+ *
+ * FIXME maybe we should do something about that ^^^^
  */
 final class NonStoringFollower extends AbstractLogWatchFollower {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MessageExchange exchange = new MessageExchange();
+    private final MessageMetricManager metrics = new MessageMetricManager();
 
-    public NonStoringFollower(final DefaultLogWatch watch) {
+    public NonStoringFollower(final DefaultLogWatch watch,
+            final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
         super(watch);
+        for (final Pair<String, MessageMeasure<? extends Number>> pair : measuresHandedDown) {
+            this.measure(pair.getValue(), pair.getKey(), false);
+        }
     }
 
     @Override
@@ -47,8 +61,31 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
+    public MessageMetric<? extends Number> getMetric(final String id) {
+        return this.metrics.getMetric(id);
+    }
+
+    @Override
+    public String getMetricId(final MessageMetric<? extends Number> measure) {
+        return this.metrics.getMetricId(measure);
+    }
+
+    private <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id,
+        final boolean checkIfFollowing) {
+        if (checkIfFollowing && !this.isFollowing()) {
+            throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
+        }
+        return this.metrics.measure(measure, id);
+    }
+
+    @Override
+    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+        return this.measure(measure, id, true);
+    }
+
+    @Override
     synchronized void
-    notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+        notifyOfMessage(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
         if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
@@ -57,6 +94,17 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
             mf.notifyOfMessage(msg, status, this);
         }
+        this.metrics.notifyOfMessage(msg, status, source);
+    }
+
+    @Override
+    public boolean terminateMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.terminateMeasuring(metric);
+    }
+
+    @Override
+    public boolean terminateMeasuring(final String id) {
+        return this.metrics.terminateMeasuring(id);
     }
 
     /**

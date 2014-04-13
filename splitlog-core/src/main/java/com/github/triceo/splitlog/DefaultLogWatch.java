@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -18,6 +20,8 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageMeasure;
+import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.TailSplitter;
 
 /**
@@ -35,6 +39,8 @@ final class DefaultLogWatch implements LogWatch {
     private final LogWatchTailingManager tailing;
     private final LogWatchSweepingManager sweeping;
     private final LogWatchStorageManager messaging;
+    private final MessageMetricManager metrics = new MessageMetricManager();
+    private final BidiMap<String, MessageMeasure<? extends Number>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number>>();
     private MessageBuilder currentlyProcessedMessage;
     private WeakReference<Message> previousAcceptedMessage;
 
@@ -53,7 +59,7 @@ final class DefaultLogWatch implements LogWatch {
     /**
      * <strong>This is not part of the public API.</strong> Purely for purposes
      * of testing the automated message sweep.
-     * 
+     *
      * @return How many messages there currently are in the internal message
      *         store.
      */
@@ -90,7 +96,7 @@ final class DefaultLogWatch implements LogWatch {
     /**
      * Notify {@link Follower}s of a message that is
      * {@link MessageDeliveryStatus#INCOMING}.
-     * 
+     *
      * @param messageBuilder
      *            Builder to use to construct the message.
      * @return The message that was the subject of notifications.
@@ -100,13 +106,14 @@ final class DefaultLogWatch implements LogWatch {
         for (final AbstractFollower f : this.followers) {
             f.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
         }
+        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.INCOMING, this);
         return message;
     }
 
     /**
      * Notify {@link Follower} of a message that could not be delivered fully as
      * the Follower terminated.
-     * 
+     *
      * @param follower
      *            The follower that was terminated.
      * @param messageBuilder
@@ -117,6 +124,7 @@ final class DefaultLogWatch implements LogWatch {
         final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         follower.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
+        this.metrics.notifyOfMessage(message, MessageDeliveryStatus.UNDELIVERED, this);
         return message;
     }
 
@@ -124,7 +132,7 @@ final class DefaultLogWatch implements LogWatch {
      * Notify {@link Follower}s of a message that is either
      * {@link MessageDeliveryStatus#ACCEPTED} or
      * {@link MessageDeliveryStatus#REJECTED}.
-     * 
+     *
      * @param messageBuilder
      *            Builder to use to construct the message.
      * @return The message that was the subject of notifications; null if
@@ -133,10 +141,12 @@ final class DefaultLogWatch implements LogWatch {
     private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
         final boolean messageAccepted = this.messaging.registerMessage(message, this);
+        final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
+                : MessageDeliveryStatus.REJECTED;
         for (final AbstractFollower f : this.followers) {
-            f.notifyOfMessage(message, messageAccepted ? MessageDeliveryStatus.ACCEPTED
-                    : MessageDeliveryStatus.REJECTED, this);
+            f.notifyOfMessage(message, status, this);
         }
+        this.metrics.notifyOfMessage(message, status, this);
         return messageAccepted ? message : null;
     }
 
@@ -144,7 +154,7 @@ final class DefaultLogWatch implements LogWatch {
      * Return all messages that have been sent to a given {@link Follower}, from
      * its {@link #follow()} until either its {@link #unfollow(Follower)} or to
      * this moment, whichever is relevant.
-     * 
+     *
      * @param follower
      *            The follower in question.
      * @return Unmodifiable list of all the received messages, in the order
@@ -180,7 +190,7 @@ final class DefaultLogWatch implements LogWatch {
      * First invocation of the method on an instance will trigger
      * {@link LogWatchStorageSweeper} to be scheduled for periodical sweeping of
      * unreachable messages.
-     * 
+     *
      * @param boolean If the tailer needs a delayed start because of
      *        {@link #follow(MessageCondition)}, as explained in
      *        {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
@@ -191,11 +201,18 @@ final class DefaultLogWatch implements LogWatch {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
         this.sweeping.start();
-        final AbstractLogWatchFollower follower = new NonStoringFollower(this);
+        // assemble list of metrics to be handing down and then the follower
+        final List<Pair<String, MessageMeasure<? extends Number>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number>>>();
+        for (final BidiMap.Entry<String, MessageMeasure<? extends Number>> entry : this.handingDown.entrySet()) {
+            pairs.add(ImmutablePair.<String, MessageMeasure<? extends Number>> of(entry.getKey(), entry.getValue()));
+        }
+        final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
+        // register the follower
         this.followers.add(follower);
         this.messaging.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
         if (this.followers.size() == 1) {
+            // we have listeners, let's start tailing
             this.tailing.start(needsToWait);
         }
         return follower;
@@ -233,6 +250,8 @@ final class DefaultLogWatch implements LogWatch {
         for (final AbstractLogWatchFollower chunk : copyOfFollowers) {
             this.unfollow(chunk);
         }
+        this.metrics.terminateMeasuring();
+        this.handingDown.clear();
         this.sweeping.stop();
         this.previousAcceptedMessage = null;
         return true;
@@ -271,6 +290,57 @@ final class DefaultLogWatch implements LogWatch {
         }
         builder.append(']');
         return builder.toString();
+    }
+
+    @Override
+    public <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id) {
+        if (!this.isTerminated()) {
+            throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
+        }
+        return this.metrics.measure(measure, id);
+    }
+
+    @Override
+    public MessageMetric<? extends Number> getMetric(final String id) {
+        return this.metrics.getMetric(id);
+    }
+
+    @Override
+    public String getMetricId(final MessageMetric<? extends Number> measure) {
+        return this.metrics.getMetricId(measure);
+    }
+
+    @Override
+    public boolean terminateMeasuring(final String id) {
+        return this.metrics.terminateMeasuring(id);
+    }
+
+    @Override
+    public boolean terminateMeasuring(final MessageMetric<? extends Number> metric) {
+        return this.metrics.terminateMeasuring(metric);
+    }
+
+    @Override
+    public synchronized boolean beHandingDown(final MessageMeasure<? extends Number> measure, final String id) {
+        if (measure == null) {
+            throw new IllegalArgumentException("Measure may not be null.");
+        } else if (id == null) {
+            throw new IllegalArgumentException("ID may not be null.");
+        } else if (this.handingDown.containsKey(id) || this.handingDown.containsValue(measure)) {
+            return false;
+        }
+        this.handingDown.put(id, measure);
+        return true;
+    }
+
+    @Override
+    public synchronized boolean stopHandingDown(final MessageMeasure<? extends Number> measure) {
+        return (this.handingDown.removeValue(measure) != null);
+    }
+
+    @Override
+    public synchronized boolean stopHandingDown(final String id) {
+        return (this.handingDown.remove(id) != null);
     }
 
 }
