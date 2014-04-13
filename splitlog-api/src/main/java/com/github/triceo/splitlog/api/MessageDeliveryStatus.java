@@ -21,12 +21,6 @@ public enum MessageDeliveryStatus {
      */
     REJECTED,
     /**
-     * The message has been fully read, but hasn't been through the acceptance
-     * filter yet. Will be replaced by either {@link #ACCEPTED} or
-     * {@link #REJECTED}.
-     */
-    UNDECIDED,
-    /**
      * {@link Follower} terminated before this message could be read fully.
      * Terminal state.
      */

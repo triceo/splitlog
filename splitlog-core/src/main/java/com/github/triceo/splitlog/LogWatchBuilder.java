@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageCondition;
+import com.github.triceo.splitlog.api.MessageStoreCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
@@ -13,7 +14,7 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 /**
  * Prepares an instance of {@link LogWatch}. Unless overriden by the user, the
  * instance will have the following properties:
- * 
+ *
  * <dl>
  * <dt>Reads file from beginning?</dt>
  * <dd>Yes.</dd>
@@ -34,7 +35,7 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  * {@link #withDelayBeforeTailingStarts(int, TimeUnit)} for an explanation of
  * why this is necessary.</dd>
  * </dl>
- * 
+ *
  * By default, the instance will allow every message through.
  */
 final public class LogWatchBuilder {
@@ -52,12 +53,12 @@ final public class LogWatchBuilder {
     private boolean readingFromBeginning = true;
     private boolean closingBetweenReads;
     // will accept all messages
-    private MessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
+    private MessageStoreCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
     /**
      * Used to construct a {@link LogWatch} for a particular log file.
-     * 
+     *
      * @param f
      *            File to watch.
      * @return Builder that is used to configure the new log watch instance
@@ -74,7 +75,7 @@ final public class LogWatchBuilder {
     /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden.
-     * 
+     *
      * @return The newly build log watch.
      */
     public LogWatch build() {
@@ -84,10 +85,10 @@ final public class LogWatchBuilder {
     /**
      * The condition that will be used for accepting messages into the log
      * watch.
-     * 
+     *
      * @return The condition.
      */
-    public MessageCondition getMessageAcceptanceCondition() {
+    public MessageStoreCondition getMessageAcceptanceCondition() {
         return this.messageAcceptanceCondition;
     }
 
@@ -95,12 +96,12 @@ final public class LogWatchBuilder {
      * Only the messages for which
      * {@link MessageCondition#accept(Message, LogWatch)} is true will be
      * registered by the future log watch.
-     * 
+     *
      * @param condition
      *            The condition.
      * @return This.
      */
-    public LogWatchBuilder withMessageAcceptanceCondition(final MessageCondition condition) {
+    public LogWatchBuilder withMessageAcceptanceCondition(final MessageStoreCondition condition) {
         if (condition == null) {
             throw new IllegalArgumentException("Message acceptance condition must not be null.");
         }
@@ -111,7 +112,7 @@ final public class LogWatchBuilder {
     /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden.
-     * 
+     *
      * @param splitter
      *            The splitter instance to use for the log watch instead of the
      *            default.
@@ -129,7 +130,7 @@ final public class LogWatchBuilder {
     /**
      * Change the default behavior of the future log watch to close the watched
      * file after each reading.
-     * 
+     *
      * @return This.
      */
     public LogWatchBuilder closingAfterReading() {
@@ -139,7 +140,7 @@ final public class LogWatchBuilder {
 
     /**
      * Get the capacity of the future log watch.
-     * 
+     *
      * @return Maximum capacity in messages.
      */
     public int getCapacityLimit() {
@@ -148,7 +149,7 @@ final public class LogWatchBuilder {
 
     /**
      * Limit capacity of the log watch to a given amount of messages.
-     * 
+     *
      * @param size
      *            Maximum amount of messages to store.
      * @return This.
@@ -163,7 +164,7 @@ final public class LogWatchBuilder {
 
     /**
      * Get the delay between attempts to sweep unreachable messages from memory.
-     * 
+     *
      * @return In milliseconds.
      */
     public long getDelayBetweenSweeps() {
@@ -172,7 +173,7 @@ final public class LogWatchBuilder {
 
     /**
      * Get the delay between attempts to read from the watched file.
-     * 
+     *
      * @return In milliseconds.
      */
     public long getDelayBetweenReads() {
@@ -184,7 +185,7 @@ final public class LogWatchBuilder {
      * start of tailing. Please see
      * {@link #withDelayBeforeTailingStarts(int, TimeUnit)} for an explanation
      * of why this is necessary.
-     * 
+     *
      * @return In milliseconds.
      */
     public long getDelayBeforeTailingStarts() {
@@ -193,7 +194,7 @@ final public class LogWatchBuilder {
 
     /**
      * Get the file that the log watch will be watching.
-     * 
+     *
      * @return The file that will be watched by the future log watch.
      */
     public File getFileToWatch() {
@@ -202,7 +203,7 @@ final public class LogWatchBuilder {
 
     /**
      * Get the buffer size for the log watch.
-     * 
+     *
      * @return In bytes.
      */
     public int getReadingBufferSize() {
@@ -213,7 +214,7 @@ final public class LogWatchBuilder {
      * Change the default behavior of the future log watch so that the existing
      * contents of the file is ignored and only the future additions to the file
      * are reported.
-     * 
+     *
      * @return This.
      */
     public LogWatchBuilder ignoringPreexistingContent() {
@@ -241,10 +242,10 @@ final public class LogWatchBuilder {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
         builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+        .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+        .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+        .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+        .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
         builder.append(']');
         return builder.toString();
     }
@@ -272,7 +273,7 @@ final public class LogWatchBuilder {
 
     /**
      * Specify the delay between attempts to read the file.
-     * 
+     *
      * @param length
      *            Length of time.
      * @param unit
@@ -287,14 +288,14 @@ final public class LogWatchBuilder {
     /**
      * Specify the delay between when the log tailing is requested and when it
      * is actually started.
-     * 
+     *
      * In order for {@link LogWatch#follow(MessageCondition)} to actually work,
      * we need the tailer to start after we are already waiting. But the waiting
      * will block the thread, making it impossible to start the tailer.
      * Therefore, we schedule the tailer on a different thread before we start
      * waiting and we delay the actual execution by this amount, so that the
      * waiting has time to start.
-     * 
+     *
      * @param length
      *            Length of time.
      * @param unit
@@ -309,7 +310,7 @@ final public class LogWatchBuilder {
     /**
      * Specify the delay between attempts to sweep the log watch from
      * unreachable messages.
-     * 
+     *
      * @param length
      *            Length of time.
      * @param unit
@@ -324,7 +325,7 @@ final public class LogWatchBuilder {
     /**
      * Specify the buffer size that will be used for reading changes made to the
      * watched file.
-     * 
+     *
      * @param bufferSize
      *            In bytes.
      * @return This.
