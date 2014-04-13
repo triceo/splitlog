@@ -12,7 +12,8 @@ public enum MessageDeliveryStatus {
     ACCEPTED,
     /**
      * Message not yet fully read. Is purely temporary and will be replaced
-     * later, by either {@link #UNDECIDED} or {@link #INCOMPLETE}.
+     * later, by either {@link #ACCEPTED}, {@link #REJECTED} or
+     * {@link #INCOMPLETE}.
      */
     INCOMING,
     /**

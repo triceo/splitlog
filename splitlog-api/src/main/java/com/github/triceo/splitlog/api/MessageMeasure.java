@@ -14,7 +14,7 @@ public interface MessageMeasure<T extends Number> {
     /**
      * Update metric after the arrival of another message.
      *
-     * @param previous
+     * @param metric
      *            The metric that is being updated.
      * @param evaluate
      *            The message to evaluate.

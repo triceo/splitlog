@@ -94,8 +94,8 @@ final public class LogWatchBuilder {
 
     /**
      * Only the messages for which
-     * {@link MidDeliveryMessageCondition#accept(Message, LogWatch)} is true
-     * will be registered by the future log watch.
+     * {@link SimpleMessageCondition#accept(Message)} is true will be registered
+     * by the future log watch.
      *
      * @param condition
      *            The condition.
@@ -242,10 +242,10 @@ final public class LogWatchBuilder {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
         builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-        .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-        .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-        .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-        .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
         builder.append(']');
         return builder.toString();
     }

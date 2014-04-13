@@ -14,7 +14,7 @@ public interface MessageMetricProducer {
      *            {@link #measure(MessageMeasure, String)}.
      * @return Null if no such metric. Either not
      *         {@link #measure(MessageMeasure, String)}'d or already
-     *         {@link #terminateMeasuring(MessageMeasure)}'d.
+     *         {@link #terminateMeasuring(MessageMetric)}'d.
      */
     MessageMetric<? extends Number> getMetric(String id);
 
@@ -26,7 +26,7 @@ public interface MessageMetricProducer {
      *            {@link #measure(MessageMeasure, String)}.
      * @return Null if no such metric. Either not
      *         {@link #measure(MessageMeasure, String)}'d or already
-     *         {@link #terminateMeasuring(MessageMeasure)}'d.
+     *         {@link #terminateMeasuring(MessageMetric)}'d.
      */
     String getMetricId(MessageMetric<? extends Number> measure);
 
