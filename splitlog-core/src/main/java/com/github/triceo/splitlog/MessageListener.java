@@ -11,7 +11,7 @@ import com.github.triceo.splitlog.api.MessageSource;
  * @param <T>
  *            The source that they expect such notifications from.
  */
-public interface MessageListener<T extends MessageSource> {
+public interface MessageListener<S extends MessageSource<S>> {
 
     /**
      * Notify the code of a new message becoming available in the log.
@@ -32,6 +32,6 @@ public interface MessageListener<T extends MessageSource> {
      * @param source
      *            The code that is notifying us of this event.
      */
-    void messageReceived(Message message, MessageDeliveryStatus status, T source);
+    void messageReceived(Message message, MessageDeliveryStatus status, S source);
 
 }

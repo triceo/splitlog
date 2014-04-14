@@ -13,20 +13,20 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageSource;
 
-final class MessageMetricExchange<T extends Number> implements MessageListener<MessageSource> {
+final class MessageMetricExchange<T extends Number, S extends MessageSource<S>> implements MessageListener<S> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageMetricExchange.class);
 
-    private MessageMetricCondition<T> messageBlockingCondition = null;
+    private MessageMetricCondition<T, S> messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
-    private final MessageMetric<T> metric;
+    private final MessageMetric<T, S> metric;
 
-    public MessageMetricExchange(final MessageMetric<T> metric) {
+    public MessageMetricExchange(final MessageMetric<T, S> metric) {
         this.metric = metric;
     }
 
     @Override
-    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
         MessageMetricExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         if (this.messageBlockingCondition == null) {
             MessageMetricExchange.LOGGER.debug("Not blocked.");
@@ -53,7 +53,7 @@ final class MessageMetricExchange<T extends Number> implements MessageListener<M
      * an already set condition. That condition will later be unset by the
      * notify*() method calls from the tailing thread.
      */
-    public synchronized Message waitForMessage(final MessageMetricCondition<T> condition, final long timeout,
+    public synchronized Message waitForMessage(final MessageMetricCondition<T, S> condition, final long timeout,
         final TimeUnit unit) {
         this.messageBlockingCondition = condition;
         try {

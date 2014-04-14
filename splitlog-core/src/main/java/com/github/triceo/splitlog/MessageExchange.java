@@ -14,7 +14,7 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageSource;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 
-final class MessageExchange implements MessageListener<MessageSource> {
+final class MessageExchange<S extends MessageSource<S>> implements MessageListener<S> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageExchange.class);
 
@@ -22,7 +22,7 @@ final class MessageExchange implements MessageListener<MessageSource> {
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
     @Override
-    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final MessageSource source) {
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
         MessageExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         if (this.messageBlockingCondition == null) {
             MessageExchange.LOGGER.debug("Not waiting for message '{}' in state {} from {}.", msg, status, source);

@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * The primary point of interaction with this tool. Allows users to start
  * listening to changes in log files.
  */
-public interface LogWatch extends MessageSource {
+public interface LogWatch extends MessageSource<LogWatch> {
 
     /**
      * The file that is being tracked by this class.
@@ -37,7 +37,7 @@ public interface LogWatch extends MessageSource {
      * @return True after {@link #startHandingDown(MessageMeasure, String)} has
      *         been called and before {@link #stopHandingDown(MessageMeasure)}.
      */
-    boolean isHandingDown(final MessageMeasure<? extends Number> measure);
+    boolean isHandingDown(final MessageMeasure<? extends Number, Follower> measure);
 
     /**
      * Whether or not particular {@link MessageMeasure} is being automatically
@@ -108,7 +108,7 @@ public interface LogWatch extends MessageSource {
      * @return False if either the measure or the ID is already being handed
      *         down.
      */
-    boolean startHandingDown(final MessageMeasure<? extends Number> measure, final String id);
+    boolean startHandingDown(final MessageMeasure<? extends Number, Follower> measure, final String id);
 
     /**
      * Stop particular follower from following.
@@ -129,7 +129,7 @@ public interface LogWatch extends MessageSource {
      *            {@link Follower}s.
      * @return False if it wasn't being handed down.
      */
-    boolean stopHandingDown(final MessageMeasure<? extends Number> measure);
+    boolean stopHandingDown(final MessageMeasure<? extends Number, Follower> measure);
 
     /**
      * Invalidate {@link #startHandingDown(MessageMeasure, String)}. No further

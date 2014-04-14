@@ -8,8 +8,10 @@ package com.github.triceo.splitlog.api;
  *
  * @param <T>
  *            The value type returned by the metric.
+ * @param <S>
+ *            Where this is getting its {@link Message}s from.
  */
-public interface MessageMeasure<T extends Number> {
+public interface MessageMeasure<T extends Number, S extends MessageSource<S>> {
 
     /**
      * Update metric after the arrival of another message.
@@ -25,6 +27,6 @@ public interface MessageMeasure<T extends Number> {
      * @return The new value for the metric. Message count will be incremented
      *         automatically.
      */
-    T update(MessageMetric<T> metric, Message evaluate, MessageDeliveryStatus status, MessageSource source);
+    T update(MessageMetric<T, S> metric, Message evaluate, MessageDeliveryStatus status, S source);
 
 }
