@@ -7,8 +7,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageSource;
@@ -18,7 +16,7 @@ final class MessageExchange<S extends MessageSource<S>> implements MessageListen
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageExchange.class);
 
-    private MidDeliveryMessageCondition messageBlockingCondition = null;
+    private MidDeliveryMessageCondition<S> messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
     @Override
@@ -30,16 +28,8 @@ final class MessageExchange<S extends MessageSource<S>> implements MessageListen
             return;
         }
         // check if the user code accepts the message
-        if (source instanceof LogWatch) {
-            if (!this.messageBlockingCondition.accept(msg, status, (LogWatch) source)) {
-                return;
-            }
-        } else if (source instanceof AbstractLogWatchFollower) {
-            if (!this.messageBlockingCondition.accept(msg, status, (Follower) source)) {
-                return;
-            }
-        } else {
-            throw new IllegalStateException(source + " is not a valid message notification source.");
+        if (!this.messageBlockingCondition.accept(msg, status, source)) {
+            return;
         }
         MessageExchange.LOGGER.debug("Accepted message '{}' in state {} from {}.", msg, status, source);
         this.messageBlockingCondition = null;
@@ -56,7 +46,7 @@ final class MessageExchange<S extends MessageSource<S>> implements MessageListen
      * an already set condition. That condition will later be unset by the
      * notify*() method calls from the tailing thread.
      */
-    public synchronized Message waitForMessage(final MidDeliveryMessageCondition condition, final long timeout,
+    public synchronized Message waitForMessage(final MidDeliveryMessageCondition<S> condition, final long timeout,
         final TimeUnit unit) {
         this.messageBlockingCondition = condition;
         try {

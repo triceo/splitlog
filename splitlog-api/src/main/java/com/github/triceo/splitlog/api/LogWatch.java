@@ -74,7 +74,7 @@ public interface LogWatch extends MessageSource<LogWatch> {
      *            Condition to pass to the follower.
      * @return The new follower and the result of the wait call.
      */
-    Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition waitFor);
+    Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition<LogWatch> waitFor);
 
     /**
      * Begin watching for new messages from this point in time, immediately
@@ -91,7 +91,7 @@ public interface LogWatch extends MessageSource<LogWatch> {
      *            The time unit for the above.
      * @return The new follower and the result of the wait call.
      */
-    Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition waitFor, long howLong, TimeUnit unit);
+    Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition<LogWatch> waitFor, long howLong, TimeUnit unit);
 
     /**
      * Every new {@link Follower} from now on will immediately receive a new

@@ -17,14 +17,14 @@ import org.junit.Test;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 
 public class WaitingTest extends DefaultFollowerBaseTest {
 
+    private static final int THREADS = 100;
     private static final int TIMEOUT_MILLIS = 10000;
     private static final int TOTAL_MESSAGES = 10;
-    private static final int THREADS = 100;
     private ExecutorService es;
 
     @Before
@@ -56,22 +56,12 @@ public class WaitingTest extends DefaultFollowerBaseTest {
                 @Override
                 public Message call() {
                     final Follower follower = WaitingTest.this.getLogWatch().startFollowing();
-                    return follower.waitFor(new MidDeliveryMessageCondition() {
-
-                        private boolean accept(final Message evaluate) {
-                            return evaluate.getLines().get(0).endsWith(expectedValue);
-                        }
+                    return follower.waitFor(new MidDeliveryMessageCondition<LogWatch>() {
 
                         @Override
                         public boolean accept(final Message evaluate, final MessageDeliveryStatus status,
                             final LogWatch source) {
-                            return this.accept(evaluate);
-                        }
-
-                        @Override
-                        public boolean accept(final Message evaluate, final MessageDeliveryStatus status,
-                            final Follower source) {
-                            return this.accept(evaluate);
+                            return evaluate.getLines().get(0).endsWith(expectedValue);
                         }
 
                     }, WaitingTest.TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);

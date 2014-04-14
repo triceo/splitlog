@@ -80,22 +80,13 @@ public class LogWriter {
     public String write(final String line, final Follower follower) {
         this.writeDelayed(line);
         // wait until the last part of the string is finally present
-        final Message result = follower.waitFor(new MidDeliveryMessageCondition() {
-
-            private boolean accept(final Message receivedMessage) {
-                final String lastLine = receivedMessage.getLines().get(receivedMessage.getLines().size() - 1);
-                final String textStr[] = line.split("\\r?\\n");
-                return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
-            }
+        final Message result = follower.waitFor(new MidDeliveryMessageCondition<LogWatch>() {
 
             @Override
             public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                return this.accept(evaluate);
-            }
-
-            @Override
-            public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final Follower source) {
-                return this.accept(evaluate);
+                final String lastLine = evaluate.getLines().get(evaluate.getLines().size() - 1);
+                final String textStr[] = line.split("\\r?\\n");
+                return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
             }
 
         }, LogWriter.WAIT_FOR_MESSAGE_MILLIS, TimeUnit.MILLISECONDS);

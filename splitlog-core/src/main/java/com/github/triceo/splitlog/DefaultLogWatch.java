@@ -46,9 +46,9 @@ final class DefaultLogWatch implements LogWatch {
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
-        final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-        final int bufferSize, final long delayForTailerStart) {
+        final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
+            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+            final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.messaging = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
@@ -219,14 +219,14 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor) {
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor) {
         final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor));
     }
 
     @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor, final long howLong,
-            final TimeUnit unit) {
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
+        final long howLong, final TimeUnit unit) {
         final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
@@ -281,7 +281,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
-            final String id) {
+        final String id) {
         if (!this.isTerminated()) {
             throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
         }

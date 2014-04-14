@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingCondition;
 
 @RunWith(Parameterized.class)
 public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
@@ -240,7 +240,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     public void testWaitForAfterPreviousFailed() {
         final Follower follower = this.getLogWatch().startFollowing();
         // this call will fail, since we're not writing anything
-        final Message noMessage = follower.waitFor(AllMessagesAcceptingCondition.INSTANCE, 1, TimeUnit.SECONDS);
+        final Message noMessage = follower.waitFor(AllFollowerMessagesAcceptingCondition.INSTANCE, 1, TimeUnit.SECONDS);
         Assertions.assertThat(noMessage).isNull();
         // these calls should succeed
         final String message = "test";
