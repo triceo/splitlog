@@ -20,7 +20,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
-    private final MessageExchange exchange = new MessageExchange();
+    private final MessageExchange<Follower> exchange = new MessageExchange<Follower>();
 
     public NonStoringMergingFollower(final CommonFollower... followers) {
         super(followers);
@@ -38,6 +38,15 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
             }
         }
         return Collections.unmodifiableSortedSet(sorted);
+    }
+
+    @Override
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final Follower source) {
+        if (!this.getMerged().contains(source)) {
+            throw new IllegalArgumentException("Forbidden notification source: " + source);
+        }
+        NonStoringMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
+        this.exchange.messageReceived(msg, status, source);
     }
 
     /**
@@ -59,15 +68,6 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
         return this.exchange.waitForMessage(condition, timeout, unit);
-    }
-
-    @Override
-    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final Follower source) {
-        if (!this.getMerged().contains(source)) {
-            throw new IllegalArgumentException("Forbidden notification source: " + source);
-        }
-        NonStoringMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
-        this.exchange.messageReceived(msg, status, source);
     }
 
 }

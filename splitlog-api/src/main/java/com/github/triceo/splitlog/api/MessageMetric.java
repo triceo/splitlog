@@ -10,15 +10,17 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T>
  *            Type of the value that the metric is measuring.
+ * @param <S>
+ *            Where this is getting its {@link Message}s from.
  */
-public interface MessageMetric<T extends Number> {
+public interface MessageMetric<T extends Number, S extends MessageSource<S>> {
 
     /**
      * Retrieves the measure that is used to produce the value of this metric.
      *
      * @return Never null.
      */
-    MessageMeasure<T> getMeasure();
+    MessageMeasure<T, S> getMeasure();
 
     /**
      * Retrieve the number of times that the metric has been invoked on a
@@ -27,6 +29,14 @@ public interface MessageMetric<T extends Number> {
      * @return A number >= 0.
      */
     long getMessageCount();
+
+    /**
+     * Retrieve the instance that is responsible for notifying this metric of
+     * new {@link Message}s-
+     *
+     * @return Typically the instance that was used to retrieve this metric.
+     */
+    S getSource();
 
     /**
      * Retrieve the value of this metric, which is a sum of the return values of
@@ -46,7 +56,7 @@ public interface MessageMetric<T extends Number> {
      * @return The message that made the metric pass the condition. Null if the
      *         method unblocked due to some other reason.
      */
-    Message waitFor(MessageMetricCondition<T> condition);
+    Message waitFor(MessageMetricCondition<T, S> condition);
 
     /**
      * Will block until a message arrives, for which the condition is true. If
@@ -61,6 +71,6 @@ public interface MessageMetric<T extends Number> {
      * @return The message that made the metric pass the condition. Null if the
      *         method unblocked due to some other reason.
      */
-    Message waitFor(MessageMetricCondition<T> condition, long timeout, TimeUnit unit);
+    Message waitFor(MessageMetricCondition<T, S> condition, long timeout, TimeUnit unit);
 
 }

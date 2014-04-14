@@ -9,27 +9,26 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MessageSource;
 
 public class HandingDownTest extends DefaultFollowerBaseTest {
 
     private static final String ID = "ID";
     private static final String ID2 = "ID2";
-    private static final MessageMeasure<Integer> MEASURE = new MessageMeasure<Integer>() {
+    private static final MessageMeasure<Integer, Follower> MEASURE = new MessageMeasure<Integer, Follower>() {
 
         @Override
-        public Integer update(final MessageMetric<Integer> metric, final Message evaluate,
-            final MessageDeliveryStatus status, final MessageSource source) {
+        public Integer update(final MessageMetric<Integer, Follower> metric, final Message evaluate,
+            final MessageDeliveryStatus status, final Follower source) {
             final Integer value = metric.getValue();
             return (value == null) ? 1 : value + 2;
         }
 
     };
-    private static final MessageMeasure<Integer> MEASURE2 = new MessageMeasure<Integer>() {
+    private static final MessageMeasure<Integer, Follower> MEASURE2 = new MessageMeasure<Integer, Follower>() {
 
         @Override
-        public Integer update(final MessageMetric<Integer> metric, final Message evaluate,
-            final MessageDeliveryStatus status, final MessageSource source) {
+        public Integer update(final MessageMetric<Integer, Follower> metric, final Message evaluate,
+            final MessageDeliveryStatus status, final Follower source) {
             final Integer value = metric.getValue();
             return (value == null) ? 1 : value + 1;
         }
@@ -47,9 +46,11 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
     @Test
     public void testHandDown() {
         final LogWatch watch = this.getLogWatch();
-        final Follower noHandDowns = watch.startFollowing(); // nothing is handed down
+        final Follower noHandDowns = watch.startFollowing(); // nothing is
+        // handed down
         watch.startHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID);
-        final Follower handDown = watch.startFollowing(); // this gets handed down one
+        final Follower handDown = watch.startFollowing(); // this gets handed
+        // down one
         Assertions.assertThat(noHandDowns.getMetric(HandingDownTest.ID)).isNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID)).isNotNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID).getMeasure()).isEqualTo(HandingDownTest.MEASURE);
@@ -57,7 +58,8 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.ID)).isTrue();
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.ID)).isFalse();
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.MEASURE)).isFalse();
-        final Follower noHandDowns2 = watch.startFollowing(); // nothing is handed down
+        final Follower noHandDowns2 = watch.startFollowing(); // nothing is
+        // handed down
         Assertions.assertThat(noHandDowns.getMetric(HandingDownTest.ID)).isNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID)).isNotNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID).getMeasure()).isEqualTo(HandingDownTest.MEASURE);

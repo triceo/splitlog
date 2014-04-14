@@ -33,17 +33,17 @@ final class DefaultLogWatch implements LogWatch {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
 
-    private final TailSplitter splitter;
-    private boolean isTerminated = false;
-    private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
-    private final File watchedFile;
-    private final LogWatchTailingManager tailing;
-    private final LogWatchSweepingManager sweeping;
-    private final LogWatchStorageManager messaging;
-    private final MessageMetricManager metrics = new MessageMetricManager();
-    private final BidiMap<String, MessageMeasure<? extends Number>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number>>();
     private MessageBuilder currentlyProcessedMessage;
+    private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
+    private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
+    private boolean isTerminated = false;
+    private final LogWatchStorageManager messaging;
+    private final MessageMetricManager<LogWatch> metrics = new MessageMetricManager<LogWatch>(this);
     private WeakReference<Message> previousAcceptedMessage;
+    private final TailSplitter splitter;
+    private final LogWatchSweepingManager sweeping;
+    private final LogWatchTailingManager tailing;
+    private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
             final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
@@ -55,17 +55,6 @@ final class DefaultLogWatch implements LogWatch {
                 reopenBetweenReads, bufferSize);
         this.sweeping = new LogWatchSweepingManager(this.messaging, delayBetweenSweeps);
         this.watchedFile = watchedFile;
-    }
-
-    /**
-     * <strong>This is not part of the public API.</strong> Purely for purposes
-     * of testing the automated message sweep.
-     *
-     * @return How many messages there currently are in the internal message
-     *         store.
-     */
-    int countMessagesInStorage() {
-        return this.messaging.getMessageStore().size();
     }
 
     synchronized void addLine(final String line) {
@@ -92,6 +81,69 @@ final class DefaultLogWatch implements LogWatch {
             this.currentlyProcessedMessage.add(line);
         }
         this.handleIncomingMessage(this.currentlyProcessedMessage);
+    }
+
+    /**
+     * <strong>This is not part of the public API.</strong> Purely for purposes
+     * of testing the automated message sweep.
+     *
+     * @return How many messages there currently are in the internal message
+     *         store.
+     */
+    int countMessagesInStorage() {
+        return this.messaging.getMessageStore().size();
+    }
+
+    /**
+     * Return all messages that have been sent to a given {@link Follower}, from
+     * its {@link #startFollowing()} until either its
+     * {@link #stopFollowing(Follower)} or to this moment, whichever is
+     * relevant.
+     *
+     * @param follower
+     *            The follower in question.
+     * @return Unmodifiable list of all the received messages, in the order
+     *         received.
+     */
+    protected List<Message> getAllMessages(final Follower follower) {
+        return this.messaging.getAllMessages(follower);
+    }
+
+    @Override
+    public MessageMetric<? extends Number, LogWatch> getMetric(final String id) {
+        return this.metrics.getMetric(id);
+    }
+
+    @Override
+    public String getMetricId(final MessageMetric<? extends Number, LogWatch> measure) {
+        return this.metrics.getMetricId(measure);
+    }
+
+    @Override
+    public File getWatchedFile() {
+        return this.watchedFile;
+    }
+
+    /**
+     * Notify {@link Follower}s of a message that is either
+     * {@link MessageDeliveryStatus#ACCEPTED} or
+     * {@link MessageDeliveryStatus#REJECTED}.
+     *
+     * @param messageBuilder
+     *            Builder to use to construct the message.
+     * @return The message that was the subject of notifications; null if
+     *         rejected.
+     */
+    private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
+        final Message message = messageBuilder.buildFinal(this.splitter);
+        final boolean messageAccepted = this.messaging.registerMessage(message, this);
+        final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
+                : MessageDeliveryStatus.REJECTED;
+        for (final AbstractLogWatchFollower f : this.followers) {
+            f.messageReceived(message, status, this);
+        }
+        this.metrics.messageReceived(message, status, this);
+        return messageAccepted ? message : null;
     }
 
     /**
@@ -129,41 +181,29 @@ final class DefaultLogWatch implements LogWatch {
         return message;
     }
 
-    /**
-     * Notify {@link Follower}s of a message that is either
-     * {@link MessageDeliveryStatus#ACCEPTED} or
-     * {@link MessageDeliveryStatus#REJECTED}.
-     *
-     * @param messageBuilder
-     *            Builder to use to construct the message.
-     * @return The message that was the subject of notifications; null if
-     *         rejected.
-     */
-    private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
-        final Message message = messageBuilder.buildFinal(this.splitter);
-        final boolean messageAccepted = this.messaging.registerMessage(message, this);
-        final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
-                : MessageDeliveryStatus.REJECTED;
-        for (final AbstractLogWatchFollower f : this.followers) {
-            f.messageReceived(message, status, this);
-        }
-        this.metrics.messageReceived(message, status, this);
-        return messageAccepted ? message : null;
+    @Override
+    public synchronized boolean isFollowedBy(final Follower follower) {
+        return this.followers.contains(follower);
     }
 
-    /**
-     * Return all messages that have been sent to a given {@link Follower}, from
-     * its {@link #startFollowing()} until either its
-     * {@link #stopFollowing(Follower)} or to this moment, whichever is
-     * relevant.
-     *
-     * @param follower
-     *            The follower in question.
-     * @return Unmodifiable list of all the received messages, in the order
-     *         received.
-     */
-    protected List<Message> getAllMessages(final Follower follower) {
-        return this.messaging.getAllMessages(follower);
+    @Override
+    public boolean isHandingDown(final MessageMeasure<? extends Number, Follower> measure) {
+        return this.handingDown.containsValue(measure);
+    }
+
+    @Override
+    public boolean isHandingDown(final String id) {
+        return this.handingDown.containsKey(id);
+    }
+
+    @Override
+    public boolean isMeasuring(final MessageMetric<? extends Number, LogWatch> metric) {
+        return this.metrics.isMeasuring(metric);
+    }
+
+    @Override
+    public boolean isMeasuring(final String id) {
+        return this.metrics.isMeasuring(id);
     }
 
     @Override
@@ -172,20 +212,23 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean isFollowedBy(final Follower follower) {
-        return this.followers.contains(follower);
-    }
-
-    @Override
-    public File getWatchedFile() {
-        return this.watchedFile;
-    }
-
-    @Override
     public Follower startFollowing() {
         final Follower f = this.startFollowingActually(false);
         this.tailing.waitUntilStarted();
         return f;
+    }
+
+    @Override
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor) {
+        final Follower f = this.startFollowingActually(true);
+        return ImmutablePair.of(f, f.waitFor(waitFor));
+    }
+
+    @Override
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor, final long howLong,
+            final TimeUnit unit) {
+        final Follower f = this.startFollowingActually(true);
+        return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
 
     /**
@@ -204,9 +247,11 @@ final class DefaultLogWatch implements LogWatch {
         }
         this.sweeping.start();
         // assemble list of metrics to be handing down and then the follower
-        final List<Pair<String, MessageMeasure<? extends Number>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number>>>();
-        for (final BidiMap.Entry<String, MessageMeasure<? extends Number>> entry : this.handingDown.entrySet()) {
-            pairs.add(ImmutablePair.<String, MessageMeasure<? extends Number>> of(entry.getKey(), entry.getValue()));
+        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number, Follower>>>();
+        for (final BidiMap.Entry<String, MessageMeasure<? extends Number, Follower>> entry : this.handingDown
+                .entrySet()) {
+            pairs.add(ImmutablePair.<String, MessageMeasure<? extends Number, Follower>> of(entry.getKey(),
+                    entry.getValue()));
         }
         final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
         // register the follower
@@ -221,16 +266,63 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor) {
-        final Follower f = this.startFollowingActually(true);
-        return ImmutablePair.of(f, f.waitFor(waitFor));
+    public synchronized boolean startHandingDown(final MessageMeasure<? extends Number, Follower> measure,
+        final String id) {
+        if (measure == null) {
+            throw new IllegalArgumentException("Measure may not be null.");
+        } else if (id == null) {
+            throw new IllegalArgumentException("ID may not be null.");
+        } else if (this.handingDown.containsKey(id) || this.handingDown.containsValue(measure)) {
+            return false;
+        }
+        this.handingDown.put(id, measure);
+        return true;
     }
 
     @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition waitFor, final long howLong,
-            final TimeUnit unit) {
-        final Follower f = this.startFollowingActually(true);
-        return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
+    public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
+            final String id) {
+        if (!this.isTerminated()) {
+            throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
+        }
+        return this.metrics.startMeasuring(measure, id);
+    }
+
+    @Override
+    public synchronized boolean stopFollowing(final Follower follower) {
+        if (!this.followers.remove(follower)) {
+            return false;
+        }
+        this.messaging.followerTerminated(follower);
+        DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
+        if (this.currentlyProcessedMessage != null) {
+            this.handleUndeliveredMessage((AbstractLogWatchFollower) follower, this.currentlyProcessedMessage);
+        }
+        if (this.followers.size() == 0) {
+            this.tailing.stop();
+            this.currentlyProcessedMessage = null;
+        }
+        return true;
+    }
+
+    @Override
+    public synchronized boolean stopHandingDown(final MessageMeasure<? extends Number, Follower> measure) {
+        return (this.handingDown.removeValue(measure) != null);
+    }
+
+    @Override
+    public synchronized boolean stopHandingDown(final String id) {
+        return (this.handingDown.remove(id) != null);
+    }
+
+    @Override
+    public boolean stopMeasuring(final MessageMetric<? extends Number, LogWatch> metric) {
+        return this.metrics.stopMeasuring(metric);
+    }
+
+    @Override
+    public boolean stopMeasuring(final String id) {
+        return this.metrics.stopMeasuring(id);
     }
 
     /**
@@ -261,23 +353,6 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean stopFollowing(final Follower follower) {
-        if (!this.followers.remove(follower)) {
-            return false;
-        }
-        this.messaging.followerTerminated(follower);
-        DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
-        if (this.currentlyProcessedMessage != null) {
-            this.handleUndeliveredMessage((AbstractLogWatchFollower) follower, this.currentlyProcessedMessage);
-        }
-        if (this.followers.size() == 0) {
-            this.tailing.stop();
-            this.currentlyProcessedMessage = null;
-        }
-        return true;
-    }
-
-    @Override
     public String toString() {
         // properly size the builder
         final String filename = this.watchedFile.toString();
@@ -293,77 +368,6 @@ final class DefaultLogWatch implements LogWatch {
         }
         builder.append(']');
         return builder.toString();
-    }
-
-    @Override
-    public <T extends Number> MessageMetric<T> startMeasuring(final MessageMeasure<T> measure, final String id) {
-        if (!this.isTerminated()) {
-            throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
-        }
-        return this.metrics.startMeasuring(measure, id);
-    }
-
-    @Override
-    public MessageMetric<? extends Number> getMetric(final String id) {
-        return this.metrics.getMetric(id);
-    }
-
-    @Override
-    public String getMetricId(final MessageMetric<? extends Number> measure) {
-        return this.metrics.getMetricId(measure);
-    }
-
-    @Override
-    public boolean stopMeasuring(final String id) {
-        return this.metrics.stopMeasuring(id);
-    }
-
-    @Override
-    public boolean stopMeasuring(final MessageMetric<? extends Number> metric) {
-        return this.metrics.stopMeasuring(metric);
-    }
-
-    @Override
-    public synchronized boolean startHandingDown(final MessageMeasure<? extends Number> measure, final String id) {
-        if (measure == null) {
-            throw new IllegalArgumentException("Measure may not be null.");
-        } else if (id == null) {
-            throw new IllegalArgumentException("ID may not be null.");
-        } else if (this.handingDown.containsKey(id) || this.handingDown.containsValue(measure)) {
-            return false;
-        }
-        this.handingDown.put(id, measure);
-        return true;
-    }
-
-    @Override
-    public synchronized boolean stopHandingDown(final MessageMeasure<? extends Number> measure) {
-        return (this.handingDown.removeValue(measure) != null);
-    }
-
-    @Override
-    public synchronized boolean stopHandingDown(final String id) {
-        return (this.handingDown.remove(id) != null);
-    }
-
-    @Override
-    public boolean isMeasuring(final String id) {
-        return this.metrics.isMeasuring(id);
-    }
-
-    @Override
-    public boolean isMeasuring(final MessageMetric<? extends Number> metric) {
-        return this.metrics.isMeasuring(metric);
-    }
-
-    @Override
-    public boolean isHandingDown(final MessageMeasure<? extends Number> measure) {
-        return this.handingDown.containsValue(measure);
-    }
-
-    @Override
-    public boolean isHandingDown(final String id) {
-        return this.handingDown.containsKey(id);
     }
 
 }

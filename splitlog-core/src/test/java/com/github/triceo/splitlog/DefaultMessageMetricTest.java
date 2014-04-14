@@ -9,20 +9,20 @@ import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
-import com.github.triceo.splitlog.api.MessageSource;
 
-public class DefaultMessageMetricTest {
+public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
 
-    private static final MessageMeasure<Integer> DEFAULT_MEASURE = new MessageMeasure<Integer>() {
+    private static final MessageMeasure<Integer, LogWatch> DEFAULT_MEASURE = new MessageMeasure<Integer, LogWatch>() {
 
         @Override
-        public Integer update(final MessageMetric<Integer> metric, final Message evaluate,
-            final MessageDeliveryStatus status, final MessageSource source) {
+        public Integer update(final MessageMetric<Integer, LogWatch> metric, final Message evaluate,
+            final MessageDeliveryStatus status, final LogWatch source) {
             final Integer value = metric.getValue();
             return (value == null) ? 1 : value + 2;
         }
@@ -35,15 +35,15 @@ public class DefaultMessageMetricTest {
 
     @Test
     public void testGetMeasure() {
-        final MessageMetric<Integer> metric = new DefaultMessageMetric<Integer>(
+        final MessageMetric<Integer, LogWatch> metric = new DefaultMessageMetric<Integer, LogWatch>(this.getLogWatch(),
                 DefaultMessageMetricTest.DEFAULT_MEASURE);
         Assertions.assertThat(metric.getMeasure()).isSameAs(DefaultMessageMetricTest.DEFAULT_MEASURE);
     }
 
     @Test
     public void testIncreases() {
-        final DefaultMessageMetric<Integer> metric = new DefaultMessageMetric<Integer>(
-                DefaultMessageMetricTest.DEFAULT_MEASURE);
+        final DefaultMessageMetric<Integer, LogWatch> metric = new DefaultMessageMetric<Integer, LogWatch>(
+                this.getLogWatch(), DefaultMessageMetricTest.DEFAULT_MEASURE);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(0);
         Assertions.assertThat(metric.getValue()).isNull();
         metric.messageReceived(null, null, null); // shouldn't use nulls, but in
@@ -58,13 +58,13 @@ public class DefaultMessageMetricTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullConstructor() {
-        new DefaultMessageMetric<Integer>(null);
+        new DefaultMessageMetric<Integer, LogWatch>(this.getLogWatch(), null);
     }
 
     @Test
     public void testWaiting() {
-        final DefaultMessageMetric<Integer> metric = new DefaultMessageMetric<Integer>(
-                DefaultMessageMetricTest.DEFAULT_MEASURE);
+        final DefaultMessageMetric<Integer, LogWatch> metric = new DefaultMessageMetric<Integer, LogWatch>(
+                this.getLogWatch(), DefaultMessageMetricTest.DEFAULT_MEASURE);
         Assertions.assertThat(metric.getValue()).isNull();
         metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, null);
         Assertions.assertThat(metric.getValue()).isEqualTo(1);
@@ -86,10 +86,10 @@ public class DefaultMessageMetricTest {
             }
 
         }, 1, TimeUnit.SECONDS);
-        final Message result = metric.waitFor(new MessageMetricCondition<Integer>() {
+        final Message result = metric.waitFor(new MessageMetricCondition<Integer, LogWatch>() {
 
             @Override
-            public boolean accept(final MessageMetric<Integer> evaluate) {
+            public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
                 return evaluate.getValue() == 5;
             }
 

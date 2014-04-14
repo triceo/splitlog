@@ -3,20 +3,20 @@ package com.github.triceo.splitlog;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MessageSource;
 
-public class MessageMetricManagerTest {
+public class MessageMetricManagerTest extends DefaultFollowerBaseTest {
 
     private static final String ID = "ID";
-    private static final MessageMeasure<Integer> MEASURE = new MessageMeasure<Integer>() {
+    private static final MessageMeasure<Integer, LogWatch> MEASURE = new MessageMeasure<Integer, LogWatch>() {
 
         @Override
-        public Integer update(final MessageMetric<Integer> metric, final Message evaluate,
-            final MessageDeliveryStatus status, final MessageSource source) {
+        public Integer update(final MessageMetric<Integer, LogWatch> metric, final Message evaluate,
+            final MessageDeliveryStatus status, final LogWatch source) {
             final Integer value = metric.getValue();
             return (value == null) ? 1 : value + 2;
         }
@@ -25,26 +25,26 @@ public class MessageMetricManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testDuplicateId() {
-        final MessageMetricManager manager = new MessageMetricManager();
+        final MessageMetricManager<LogWatch> manager = new MessageMetricManager<LogWatch>(this.getLogWatch());
         manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
         manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullId() {
-        new MessageMetricManager().startMeasuring(MessageMetricManagerTest.MEASURE, null);
+        new MessageMetricManager<LogWatch>(this.getLogWatch()).startMeasuring(MessageMetricManagerTest.MEASURE, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullMeasure() {
-        new MessageMetricManager().startMeasuring(null, MessageMetricManagerTest.ID);
+        new MessageMetricManager<LogWatch>(this.getLogWatch()).startMeasuring(null, MessageMetricManagerTest.ID);
     }
 
     @Test
     public void testProperRetrieval() {
-        final MessageMetricManager manager = new MessageMetricManager();
+        final MessageMetricManager<LogWatch> manager = new MessageMetricManager<LogWatch>(this.getLogWatch());
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
-        final MessageMetric<Integer> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE,
+        final MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE,
                 MessageMetricManagerTest.ID);
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isSameAs(metric);
         Assertions.assertThat(manager.getMetricId(metric)).isSameAs(MessageMetricManagerTest.ID);
@@ -56,10 +56,11 @@ public class MessageMetricManagerTest {
 
     @Test
     public void testTermination() {
-        final MessageMetricManager manager = new MessageMetricManager();
+        final MessageMetricManager<LogWatch> manager = new MessageMetricManager<LogWatch>(this.getLogWatch());
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
         // terminate by ID
-        MessageMetric<Integer> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE,
+                MessageMetricManagerTest.ID);
         Assertions.assertThat(manager.stopMeasuring(MessageMetricManagerTest.ID)).isTrue();
         Assertions.assertThat(manager.stopMeasuring(metric)).isFalse();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();

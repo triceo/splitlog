@@ -3,8 +3,11 @@ package com.github.triceo.splitlog.api;
 /**
  * Implementors of this interface provide users with means of measuring various
  * properties of {@link Message}s that pass through them.
+ *
+ * @param <S>
+ *            Where this is getting its {@link Message}s from.
  */
-public interface MessageMetricProducer {
+public interface MessageMetricProducer<S extends MessageSource<S>> {
 
     /**
      * Retrieve the metric for a particular ID.
@@ -16,7 +19,7 @@ public interface MessageMetricProducer {
      *         {@link #startMeasuring(MessageMeasure, String)}'d or already
      *         {@link #stopMeasuring(MessageMetric)}'d.
      */
-    MessageMetric<? extends Number> getMetric(String id);
+    MessageMetric<? extends Number, S> getMetric(String id);
 
     /**
      * Retrieve the ID for a particular measure.
@@ -28,7 +31,7 @@ public interface MessageMetricProducer {
      *         {@link #startMeasuring(MessageMeasure, String)}'d or already
      *         {@link #stopMeasuring(MessageMetric)}'d.
      */
-    String getMetricId(MessageMetric<? extends Number> measure);
+    String getMetricId(MessageMetric<? extends Number, S> measure);
 
     /**
      * Whether or not particular {@link MessageMetric} is active.
@@ -38,7 +41,7 @@ public interface MessageMetricProducer {
      * @return True after {@link #startMeasuring(MessageMeasure, String)} has
      *         been called and before {@link #stopMeasuring(MessageMetric)}.
      */
-    boolean isMeasuring(MessageMetric<? extends Number> metric);
+    boolean isMeasuring(MessageMetric<? extends Number, S> metric);
 
     /**
      * Whether or not particular {@link MessageMetric} is active.
@@ -65,7 +68,7 @@ public interface MessageMetricProducer {
      *             {@link #startMeasuring(MessageMeasure, String)} and not to
      *             {@link #stopMeasuring(String)} or equivalents.
      */
-    <T extends Number> MessageMetric<T> startMeasuring(MessageMeasure<T> measure, String id);
+    <T extends Number> MessageMetric<T, S> startMeasuring(MessageMeasure<T, S> measure, String id);
 
     /**
      * Will stop the metric from being notified of new {@link Message}s. From
@@ -75,7 +78,7 @@ public interface MessageMetricProducer {
      *            The metric in question.
      * @return True if stopped, false if unknown.
      */
-    boolean stopMeasuring(MessageMetric<? extends Number> metric);
+    boolean stopMeasuring(MessageMetric<? extends Number, S> metric);
 
     /**
      * Will stop the metric from being notified of new {@link Message}s. From

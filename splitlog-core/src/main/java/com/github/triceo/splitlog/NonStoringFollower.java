@@ -10,6 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
@@ -36,13 +37,13 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
-    private final MessageExchange exchange = new MessageExchange();
-    private final MessageMetricManager metrics = new MessageMetricManager();
+    private final MessageExchange<LogWatch> exchange = new MessageExchange<LogWatch>();
+    private final MessageMetricManager<Follower> metrics = new MessageMetricManager<Follower>(this);
 
     public NonStoringFollower(final DefaultLogWatch watch,
-        final List<Pair<String, MessageMeasure<?>>> measuresHandedDown) {
+        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
-        for (final Pair<String, MessageMeasure<? extends Number>> pair : measuresHandedDown) {
+        for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.measure(pair.getValue(), pair.getKey(), false);
         }
     }
@@ -61,26 +62,31 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    public MessageMetric<? extends Number> getMetric(final String id) {
+    public MessageMetric<? extends Number, Follower> getMetric(final String id) {
         return this.metrics.getMetric(id);
     }
 
     @Override
-    public String getMetricId(final MessageMetric<? extends Number> measure) {
+    public String getMetricId(final MessageMetric<? extends Number, Follower> measure) {
         return this.metrics.getMetricId(measure);
     }
 
-    private <T extends Number> MessageMetric<T> measure(final MessageMeasure<T> measure, final String id,
-            final boolean checkIfFollowing) {
+    @Override
+    public boolean isMeasuring(final MessageMetric<? extends Number, Follower> metric) {
+        return this.metrics.isMeasuring(metric);
+    }
+
+    @Override
+    public boolean isMeasuring(final String id) {
+        return this.metrics.isMeasuring(id);
+    }
+
+    private <T extends Number> MessageMetric<T, Follower> measure(final MessageMeasure<T, Follower> measure,
+            final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && !this.isFollowing()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
         return this.metrics.startMeasuring(measure, id);
-    }
-
-    @Override
-    public <T extends Number> MessageMetric<T> startMeasuring(final MessageMeasure<T> measure, final String id) {
-        return this.measure(measure, id, true);
     }
 
     @Override
@@ -94,11 +100,17 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
             mf.messageReceived(msg, status, this);
         }
-        this.metrics.messageReceived(msg, status, source);
+        this.metrics.messageReceived(msg, status, this);
     }
 
     @Override
-    public boolean stopMeasuring(final MessageMetric<? extends Number> metric) {
+    public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
+            final String id) {
+        return this.measure(measure, id, true);
+    }
+
+    @Override
+    public boolean stopMeasuring(final MessageMetric<? extends Number, Follower> metric) {
         return this.metrics.stopMeasuring(metric);
     }
 
@@ -126,16 +138,6 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
         }
         return this.exchange.waitForMessage(condition, timeout, unit);
-    }
-
-    @Override
-    public boolean isMeasuring(final String id) {
-        return this.metrics.isMeasuring(id);
-    }
-
-    @Override
-    public boolean isMeasuring(final MessageMetric<? extends Number> metric) {
-        return this.metrics.isMeasuring(metric);
     }
 
 }

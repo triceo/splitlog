@@ -17,14 +17,14 @@ public enum MessageDeliveryStatus {
      */
     INCOMING,
     /**
-     * The message has been read fully, but rejected by a user-defined message
-     * acceptance filter on a {@link LogWatch}. Terminal state.
-     */
-    REJECTED,
-    /**
      * {@link Follower} terminated before this message could be read fully.
      * Terminal state.
      */
-    INCOMPLETE;
+    INCOMPLETE,
+    /**
+     * The message has been read fully, but rejected by a user-defined message
+     * acceptance filter on a {@link LogWatch}. Terminal state.
+     */
+    REJECTED;
 
 }
