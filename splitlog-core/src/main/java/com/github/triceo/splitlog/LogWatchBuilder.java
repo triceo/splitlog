@@ -8,7 +8,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
-import com.github.triceo.splitlog.conditions.AllMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
 /**
@@ -40,21 +40,10 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  */
 final public class LogWatchBuilder {
 
+    public static final long DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS = 5;
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
     public static final long DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
-    public static final long DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS = 5;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
-
-    private final File fileToWatch;
-    private int limitCapacityTo = Integer.MAX_VALUE;
-    private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
-    private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
-    private long delayBeforeTailingStarts = LogWatchBuilder.DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS;
-    private boolean readingFromBeginning = true;
-    private boolean closingBetweenReads;
-    // will accept all messages
-    private SimpleMessageCondition messageAcceptanceCondition = AllMessagesAcceptingCondition.INSTANCE;
-    private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
 
     /**
      * Used to construct a {@link LogWatch} for a particular log file.
@@ -68,6 +57,40 @@ final public class LogWatchBuilder {
         return new LogWatchBuilder(f);
     }
 
+    private static long getDelay(final int length, final TimeUnit unit) {
+        if (length < 1) {
+            throw new IllegalArgumentException("The length of time must be at least 1.");
+        }
+        switch (unit) {
+            case NANOSECONDS:
+                if (length < (1000 * 1000)) {
+                    throw new IllegalArgumentException("The length of time must amount to at least 1 ms.");
+                }
+                break;
+            case MICROSECONDS:
+                if (length < 1000) {
+                    throw new IllegalArgumentException("The length of time must amount to at least 1 ms.");
+                }
+                break;
+            default:
+                // every other unit is more than 1 ms by default
+        }
+        return unit.toMillis(length);
+    }
+
+    private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
+    private boolean closingBetweenReads;
+    private long delayBeforeTailingStarts = LogWatchBuilder.DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS;
+    private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
+    private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
+    private final File fileToWatch;
+    private int limitCapacityTo = Integer.MAX_VALUE;
+
+    // will accept all messages
+    private SimpleMessageCondition messageAcceptanceCondition = AllLogWatchMessagesAcceptingCondition.INSTANCE;
+
+    private boolean readingFromBeginning = true;
+
     protected LogWatchBuilder(final File fileToWatch) {
         this.fileToWatch = fileToWatch;
     }
@@ -80,33 +103,6 @@ final public class LogWatchBuilder {
      */
     public LogWatch build() {
         return this.buildWith(new SimpleTailSplitter());
-    }
-
-    /**
-     * The condition that will be used for accepting messages into the log
-     * watch.
-     *
-     * @return The condition.
-     */
-    public SimpleMessageCondition getMessageAcceptanceCondition() {
-        return this.messageAcceptanceCondition;
-    }
-
-    /**
-     * Only the messages for which
-     * {@link SimpleMessageCondition#accept(Message)} is true will be registered
-     * by the future log watch.
-     *
-     * @param condition
-     *            The condition.
-     * @return This.
-     */
-    public LogWatchBuilder withMessageAcceptanceCondition(final SimpleMessageCondition condition) {
-        if (condition == null) {
-            throw new IllegalArgumentException("Message acceptance condition must not be null.");
-        }
-        this.messageAcceptanceCondition = condition;
-        return this;
     }
 
     /**
@@ -148,39 +144,6 @@ final public class LogWatchBuilder {
     }
 
     /**
-     * Limit capacity of the log watch to a given amount of messages.
-     *
-     * @param size
-     *            Maximum amount of messages to store.
-     * @return This.
-     */
-    public LogWatchBuilder limitCapacityTo(final int size) {
-        if (size <= 0) {
-            throw new IllegalArgumentException("Size of the memory store must be larger than zero.");
-        }
-        this.limitCapacityTo = size;
-        return this;
-    }
-
-    /**
-     * Get the delay between attempts to sweep unreachable messages from memory.
-     *
-     * @return In milliseconds.
-     */
-    public long getDelayBetweenSweeps() {
-        return this.delayBetweenSweeps;
-    }
-
-    /**
-     * Get the delay between attempts to read from the watched file.
-     *
-     * @return In milliseconds.
-     */
-    public long getDelayBetweenReads() {
-        return this.delayBetweenReads;
-    }
-
-    /**
      * Get the delay between the request for starting tailing and the actual
      * start of tailing. Please see
      * {@link #withDelayBeforeTailingStarts(int, TimeUnit)} for an explanation
@@ -193,12 +156,40 @@ final public class LogWatchBuilder {
     }
 
     /**
+     * Get the delay between attempts to read from the watched file.
+     *
+     * @return In milliseconds.
+     */
+    public long getDelayBetweenReads() {
+        return this.delayBetweenReads;
+    }
+
+    /**
+     * Get the delay between attempts to sweep unreachable messages from memory.
+     *
+     * @return In milliseconds.
+     */
+    public long getDelayBetweenSweeps() {
+        return this.delayBetweenSweeps;
+    }
+
+    /**
      * Get the file that the log watch will be watching.
      *
      * @return The file that will be watched by the future log watch.
      */
     public File getFileToWatch() {
         return this.fileToWatch;
+    }
+
+    /**
+     * The condition that will be used for accepting messages into the log
+     * watch.
+     *
+     * @return The condition.
+     */
+    public SimpleMessageCondition getMessageAcceptanceCondition() {
+        return this.messageAcceptanceCondition;
     }
 
     /**
@@ -237,52 +228,32 @@ final public class LogWatchBuilder {
         return this.readingFromBeginning;
     }
 
+    /**
+     * Limit capacity of the log watch to a given amount of messages.
+     *
+     * @param size
+     *            Maximum amount of messages to store.
+     * @return This.
+     */
+    public LogWatchBuilder limitCapacityTo(final int size) {
+        if (size <= 0) {
+            throw new IllegalArgumentException("Size of the memory store must be larger than zero.");
+        }
+        this.limitCapacityTo = size;
+        return this;
+    }
+
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
         builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-        .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-        .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-        .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-        .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
         builder.append(']');
         return builder.toString();
-    }
-
-    private static long getDelay(final int length, final TimeUnit unit) {
-        if (length < 1) {
-            throw new IllegalArgumentException("The length of time must be at least 1.");
-        }
-        switch (unit) {
-            case NANOSECONDS:
-                if (length < (1000 * 1000)) {
-                    throw new IllegalArgumentException("The length of time must amount to at least 1 ms.");
-                }
-                break;
-            case MICROSECONDS:
-                if (length < 1000) {
-                    throw new IllegalArgumentException("The length of time must amount to at least 1 ms.");
-                }
-                break;
-            default:
-                // every other unit is more than 1 ms by default
-        }
-        return unit.toMillis(length);
-    }
-
-    /**
-     * Specify the delay between attempts to read the file.
-     *
-     * @param length
-     *            Length of time.
-     * @param unit
-     *            Unit of that length.
-     * @return This.
-     */
-    public LogWatchBuilder withDelayBetweenReads(final int length, final TimeUnit unit) {
-        this.delayBetweenReads = LogWatchBuilder.getDelay(length, unit);
-        return this;
     }
 
     /**
@@ -308,6 +279,20 @@ final public class LogWatchBuilder {
     }
 
     /**
+     * Specify the delay between attempts to read the file.
+     *
+     * @param length
+     *            Length of time.
+     * @param unit
+     *            Unit of that length.
+     * @return This.
+     */
+    public LogWatchBuilder withDelayBetweenReads(final int length, final TimeUnit unit) {
+        this.delayBetweenReads = LogWatchBuilder.getDelay(length, unit);
+        return this;
+    }
+
+    /**
      * Specify the delay between attempts to sweep the log watch from
      * unreachable messages.
      *
@@ -319,6 +304,23 @@ final public class LogWatchBuilder {
      */
     public LogWatchBuilder withDelayBetweenSweeps(final int length, final TimeUnit unit) {
         this.delayBetweenSweeps = LogWatchBuilder.getDelay(length, unit);
+        return this;
+    }
+
+    /**
+     * Only the messages for which
+     * {@link SimpleMessageCondition#accept(Message)} is true will be registered
+     * by the future log watch.
+     *
+     * @param condition
+     *            The condition.
+     * @return This.
+     */
+    public LogWatchBuilder withMessageAcceptanceCondition(final SimpleMessageCondition condition) {
+        if (condition == null) {
+            throw new IllegalArgumentException("Message acceptance condition must not be null.");
+        }
+        this.messageAcceptanceCondition = condition;
         return this;
     }
 

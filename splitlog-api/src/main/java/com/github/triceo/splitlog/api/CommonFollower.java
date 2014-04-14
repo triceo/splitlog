@@ -2,7 +2,6 @@ package com.github.triceo.splitlog.api;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Follower's primary function is to allow users to work with their portion of
@@ -74,29 +73,6 @@ public interface CommonFollower {
      *         compose {@link MergingFollower}s.
      */
     MergingFollower mergeWith(CommonFollower f);
-
-    /**
-     * Will block until a message arrives, for which the condition is true.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
-    Message waitFor(MidDeliveryMessageCondition condition);
-
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @param timeout
-     *            Time before forcibly aborting.
-     * @param unit
-     *            Unit of time.
-     * @return Null if the method unblocked due to some other reason.
-     */
-    Message waitFor(MidDeliveryMessageCondition condition, long timeout, TimeUnit unit);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using a
