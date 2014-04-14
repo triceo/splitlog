@@ -66,9 +66,9 @@ public interface LogWatch extends MessageSource<LogWatch> {
 
     /**
      * Begin watching for new messages from this point in time, immediately
-     * calling {@link CommonFollower#waitFor(MidDeliveryMessageCondition)} -
-     * this way, no messages can be missed between the actual start of the
-     * tailer and the first wait. .
+     * calling {@link Follower#waitFor(MidDeliveryMessageCondition)} - this way,
+     * no messages can be missed between the actual start of the tailer and the
+     * first wait. .
      *
      * @param waitFor
      *            Condition to pass to the follower.
@@ -79,8 +79,8 @@ public interface LogWatch extends MessageSource<LogWatch> {
     /**
      * Begin watching for new messages from this point in time, immediately
      * calling
-     * {@link CommonFollower#waitFor(MidDeliveryMessageCondition, long, TimeUnit)}
-     * - this way, no messages can be missed between the actual start of the
+     * {@link Follower#waitFor(MidDeliveryMessageCondition, long, TimeUnit)} -
+     * this way, no messages can be missed between the actual start of the
      * tailer and the first wait. .
      *
      * @param waitFor
