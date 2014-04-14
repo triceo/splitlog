@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
@@ -16,7 +17,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageSource;
 
-public class DefaultMessageMetricTest {
+public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
 
     private static final MessageMeasure<Integer> DEFAULT_MEASURE = new MessageMeasure<Integer>() {
 
@@ -42,18 +43,29 @@ public class DefaultMessageMetricTest {
 
     @Test
     public void testIncreases() {
+        final LogWatch watch = this.getLogWatch(); // placeholder
         final DefaultMessageMetric<Integer> metric = new DefaultMessageMetric<Integer>(
                 DefaultMessageMetricTest.DEFAULT_MEASURE);
+        Assertions.assertThat(metric.getMessageCount(null)).isEqualTo(0);
+        Assertions.assertThat(metric.getValue(null)).isNull();
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(0);
         Assertions.assertThat(metric.getValue()).isNull();
-        metric.messageReceived(null, null, null); // shouldn't use nulls, but in
-        // this test, it doesn't
-        // matter
+        final Message one = DefaultMessageMetricTest.MESSAGE.buildFinal();
+        metric.messageReceived(one, MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(1);
         Assertions.assertThat(metric.getValue()).isEqualTo(1);
-        metric.messageReceived(null, null, null);
+        final Message two = DefaultMessageMetricTest.MESSAGE.buildFinal();
+        metric.messageReceived(two, MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(2);
         Assertions.assertThat(metric.getValue()).isEqualTo(3);
+        // test history
+        Assertions.assertThat(metric.getMessageCount(one)).isEqualTo(1);
+        Assertions.assertThat(metric.getValue(one)).isEqualTo(1);
+        Assertions.assertThat(metric.getMessageCount(two)).isEqualTo(2);
+        Assertions.assertThat(metric.getValue(two)).isEqualTo(3);
+        final Message none = DefaultMessageMetricTest.MESSAGE.buildFinal();
+        Assertions.assertThat(metric.getMessageCount(none)).isEqualTo(-1);
+        Assertions.assertThat(metric.getValue(none)).isNull();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -63,10 +75,11 @@ public class DefaultMessageMetricTest {
 
     @Test
     public void testWaiting() {
+        final LogWatch watch = this.getLogWatch(); // placeholder
         final DefaultMessageMetric<Integer> metric = new DefaultMessageMetric<Integer>(
                 DefaultMessageMetricTest.DEFAULT_MEASURE);
         Assertions.assertThat(metric.getValue()).isNull();
-        metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, null);
+        metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getValue()).isEqualTo(1);
         final Future<Message> expected = this.e.schedule(new Callable<Message>() {
 
@@ -74,14 +87,14 @@ public class DefaultMessageMetricTest {
             public Message call() throws Exception {
                 // this message will only increase the metric
                 metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
-                        null);
+                        watch);
                 // this message will put metric over threshold
                 final Message m = DefaultMessageMetricTest.MESSAGE.buildFinal();
-                metric.messageReceived(m, MessageDeliveryStatus.ACCEPTED, null);
+                metric.messageReceived(m, MessageDeliveryStatus.ACCEPTED, watch);
                 // and this message will, once again, do nothing; nothing else
                 // is waiting
                 metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
-                        null);
+                        watch);
                 return m;
             }
 

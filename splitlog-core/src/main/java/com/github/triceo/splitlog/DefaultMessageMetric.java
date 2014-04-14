@@ -1,6 +1,11 @@
 package com.github.triceo.splitlog;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
@@ -13,8 +18,7 @@ final class DefaultMessageMetric<T extends Number> implements MessageMetric<T>, 
 
     private final MessageMetricExchange<T> exchange = new MessageMetricExchange<T>(this);
     private final MessageMeasure<T> measure;
-    private int messageCount;
-    private T value;
+    private final SortedMap<Long, Pair<Long, T>> stats = new TreeMap<Long, Pair<Long, T>>();
 
     public DefaultMessageMetric(final MessageMeasure<T> measure) {
         if (measure == null) {
@@ -30,20 +34,49 @@ final class DefaultMessageMetric<T extends Number> implements MessageMetric<T>, 
 
     @Override
     public synchronized long getMessageCount() {
-        return this.messageCount;
+        if (this.stats.isEmpty()) {
+            return 0;
+        }
+        return this.stats.get(this.stats.lastKey()).getLeft();
+    }
+
+    @Override
+    public synchronized long getMessageCount(final Message timestamp) {
+        if (timestamp == null) {
+            return 0;
+        } else if (!this.stats.containsKey(timestamp.getUniqueId())) {
+            return -1;
+        } else {
+            return this.stats.get(timestamp.getUniqueId()).getLeft();
+        }
     }
 
     @Override
     public synchronized T getValue() {
-        return this.value;
+        if (this.stats.isEmpty()) {
+            return null;
+        }
+        return this.stats.get(this.stats.lastKey()).getRight();
+    }
+
+    @Override
+    public synchronized T getValue(final Message timestamp) {
+        if ((timestamp == null) || !this.stats.containsKey(timestamp.getUniqueId())) {
+            return null;
+        } else {
+            return this.stats.get(timestamp.getUniqueId()).getRight();
+        }
     }
 
     @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
         final MessageSource source) {
-        this.value = this.measure.update(this, msg, status, source);
+        if ((msg == null) || (status == null) || (source == null)) {
+            throw new IllegalArgumentException("Neither message properties may be null.");
+        }
+        final T newValue = this.measure.update(this, msg, status, source);
+        this.stats.put(msg.getUniqueId(), ImmutablePair.of(this.getMessageCount() + 1, newValue));
         this.exchange.messageReceived(msg, status, source);
-        this.messageCount++;
     }
 
     /**

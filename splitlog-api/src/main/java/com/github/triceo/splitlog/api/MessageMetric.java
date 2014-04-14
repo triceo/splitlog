@@ -29,6 +29,19 @@ public interface MessageMetric<T extends Number> {
     long getMessageCount();
 
     /**
+     * Retrieve the number of times that the metric has been invoked on a
+     * {@link Message}, at the time immediately after a given message has been
+     * processed.
+     *
+     * @param timestamp
+     *            The point in time after this message was processed. Null will
+     *            retrieve the initial state.
+     * @return A number >= 0. Will return -1 in case no such message was ever
+     *         processed by this metric.
+     */
+    long getMessageCount(Message timestamp);
+
+    /**
      * Retrieve the value of this metric, which is a sum of the return values of
      * all of this metric's {@link MessageMeasure} invocations.
      *
@@ -36,6 +49,20 @@ public interface MessageMetric<T extends Number> {
      *         messages arrive, is null
      */
     T getValue();
+
+    /**
+     * Retrieve the value of this metric, which is a sum of the return values of
+     * all of this metric's {@link MessageMeasure} invocations, at the time
+     * immediately after a given message has been processed.
+     *
+     * @param timestamp
+     *            The point in time after this message was processed. Null will
+     *            retrieve the initial state.
+     * @return Whatever, depends on the measure. Initial value, before any
+     *         messages arrive, is null. Null is also returned in case no such
+     *         message was ever processed by this metric.
+     */
+    T getValue(Message timestamp);
 
     /**
      * Will block until a message arrives, for which the condition is true. If
