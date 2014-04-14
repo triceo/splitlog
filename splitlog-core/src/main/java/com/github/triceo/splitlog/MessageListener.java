@@ -8,7 +8,7 @@ import com.github.triceo.splitlog.api.MessageSource;
  * Implementors of this interface state that they are interested in knowing when
  * a new {@link Message} appears in the log.
  *
- * @param <T>
+ * @param <S>
  *            The source that they expect such notifications from.
  */
 public interface MessageListener<S extends MessageSource<S>> {
