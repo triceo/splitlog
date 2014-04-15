@@ -1,17 +1,14 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.api;
 
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageProducer;
 
 /**
  * Implementors of this interface state that they are interested in knowing when
  * a new {@link Message} appears in the log.
  *
- * @param <S>
+ * @param <P>
  *            The source that they expect such notifications from.
  */
-public interface MessageListener<S extends MessageProducer<S>> {
+public interface MessageConsumer<P extends MessageProducer<P>> {
 
     /**
      * Notify the code of a new message becoming available in the log.
@@ -29,9 +26,9 @@ public interface MessageListener<S extends MessageProducer<S>> {
      *            Message in question.
      * @param status
      *            Current status of the message.
-     * @param source
+     * @param producer
      *            The code that is notifying us of this event.
      */
-    void messageReceived(Message message, MessageDeliveryStatus status, S source);
+    void messageReceived(Message message, MessageDeliveryStatus status, P producer);
 
 }

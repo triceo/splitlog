@@ -8,12 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
 
-final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>> implements MessageListener<S> {
+final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>> implements MessageConsumer<S> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageMetricExchange.class);
 

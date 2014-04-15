@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
@@ -15,7 +16,7 @@ import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S>,
-        MessageListener<S> {
+        MessageConsumer<S> {
 
     private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
     private final MessageMeasure<T, S> measure;
