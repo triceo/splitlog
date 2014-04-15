@@ -9,8 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
@@ -20,6 +22,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MessageExchange<Follower> exchange = new MessageExchange<Follower>();
+    private final MessageManager<MergingFollower> messages = new MessageManager<MergingFollower>();
 
     public NonStoringMergingFollower(final Follower... followers) {
         super(followers);
@@ -40,12 +43,27 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
+    public boolean isConsuming(final MessageConsumer<MergingFollower> consumer) {
+        return this.messages.isConsuming(consumer);
+    }
+
+    @Override
     public void messageReceived(final Message msg, final MessageDeliveryStatus status, final Follower source) {
         if (!this.getMerged().contains(source)) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         NonStoringMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
         this.exchange.messageReceived(msg, status, source);
+    }
+
+    @Override
+    public boolean startConsuming(final MessageConsumer<MergingFollower> consumer) {
+        return this.messages.startConsuming(consumer);
+    }
+
+    @Override
+    public boolean stopConsuming(final MessageConsumer<MergingFollower> consumer) {
+        return this.messages.stopConsuming(consumer);
     }
 
     /**

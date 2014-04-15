@@ -14,6 +14,7 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
@@ -72,6 +73,11 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
+    public boolean isConsuming(final MessageConsumer<Follower> consumer) {
+        return this.metrics.isConsuming(consumer);
+    }
+
+    @Override
     public boolean isMeasuring(final MessageMetric<? extends Number, Follower> metric) {
         return this.metrics.isMeasuring(metric);
     }
@@ -104,9 +110,19 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
+    public boolean startConsuming(final MessageConsumer<Follower> consumer) {
+        return this.metrics.startConsuming(consumer);
+    }
+
+    @Override
     public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
         final String id) {
         return this.measure(measure, id, true);
+    }
+
+    @Override
+    public boolean stopConsuming(final MessageConsumer<Follower> consumer) {
+        return this.metrics.stopConsuming(consumer);
     }
 
     @Override

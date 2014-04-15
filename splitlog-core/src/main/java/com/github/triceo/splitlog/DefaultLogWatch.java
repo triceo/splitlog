@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
@@ -181,6 +182,11 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
+    public boolean isConsuming(final MessageConsumer<LogWatch> consumer) {
+        return this.metrics.isConsuming(consumer);
+    }
+
+    @Override
     public synchronized boolean isFollowedBy(final Follower follower) {
         return this.followers.contains(follower);
     }
@@ -208,6 +214,11 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean isTerminated() {
         return this.isTerminated;
+    }
+
+    @Override
+    public boolean startConsuming(final MessageConsumer<LogWatch> consumer) {
+        return this.metrics.startConsuming(consumer);
     }
 
     @Override
@@ -285,6 +296,11 @@ final class DefaultLogWatch implements LogWatch {
             throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
         }
         return this.metrics.startMeasuring(measure, id);
+    }
+
+    @Override
+    public boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
+        return this.metrics.stopConsuming(consumer);
     }
 
     @Override
