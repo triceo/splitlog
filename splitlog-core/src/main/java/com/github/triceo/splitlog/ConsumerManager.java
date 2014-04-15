@@ -26,8 +26,7 @@ public class ConsumerManager<P extends MessageProducer<P>> implements MessagePro
     }
 
     @Override
-    public synchronized void
-        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    public synchronized void messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         for (final MessageConsumer<P> consumer : this.consumers) {
             consumer.messageReceived(message, status, producer);
         }

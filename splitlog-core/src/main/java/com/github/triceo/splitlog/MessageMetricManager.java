@@ -45,6 +45,7 @@ MessageMetricProducer<S>, MessageConsumer<S> {
 
     @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
+        super.messageReceived(msg, status, source);
         for (final DefaultMessageMetric<? extends Number, S> metric : this.metrics.values()) {
             metric.messageReceived(msg, status, source);
         }

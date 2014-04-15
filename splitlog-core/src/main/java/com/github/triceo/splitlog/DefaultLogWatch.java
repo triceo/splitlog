@@ -3,10 +3,9 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -35,11 +34,11 @@ final class DefaultLogWatch implements LogWatch {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
 
     private MessageBuilder currentlyProcessedMessage;
-    private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
     private boolean isTerminated = false;
     private final LogWatchStorageManager messaging;
     private final MessageMetricManager<LogWatch> metrics = new MessageMetricManager<LogWatch>(this);
+    private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
     private final LogWatchSweepingManager sweeping;
@@ -140,9 +139,6 @@ final class DefaultLogWatch implements LogWatch {
         final boolean messageAccepted = this.messaging.registerMessage(message, this);
         final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
                 : MessageDeliveryStatus.REJECTED;
-        for (final AbstractLogWatchFollower f : this.followers) {
-            f.messageReceived(message, status, this);
-        }
         this.metrics.messageReceived(message, status, this);
         return messageAccepted ? message : null;
     }
@@ -157,9 +153,6 @@ final class DefaultLogWatch implements LogWatch {
      */
     private synchronized Message handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        for (final AbstractLogWatchFollower f : this.followers) {
-            f.messageReceived(message, MessageDeliveryStatus.INCOMING, this);
-        }
         this.metrics.messageReceived(message, MessageDeliveryStatus.INCOMING, this);
         return message;
     }
@@ -188,7 +181,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized boolean isFollowedBy(final Follower follower) {
-        return this.followers.contains(follower);
+        return this.isConsuming(follower);
     }
 
     @Override
@@ -263,12 +256,12 @@ final class DefaultLogWatch implements LogWatch {
             pairs.add(ImmutablePair.<String, MessageMeasure<? extends Number, Follower>> of(entry.getKey(),
                     entry.getValue()));
         }
-        final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
         // register the follower
-        this.followers.add(follower);
+        final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
+        this.metrics.startConsuming(follower);
         this.messaging.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
-        if (this.followers.size() == 1) {
+        if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
             // we have listeners, let's start tailing
             this.tailing.start(needsToWait);
         }
@@ -305,15 +298,16 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized boolean stopFollowing(final Follower follower) {
-        if (!this.followers.remove(follower)) {
+        if (!this.isFollowedBy(follower)) {
             return false;
         }
-        this.messaging.followerTerminated(follower);
-        DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
         if (this.currentlyProcessedMessage != null) {
             this.handleUndeliveredMessage((AbstractLogWatchFollower) follower, this.currentlyProcessedMessage);
         }
-        if (this.followers.size() == 0) {
+        this.metrics.stopConsuming(follower);
+        this.messaging.followerTerminated(follower);
+        DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
+        if (this.numberOfActiveFollowers.decrementAndGet() == 0) {
             this.tailing.stop();
             this.currentlyProcessedMessage = null;
         }
@@ -352,14 +346,6 @@ final class DefaultLogWatch implements LogWatch {
             return false;
         }
         this.isTerminated = true;
-        /*
-         * methods within the loop will remove from the original list; this
-         * copying prevents CMEs.
-         */
-        final List<AbstractLogWatchFollower> copyOfFollowers = new ArrayList<AbstractLogWatchFollower>(this.followers);
-        for (final AbstractLogWatchFollower chunk : copyOfFollowers) {
-            this.stopFollowing(chunk);
-        }
         this.metrics.stop();
         this.handingDown.clear();
         this.sweeping.stop();
