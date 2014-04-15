@@ -16,7 +16,6 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
-import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
@@ -32,7 +31,7 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> implements Follower, MessageConsumer<LogWatch> {
+abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> implements Follower {
 
     private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
     private final Set<Message> tags = new LinkedHashSet<Message>();
