@@ -1,6 +1,5 @@
 package com.github.triceo.splitlog.api;
 
-
 /**
  * Implementors of this interface state that they are interested in knowing when
  * a new {@link Message} appears in the log.
@@ -9,6 +8,13 @@ package com.github.triceo.splitlog.api;
  *            The source that they expect such notifications from.
  */
 public interface MessageConsumer<P extends MessageProducer<P>> {
+
+    /**
+     * Whether or not {@link #stop()} has been called.
+     *
+     * @return True if called.
+     */
+    boolean isStopped();
 
     /**
      * Notify the code of a new message becoming available in the log.
@@ -30,5 +36,15 @@ public interface MessageConsumer<P extends MessageProducer<P>> {
      *            The code that is notifying us of this event.
      */
     void messageReceived(Message message, MessageDeliveryStatus status, P producer);
+
+    /**
+     * This consumer will no longer receive any messages.
+     *
+     * It is the duty of implementors to make sure that {@link MessageProducer}
+     * do not send any more {@link Message}s here.
+     *
+     * @return False if {@link #isStopped()}.
+     */
+    boolean stop();
 
 }

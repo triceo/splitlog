@@ -3,6 +3,7 @@ package com.github.triceo.splitlog;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,12 +19,19 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageMetricExchange.class);
 
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private MessageMetricCondition<T, S> messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
+
     private final MessageMetric<T, S> metric;
 
     public MessageMetricExchange(final MessageMetric<T, S> metric) {
         this.metric = metric;
+    }
+
+    @Override
+    public boolean isStopped() {
+        return this.isStopped.get();
     }
 
     @Override
@@ -39,7 +47,7 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
             return;
         }
         MessageMetricExchange.LOGGER
-        .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
+                .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
         this.messageBlockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);
@@ -47,6 +55,11 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
             MessageMetricExchange.LOGGER.warn("Failed to notify Metric of message '{}' in state {} from {}.", msg,
                     status, source, e);
         }
+    }
+
+    @Override
+    public boolean stop() {
+        return this.isStopped.compareAndSet(false, true);
     }
 
     /*

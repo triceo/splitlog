@@ -73,7 +73,7 @@ public class MessageMetricManagerTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
         // terminate all
         metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
-        manager.terminateMeasuring();
+        manager.stop();
         Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
     }

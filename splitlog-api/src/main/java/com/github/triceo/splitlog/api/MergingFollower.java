@@ -31,6 +31,7 @@ MessageConsumer<Follower> {
      * @return True if any of {@link #getMerged()}'s {@link #isFollowing()} is
      *         true.
      */
+    @Deprecated
     boolean isFollowing();
 
     /**

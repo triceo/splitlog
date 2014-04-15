@@ -3,6 +3,7 @@ package com.github.triceo.splitlog;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +18,15 @@ final class MessageExchange<S extends MessageProducer<S>> implements MessageCons
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageExchange.class);
 
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private MidDeliveryMessageCondition<S> messageBlockingCondition = null;
+
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
+
+    @Override
+    public boolean isStopped() {
+        return this.isStopped.get();
+    }
 
     @Override
     public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
@@ -40,6 +48,11 @@ final class MessageExchange<S extends MessageProducer<S>> implements MessageCons
             MessageExchange.LOGGER.warn("Failed to notify Follower of message '{}' in state {} from {}.", msg, status,
                     source, e);
         }
+    }
+
+    @Override
+    public boolean stop() {
+        return this.isStopped.compareAndSet(false, true);
     }
 
     /*

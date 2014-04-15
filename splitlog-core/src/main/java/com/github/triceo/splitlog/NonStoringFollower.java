@@ -42,7 +42,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private final MessageMetricManager<Follower> metrics = new MessageMetricManager<Follower>(this);
 
     public NonStoringFollower(final DefaultLogWatch watch,
-            final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
+        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.measure(pair.getValue(), pair.getKey(), false);
@@ -88,8 +88,8 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     private <T extends Number> MessageMetric<T, Follower> measure(final MessageMeasure<T, Follower> measure,
-        final String id, final boolean checkIfFollowing) {
-        if (checkIfFollowing && !this.isFollowing()) {
+            final String id, final boolean checkIfFollowing) {
+        if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
         return this.metrics.startMeasuring(measure, id);
@@ -116,7 +116,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-        final String id) {
+            final String id) {
         return this.measure(measure, id, true);
     }
 

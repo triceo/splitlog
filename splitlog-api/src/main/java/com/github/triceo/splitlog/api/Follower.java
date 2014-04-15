@@ -17,6 +17,8 @@ public interface Follower extends CommonFollower<Follower>, MessageMetricProduce
     LogWatch getFollowed();
 
     /**
+     * Use {@link #isStopped()} instead.
+     *
      * Whether or not this follower is still capable of receiving messages from
      * {@link LogWatch}. It is suggested that the reference to this follower be
      * thrown away immediately after the user has processed the results of
@@ -26,6 +28,7 @@ public interface Follower extends CommonFollower<Follower>, MessageMetricProduce
      *
      * @return True if following.
      */
+    @Deprecated
     boolean isFollowing();
 
     /**

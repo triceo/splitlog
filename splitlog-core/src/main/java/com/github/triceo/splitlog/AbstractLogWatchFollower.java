@@ -34,7 +34,9 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
 abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> implements Follower {
 
     private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
+
     private final Set<Message> tags = new LinkedHashSet<Message>();
+
     private final DefaultLogWatch watch;
 
     protected AbstractLogWatchFollower(final DefaultLogWatch watch) {
@@ -69,6 +71,11 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> imple
     }
 
     @Override
+    public boolean isStopped() {
+        return !this.getFollowed().isFollowedBy(this);
+    }
+
+    @Override
     public MergingFollower mergeWith(final Follower f) {
         if (f == null) {
             throw new IllegalArgumentException("Cannot merge with null.");
@@ -90,6 +97,11 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> imple
 
     protected boolean registerMerge(final AbstractMergingFollower mf) {
         return this.mergingFollowersToNotify.add(mf);
+    }
+
+    @Override
+    public boolean stop() {
+        return this.getFollowed().stopFollowing(this);
     }
 
     @Override

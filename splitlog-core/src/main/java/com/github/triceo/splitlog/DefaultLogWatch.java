@@ -360,7 +360,7 @@ final class DefaultLogWatch implements LogWatch {
         for (final AbstractLogWatchFollower chunk : copyOfFollowers) {
             this.stopFollowing(chunk);
         }
-        this.metrics.terminateMeasuring();
+        this.metrics.stop();
         this.handingDown.clear();
         this.sweeping.stop();
         this.previousAcceptedMessage = null;

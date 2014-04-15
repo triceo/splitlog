@@ -11,12 +11,12 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
-import com.github.triceo.splitlog.api.MessageProducer;
 
-final class MessageMetricManager<S extends MessageProducer<S>> extends MessageManager<S> implements
+final class MessageMetricManager<S extends MessageMetricProducer<S>> extends ConsumerManager<S> implements
 MessageMetricProducer<S>, MessageConsumer<S> {
 
     private final BidiMap<String, DefaultMessageMetric<? extends Number, S>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, S>>();
+
     private final S source;
 
     public MessageMetricManager(final S source) {
@@ -66,6 +66,17 @@ MessageMetricProducer<S>, MessageConsumer<S> {
     }
 
     @Override
+    public synchronized boolean stop() {
+        if (!super.stop()) {
+            return false;
+        }
+        for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
+            this.stopMeasuring(metricId);
+        }
+        return true;
+    }
+
+    @Override
     public synchronized boolean stopMeasuring(final MessageMetric<? extends Number, S> measure) {
         final String removed = this.metrics.removeValue(measure);
         return (removed != null);
@@ -75,16 +86,6 @@ MessageMetricProducer<S>, MessageConsumer<S> {
     public synchronized boolean stopMeasuring(final String id) {
         final MessageMetric<? extends Number, S> removed = this.metrics.remove(id);
         return (removed != null);
-    }
-
-    /**
-     * Will immediately terminate every measurement that hasn't yet been
-     * terminated.
-     */
-    public synchronized void terminateMeasuring() {
-        for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
-            this.stopMeasuring(metricId);
-        }
     }
 
 }

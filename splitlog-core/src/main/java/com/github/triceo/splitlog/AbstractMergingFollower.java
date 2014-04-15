@@ -48,12 +48,17 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower>
 
     @Override
     public boolean isFollowing() {
+        return !this.isStopped();
+    }
+
+    @Override
+    public synchronized boolean isStopped() {
         for (final AbstractLogWatchFollower f : this.followers) {
-            if (f.isFollowing()) {
-                return true;
+            if (!f.isStopped()) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -87,6 +92,17 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower>
         this.followers.remove(f);
         final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
         return af.unregisterMerge(this);
+    }
+
+    @Override
+    public synchronized boolean stop() {
+        if (this.isStopped()) {
+            return false;
+        }
+        for (final AbstractLogWatchFollower f : this.followers) {
+            f.stop();
+        }
+        return true;
     }
 
     @Override

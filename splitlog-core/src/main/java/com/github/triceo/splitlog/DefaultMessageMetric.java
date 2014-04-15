@@ -13,9 +13,9 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
-import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.api.MessageMetricProducer;
 
-final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S>,
+final class DefaultMessageMetric<T extends Number, S extends MessageMetricProducer<S>> implements MessageMetric<T, S>,
         MessageConsumer<S> {
 
     private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
@@ -80,6 +80,11 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
     }
 
     @Override
+    public boolean isStopped() {
+        return !this.getSource().isMeasuring(this);
+    }
+
+    @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
         if ((msg == null) || (status == null) || (source == null)) {
             throw new IllegalArgumentException("Neither message properties may be null.");
@@ -87,6 +92,11 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         final T newValue = this.measure.update(this, msg, status, source);
         this.stats.put(msg.getUniqueId(), ImmutablePair.of(this.getMessageCount() + 1, newValue));
         this.exchange.messageReceived(msg, status, source);
+    }
+
+    @Override
+    public boolean stop() {
+        return this.getSource().stopMeasuring(this);
     }
 
     /**

@@ -33,13 +33,13 @@ public class MergingTest extends DefaultFollowerBaseTest {
         // remove both followers from first merge, verify results
         mf.separate(f);
         Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
-        Assertions.assertThat(mf.isFollowing()).isTrue();
+        Assertions.assertThat(mf.isStopped()).isFalse();
         Assertions.assertThat(this.getLogWatch().stopFollowing(f2)).isTrue();
-        Assertions.assertThat(mf.isFollowing()).isFalse(); // no followers are
+        Assertions.assertThat(mf.isStopped()).isTrue(); // no followers are
                                                            // following
         Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
         mf.separate(f2);
-        Assertions.assertThat(mf.isFollowing()).isFalse(); // no followers are
+        Assertions.assertThat(mf.isStopped()).isTrue(); // no followers are
                                                            // following
         Assertions.assertThat(mf.getMessages().size()).isEqualTo(0);
         // none of these changes should have affected the second merge
@@ -50,6 +50,6 @@ public class MergingTest extends DefaultFollowerBaseTest {
         mf2.separate(f);
         Assertions.assertThat(mf2.getMessages().size()).isEqualTo(1);
         this.getLogWatch().terminate();
-        Assertions.assertThat(mf.isFollowing()).isFalse();
+        Assertions.assertThat(mf.isStopped()).isTrue();
     }
 }

@@ -22,7 +22,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MessageExchange<Follower> exchange = new MessageExchange<Follower>();
-    private final MessageManager<MergingFollower> messages = new MessageManager<MergingFollower>();
+    private final ConsumerManager<MergingFollower> messages = new ConsumerManager<MergingFollower>();
 
     public NonStoringMergingFollower(final Follower... followers) {
         super(followers);

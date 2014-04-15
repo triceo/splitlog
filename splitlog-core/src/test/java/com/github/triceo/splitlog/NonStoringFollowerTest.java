@@ -136,7 +136,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message3part1);
         // final part of the message, message3part2, will remain unflushed
         this.getLogWatch().stopFollowing(follower);
-        Assertions.assertThat(follower.isFollowing()).isFalse();
+        Assertions.assertThat(follower.isStopped()).isTrue();
     }
 
     @Test
@@ -198,7 +198,7 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(result).isEqualTo(message4);
         this.getLogWatch().stopFollowing(nestedFollower);
         // send another message, so the original follower has something extra
-        Assertions.assertThat(nestedFollower.isFollowing()).isFalse();
+        Assertions.assertThat(nestedFollower.isStopped()).isTrue();
         result = this.getWriter().write(message5, follower);
         // and make sure that the original follower has all messages
         final List<Message> messages = new LinkedList<Message>(follower.getMessages());
