@@ -38,8 +38,8 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
+    private final MeasuringConsumerManager<Follower> consumers = new MeasuringConsumerManager<Follower>(this);
     private final MessageExchange<LogWatch> exchange = new MessageExchange<LogWatch>();
-    private final MessageMetricManager<Follower> metrics = new MessageMetricManager<Follower>(this);
 
     public NonStoringFollower(final DefaultLogWatch watch,
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
@@ -64,27 +64,27 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public MessageMetric<? extends Number, Follower> getMetric(final String id) {
-        return this.metrics.getMetric(id);
+        return this.consumers.getMetric(id);
     }
 
     @Override
     public String getMetricId(final MessageMetric<? extends Number, Follower> measure) {
-        return this.metrics.getMetricId(measure);
+        return this.consumers.getMetricId(measure);
     }
 
     @Override
     public boolean isConsuming(final MessageConsumer<Follower> consumer) {
-        return this.metrics.isConsuming(consumer);
+        return this.consumers.isConsuming(consumer);
     }
 
     @Override
     public boolean isMeasuring(final MessageMetric<? extends Number, Follower> metric) {
-        return this.metrics.isMeasuring(metric);
+        return this.consumers.isMeasuring(metric);
     }
 
     @Override
     public boolean isMeasuring(final String id) {
-        return this.metrics.isMeasuring(id);
+        return this.consumers.isMeasuring(id);
     }
 
     private <T extends Number> MessageMetric<T, Follower> measure(final MessageMeasure<T, Follower> measure,
@@ -92,7 +92,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
-        return this.metrics.startMeasuring(measure, id);
+        return this.consumers.startMeasuring(measure, id);
     }
 
     @Override
@@ -106,12 +106,12 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
             mf.messageReceived(msg, status, this);
         }
-        this.metrics.messageReceived(msg, status, this);
+        this.consumers.messageReceived(msg, status, this);
     }
 
     @Override
     public boolean startConsuming(final MessageConsumer<Follower> consumer) {
-        return this.metrics.startConsuming(consumer);
+        return this.consumers.startConsuming(consumer);
     }
 
     @Override
@@ -122,17 +122,17 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public boolean stopConsuming(final MessageConsumer<Follower> consumer) {
-        return this.metrics.stopConsuming(consumer);
+        return this.consumers.stopConsuming(consumer);
     }
 
     @Override
     public boolean stopMeasuring(final MessageMetric<? extends Number, Follower> metric) {
-        return this.metrics.stopMeasuring(metric);
+        return this.consumers.stopMeasuring(metric);
     }
 
     @Override
     public boolean stopMeasuring(final String id) {
-        return this.metrics.stopMeasuring(id);
+        return this.consumers.stopMeasuring(id);
     }
 
     /**

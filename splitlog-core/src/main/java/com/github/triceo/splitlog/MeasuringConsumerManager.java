@@ -12,29 +12,27 @@ import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 
-final class MessageMetricManager<S extends MessageMetricProducer<S>> extends ConsumerManager<S> implements
-MessageMetricProducer<S>, MessageConsumer<S> {
+final class MeasuringConsumerManager<P extends MessageMetricProducer<P>> extends ConsumerManager<P> implements
+MessageMetricProducer<P>, MessageConsumer<P> {
 
-    private final BidiMap<String, DefaultMessageMetric<? extends Number, S>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, S>>();
+    private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, P>>();
 
-    private final S source;
-
-    public MessageMetricManager(final S source) {
-        this.source = source;
+    public MeasuringConsumerManager(final P producer) {
+        super(producer);
     }
 
     @Override
-    public synchronized MessageMetric<? extends Number, S> getMetric(final String id) {
+    public synchronized MessageMetric<? extends Number, P> getMetric(final String id) {
         return this.metrics.get(id);
     }
 
     @Override
-    public synchronized String getMetricId(final MessageMetric<? extends Number, S> measure) {
+    public synchronized String getMetricId(final MessageMetric<? extends Number, P> measure) {
         return this.metrics.getKey(measure);
     }
 
     @Override
-    public boolean isMeasuring(final MessageMetric<? extends Number, S> metric) {
+    public boolean isMeasuring(final MessageMetric<? extends Number, P> metric) {
         return this.metrics.containsValue(metric);
     }
 
@@ -44,15 +42,15 @@ MessageMetricProducer<S>, MessageConsumer<S> {
     }
 
     @Override
-    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
+    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final P source) {
         super.messageReceived(msg, status, source);
-        for (final DefaultMessageMetric<? extends Number, S> metric : this.metrics.values()) {
+        for (final DefaultMessageMetric<? extends Number, P> metric : this.metrics.values()) {
             metric.messageReceived(msg, status, source);
         }
     }
 
     @Override
-    public synchronized <T extends Number> MessageMetric<T, S> startMeasuring(final MessageMeasure<T, S> measure,
+    public synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
             final String id) {
         if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
@@ -61,7 +59,7 @@ MessageMetricProducer<S>, MessageConsumer<S> {
         } else if (this.metrics.containsKey(id)) {
             throw new IllegalArgumentException("Duplicate ID:" + id);
         }
-        final DefaultMessageMetric<T, S> metric = new DefaultMessageMetric<T, S>(this.source, measure);
+        final DefaultMessageMetric<T, P> metric = new DefaultMessageMetric<T, P>(this.getProducer(), measure);
         this.metrics.put(id, metric);
         return metric;
     }
@@ -78,14 +76,14 @@ MessageMetricProducer<S>, MessageConsumer<S> {
     }
 
     @Override
-    public synchronized boolean stopMeasuring(final MessageMetric<? extends Number, S> measure) {
+    public synchronized boolean stopMeasuring(final MessageMetric<? extends Number, P> measure) {
         final String removed = this.metrics.removeValue(measure);
         return (removed != null);
     }
 
     @Override
     public synchronized boolean stopMeasuring(final String id) {
-        final MessageMetric<? extends Number, S> removed = this.metrics.remove(id);
+        final MessageMetric<? extends Number, P> removed = this.metrics.remove(id);
         return (removed != null);
     }
 

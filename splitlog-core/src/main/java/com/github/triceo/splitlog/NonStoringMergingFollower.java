@@ -21,8 +21,8 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
+    private final ConsumerManager<MergingFollower> consumers = new ConsumerManager<MergingFollower>(this);
     private final MessageExchange<Follower> exchange = new MessageExchange<Follower>();
-    private final ConsumerManager<MergingFollower> messages = new ConsumerManager<MergingFollower>();
 
     public NonStoringMergingFollower(final Follower... followers) {
         super(followers);
@@ -44,7 +44,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
 
     @Override
     public boolean isConsuming(final MessageConsumer<MergingFollower> consumer) {
-        return this.messages.isConsuming(consumer);
+        return this.consumers.isConsuming(consumer);
     }
 
     @Override
@@ -58,12 +58,12 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
 
     @Override
     public boolean startConsuming(final MessageConsumer<MergingFollower> consumer) {
-        return this.messages.startConsuming(consumer);
+        return this.consumers.startConsuming(consumer);
     }
 
     @Override
     public boolean stopConsuming(final MessageConsumer<MergingFollower> consumer) {
-        return this.messages.stopConsuming(consumer);
+        return this.consumers.stopConsuming(consumer);
     }
 
     /**

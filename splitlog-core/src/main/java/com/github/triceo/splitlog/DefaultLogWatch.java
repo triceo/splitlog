@@ -36,24 +36,24 @@ final class DefaultLogWatch implements LogWatch {
     private MessageBuilder currentlyProcessedMessage;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
     private boolean isTerminated = false;
-    private final LogWatchStorageManager messaging;
-    private final MessageMetricManager<LogWatch> metrics = new MessageMetricManager<LogWatch>(this);
+    private final MeasuringConsumerManager<LogWatch> messaging = new MeasuringConsumerManager<LogWatch>(this);
     private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
+    private final LogWatchStorageManager storage;
     private final LogWatchSweepingManager sweeping;
     private final LogWatchTailingManager tailing;
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-        final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
-            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-            final int bufferSize, final long delayForTailerStart) {
+            final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
+        final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+        final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
-        this.messaging = new LogWatchStorageManager(this, capacity, acceptanceCondition);
+        this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
                 reopenBetweenReads, bufferSize);
-        this.sweeping = new LogWatchSweepingManager(this.messaging, delayBetweenSweeps);
+        this.sweeping = new LogWatchSweepingManager(this.storage, delayBetweenSweeps);
         this.watchedFile = watchedFile;
     }
 
@@ -91,7 +91,7 @@ final class DefaultLogWatch implements LogWatch {
      *         store.
      */
     int countMessagesInStorage() {
-        return this.messaging.getMessageStore().size();
+        return this.storage.getMessageStore().size();
     }
 
     /**
@@ -106,17 +106,17 @@ final class DefaultLogWatch implements LogWatch {
      *         received.
      */
     protected List<Message> getAllMessages(final Follower follower) {
-        return this.messaging.getAllMessages(follower);
+        return this.storage.getAllMessages(follower);
     }
 
     @Override
     public MessageMetric<? extends Number, LogWatch> getMetric(final String id) {
-        return this.metrics.getMetric(id);
+        return this.messaging.getMetric(id);
     }
 
     @Override
     public String getMetricId(final MessageMetric<? extends Number, LogWatch> measure) {
-        return this.metrics.getMetricId(measure);
+        return this.messaging.getMetricId(measure);
     }
 
     @Override
@@ -136,10 +136,10 @@ final class DefaultLogWatch implements LogWatch {
      */
     private synchronized Message handleCompleteMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildFinal(this.splitter);
-        final boolean messageAccepted = this.messaging.registerMessage(message, this);
+        final boolean messageAccepted = this.storage.registerMessage(message, this);
         final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
                 : MessageDeliveryStatus.REJECTED;
-        this.metrics.messageReceived(message, status, this);
+        this.messaging.messageReceived(message, status, this);
         return messageAccepted ? message : null;
     }
 
@@ -153,13 +153,13 @@ final class DefaultLogWatch implements LogWatch {
      */
     private synchronized Message handleIncomingMessage(final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
-        this.metrics.messageReceived(message, MessageDeliveryStatus.INCOMING, this);
+        this.messaging.messageReceived(message, MessageDeliveryStatus.INCOMING, this);
         return message;
     }
 
     /**
      * Notify {@link Follower} of a message that could not be delivered fully as
-     * the Follower terminated. Will not notify local metrics.
+     * the Follower terminated. Will not notify local messaging.
      *
      * @param follower
      *            The follower that was terminated.
@@ -176,7 +176,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean isConsuming(final MessageConsumer<LogWatch> consumer) {
-        return this.metrics.isConsuming(consumer);
+        return this.messaging.isConsuming(consumer);
     }
 
     @Override
@@ -196,12 +196,12 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean isMeasuring(final MessageMetric<? extends Number, LogWatch> metric) {
-        return this.metrics.isMeasuring(metric);
+        return this.messaging.isMeasuring(metric);
     }
 
     @Override
     public boolean isMeasuring(final String id) {
-        return this.metrics.isMeasuring(id);
+        return this.messaging.isMeasuring(id);
     }
 
     @Override
@@ -211,7 +211,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean startConsuming(final MessageConsumer<LogWatch> consumer) {
-        return this.metrics.startConsuming(consumer);
+        return this.messaging.startConsuming(consumer);
     }
 
     @Override
@@ -229,7 +229,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
-        final long howLong, final TimeUnit unit) {
+            final long howLong, final TimeUnit unit) {
         final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
@@ -249,7 +249,7 @@ final class DefaultLogWatch implements LogWatch {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
         this.sweeping.start();
-        // assemble list of metrics to be handing down and then the follower
+        // assemble list of messaging to be handing down and then the follower
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number, Follower>>>();
         for (final BidiMap.Entry<String, MessageMeasure<? extends Number, Follower>> entry : this.handingDown
                 .entrySet()) {
@@ -258,8 +258,8 @@ final class DefaultLogWatch implements LogWatch {
         }
         // register the follower
         final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
-        this.metrics.startConsuming(follower);
-        this.messaging.followerStarted(follower);
+        this.messaging.startConsuming(follower);
+        this.storage.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
         if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
             // we have listeners, let's start tailing
@@ -284,16 +284,16 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
-        final String id) {
+            final String id) {
         if (!this.isTerminated()) {
             throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
         }
-        return this.metrics.startMeasuring(measure, id);
+        return this.messaging.startMeasuring(measure, id);
     }
 
     @Override
     public boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
-        return this.metrics.stopConsuming(consumer);
+        return this.messaging.stopConsuming(consumer);
     }
 
     @Override
@@ -304,8 +304,8 @@ final class DefaultLogWatch implements LogWatch {
         if (this.currentlyProcessedMessage != null) {
             this.handleUndeliveredMessage((AbstractLogWatchFollower) follower, this.currentlyProcessedMessage);
         }
-        this.metrics.stopConsuming(follower);
-        this.messaging.followerTerminated(follower);
+        this.messaging.stopConsuming(follower);
+        this.storage.followerTerminated(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
         if (this.numberOfActiveFollowers.decrementAndGet() == 0) {
             this.tailing.stop();
@@ -326,12 +326,12 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean stopMeasuring(final MessageMetric<? extends Number, LogWatch> metric) {
-        return this.metrics.stopMeasuring(metric);
+        return this.messaging.stopMeasuring(metric);
     }
 
     @Override
     public boolean stopMeasuring(final String id) {
-        return this.metrics.stopMeasuring(id);
+        return this.messaging.stopMeasuring(id);
     }
 
     /**
@@ -346,7 +346,7 @@ final class DefaultLogWatch implements LogWatch {
             return false;
         }
         this.isTerminated = true;
-        this.metrics.stop();
+        this.messaging.stop();
         this.handingDown.clear();
         this.sweeping.stop();
         this.previousAcceptedMessage = null;

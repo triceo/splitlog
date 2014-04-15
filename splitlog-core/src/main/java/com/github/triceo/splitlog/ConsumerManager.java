@@ -12,8 +12,17 @@ import com.github.triceo.splitlog.api.MessageProducer;
 
 public class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P> {
 
-    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final Set<MessageConsumer<P>> consumers = new LinkedHashSet<MessageConsumer<P>>();
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
+    private final P producer;
+
+    public ConsumerManager(final P producer) {
+        this.producer = producer;
+    }
+
+    public P getProducer() {
+        return this.producer;
+    }
 
     @Override
     public boolean isConsuming(final MessageConsumer<P> consumer) {
@@ -26,7 +35,8 @@ public class ConsumerManager<P extends MessageProducer<P>> implements MessagePro
     }
 
     @Override
-    public synchronized void messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    public synchronized void
+        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         for (final MessageConsumer<P> consumer : this.consumers) {
             consumer.messageReceived(message, status, producer);
         }
