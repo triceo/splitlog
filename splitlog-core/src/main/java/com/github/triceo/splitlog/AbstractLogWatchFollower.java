@@ -32,25 +32,15 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractLogWatchFollower extends AbstractFollower implements Follower, MessageListener<LogWatch> {
+abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> implements Follower,
+        MessageListener<LogWatch> {
 
+    private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
     private final Set<Message> tags = new LinkedHashSet<Message>();
     private final DefaultLogWatch watch;
-    private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
-
-    protected Set<Message> getTags() {
-        return this.tags;
-    }
 
     protected AbstractLogWatchFollower(final DefaultLogWatch watch) {
         this.watch = watch;
-    }
-
-    @Override
-    public Message tag(final String tagLine) {
-        final Message message = new MessageBuilder(tagLine).buildTag();
-        this.tags.add(message);
-        return message;
     }
 
     @Override
@@ -58,30 +48,56 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Foll
         return NoopMessageFormatter.INSTANCE;
     }
 
+    @Override
+    public LogWatch getFollowed() {
+        return this.getWatch();
+    }
+
     protected Set<AbstractMergingFollower> getMergingFollowersToNotify() {
         return Collections.unmodifiableSet(this.mergingFollowersToNotify);
     }
 
-    @Override
-    public LogWatch getFollowed() {
-        return this.getWatch();
+    protected Set<Message> getTags() {
+        return this.tags;
     }
 
     protected DefaultLogWatch getWatch() {
         return this.watch;
     }
 
+    @Override
+    public boolean isFollowing() {
+        return this.watch.isFollowedBy(this);
+    }
+
+    @Override
+    public MergingFollower mergeWith(final CommonFollower<?> f) {
+        if (f == null) {
+            throw new IllegalArgumentException("Cannot merge with null.");
+        } else if (f == this) {
+            throw new IllegalArgumentException("Cannot merge with self.");
+        }
+        if (f instanceof MergingFollower) {
+            final MergingFollower mf = (MergingFollower) f;
+            final Set<Follower> followers = new HashSet<Follower>(mf.getMerged());
+            followers.add(this);
+            return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
+        } else if (f instanceof Follower) {
+            return new NonStoringMergingFollower(this, (Follower) f);
+        } else {
+            throw new IllegalArgumentException("Unsupported follower type: " + f.getClass());
+        }
+    }
+
     protected boolean registerMerge(final AbstractMergingFollower mf) {
         return this.mergingFollowersToNotify.add(mf);
     }
 
-    protected boolean unregisterMerge(final AbstractMergingFollower mf) {
-        return this.mergingFollowersToNotify.remove(mf);
-    }
-
     @Override
-    public boolean isFollowing() {
-        return this.watch.isFollowedBy(this);
+    public Message tag(final String tagLine) {
+        final Message message = new MessageBuilder(tagLine).buildTag();
+        this.tags.add(message);
+        return message;
     }
 
     @Override
@@ -93,6 +109,10 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Foll
         }
         builder.append("isFollowing()=").append(this.isFollowing()).append("]");
         return builder.toString();
+    }
+
+    protected boolean unregisterMerge(final AbstractMergingFollower mf) {
+        return this.mergingFollowersToNotify.remove(mf);
     }
 
     @Override
@@ -117,23 +137,6 @@ abstract class AbstractLogWatchFollower extends AbstractFollower implements Foll
             return false;
         } finally {
             IOUtils.closeQuietly(w);
-        }
-    }
-
-    @Override
-    public MergingFollower mergeWith(final CommonFollower f) {
-        if (f == null) {
-            throw new IllegalArgumentException("Cannot merge with null.");
-        } else if (f == this) {
-            throw new IllegalArgumentException("Cannot merge with self.");
-        }
-        if (f instanceof MergingFollower) {
-            final MergingFollower mf = (MergingFollower) f;
-            final Set<Follower> followers = new HashSet<Follower>(mf.getMerged());
-            followers.add(this);
-            return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
-        } else {
-            return new NonStoringMergingFollower(this, f);
         }
     }
 

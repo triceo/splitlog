@@ -25,15 +25,13 @@ import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
-abstract class AbstractMergingFollower extends AbstractFollower implements MergingFollower, MessageListener<Follower> {
+abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower> implements MergingFollower,
+        MessageListener<Follower> {
 
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
 
-    protected AbstractMergingFollower(final CommonFollower... followers) {
-        for (final CommonFollower f : followers) {
-            if (!(f instanceof AbstractLogWatchFollower)) {
-                throw new IllegalArgumentException("Illegal follower: " + f);
-            }
+    protected AbstractMergingFollower(final Follower... followers) {
+        for (final Follower f : followers) {
             final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
             this.followers.add(af);
             af.registerMerge(this);
@@ -46,14 +44,8 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
     }
 
     @Override
-    public boolean separate(final Follower f) {
-        if (!this.followers.contains(f)) {
-            return false;
-        }
-        // we know about this follower, so the cast is safe
-        this.followers.remove(f);
-        final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
-        return af.unregisterMerge(this);
+    public Collection<? extends Follower> getMerged() {
+        return Collections.unmodifiableSet(this.followers);
     }
 
     @Override
@@ -67,8 +59,33 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
     }
 
     @Override
-    public Collection<? extends Follower> getMerged() {
-        return Collections.unmodifiableSet(this.followers);
+    public MergingFollower mergeWith(final CommonFollower<?> f) {
+        if (f == null) {
+            throw new IllegalArgumentException("Cannot merge with null.");
+        } else if (f == this) {
+            throw new IllegalArgumentException("Cannot merge with self.");
+        }
+        final Set<Follower> followers = new HashSet<Follower>(this.followers);
+        if (f instanceof MergingFollower) {
+            final MergingFollower mf = (MergingFollower) f;
+            followers.addAll(mf.getMerged());
+        } else if (f instanceof Follower) {
+            followers.add((Follower) f);
+        } else {
+            throw new IllegalArgumentException("Unsupported follower type: " + f.getClass());
+        }
+        return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
+    }
+
+    @Override
+    public boolean separate(final Follower f) {
+        if (!this.followers.contains(f)) {
+            return false;
+        }
+        // we know about this follower, so the cast is safe
+        this.followers.remove(f);
+        final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
+        return af.unregisterMerge(this);
     }
 
     @Override
@@ -118,23 +135,6 @@ abstract class AbstractMergingFollower extends AbstractFollower implements Mergi
         } finally {
             IOUtils.closeQuietly(w);
         }
-    }
-
-    @Override
-    public MergingFollower mergeWith(final CommonFollower f) {
-        if (f == null) {
-            throw new IllegalArgumentException("Cannot merge with null.");
-        } else if (f == this) {
-            throw new IllegalArgumentException("Cannot merge with self.");
-        }
-        final Set<CommonFollower> followers = new HashSet<CommonFollower>(this.followers);
-        if (f instanceof MergingFollower) {
-            final MergingFollower mf = (MergingFollower) f;
-            followers.addAll(mf.getMerged());
-        } else {
-            followers.add(f);
-        }
-        return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
 
 }

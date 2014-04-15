@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
  * On top of the {@link CommonFollower}'s functions, this allows for merging
  * followers.
  */
-public interface Follower extends CommonFollower, MessageProducer<Follower> {
+public interface Follower extends CommonFollower<Follower>, MessageMetricProducer<Follower> {
 
     /**
      * Retrieve the log watch that is being followed.

@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * every tag that has been made using any of the {@link #getMerged()}.
  *
  */
-public interface MergingFollower extends CommonFollower {
+public interface MergingFollower extends CommonFollower<MergingFollower>, MessageProducer<MergingFollower> {
 
     /**
      * Retrieve followers that are currently part of this merge.
