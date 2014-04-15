@@ -12,7 +12,7 @@ import java.util.SortedSet;
  * Alternatively, each {@link Follower#tag(String)} will create a Message within
  * the follower and not notify anyone.
  */
-public interface CommonFollower {
+public interface CommonFollower<P extends MessageProducer<P>> {
 
     /**
      * Retrieve messages that this follower has been notified of, and tags. They
@@ -72,7 +72,7 @@ public interface CommonFollower {
      *         hold every merged {@link CommonFollower} individually and not
      *         compose {@link MergingFollower}s.
      */
-    MergingFollower mergeWith(CommonFollower f);
+    MergingFollower mergeWith(CommonFollower<? extends MessageProducer<?>> f);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using a

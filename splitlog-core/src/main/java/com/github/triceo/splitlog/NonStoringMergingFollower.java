@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
@@ -22,7 +21,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
 
     private final MessageExchange<Follower> exchange = new MessageExchange<Follower>();
 
-    public NonStoringMergingFollower(final CommonFollower... followers) {
+    public NonStoringMergingFollower(final Follower... followers) {
         super(followers);
     }
 
