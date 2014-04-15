@@ -11,7 +11,7 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 
-public class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P> {
+class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P> {
 
     private final Set<MessageConsumer<P>> consumers = new LinkedHashSet<MessageConsumer<P>>();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);

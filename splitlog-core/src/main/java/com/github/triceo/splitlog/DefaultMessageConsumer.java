@@ -6,7 +6,7 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 
-public class DefaultMessageConsumer<P extends MessageProducer<P>> implements MessageConsumer<P> {
+final class DefaultMessageConsumer<P extends MessageProducer<P>> implements MessageConsumer<P> {
 
     private final MessageListener<P> listener;
     private final P producer;

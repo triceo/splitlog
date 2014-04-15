@@ -15,8 +15,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 
-final class DefaultMessageMetric<T extends Number, S extends MessageMetricProducer<S>> implements MessageMetric<T, S>,
-MessageConsumer<S> {
+final class DefaultMessageMetric<T extends Number, S extends MessageMetricProducer<S>> implements MessageMetric<T, S>, MessageConsumer<S> {
 
     private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
     private final MessageMeasure<T, S> measure;
