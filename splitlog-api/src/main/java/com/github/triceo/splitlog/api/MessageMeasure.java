@@ -11,7 +11,7 @@ package com.github.triceo.splitlog.api;
  * @param <S>
  *            Where this is getting its {@link Message}s from.
  */
-public interface MessageMeasure<T extends Number, S extends MessageSource<S>> {
+public interface MessageMeasure<T extends Number, S extends MessageProducer<S>> {
 
     /**
      * Update metric after the arrival of another message.

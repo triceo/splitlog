@@ -10,9 +10,9 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
-import com.github.triceo.splitlog.api.MessageSource;
+import com.github.triceo.splitlog.api.MessageProducer;
 
-final class MessageMetricManager<S extends MessageSource<S>> implements MessageMetricProducer<S>, MessageListener<S> {
+final class MessageMetricManager<S extends MessageProducer<S>> implements MessageMetricProducer<S>, MessageListener<S> {
 
     private final BidiMap<String, DefaultMessageMetric<? extends Number, S>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, S>>();
     private final S source;
@@ -50,7 +50,7 @@ final class MessageMetricManager<S extends MessageSource<S>> implements MessageM
 
     @Override
     public synchronized <T extends Number> MessageMetric<T, S> startMeasuring(final MessageMeasure<T, S> measure,
-        final String id) {
+            final String id) {
         if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
         } else if (id == null) {

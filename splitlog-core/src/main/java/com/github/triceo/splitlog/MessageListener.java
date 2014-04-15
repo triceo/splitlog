@@ -2,7 +2,7 @@ package com.github.triceo.splitlog;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageSource;
+import com.github.triceo.splitlog.api.MessageProducer;
 
 /**
  * Implementors of this interface state that they are interested in knowing when
@@ -11,7 +11,7 @@ import com.github.triceo.splitlog.api.MessageSource;
  * @param <S>
  *            The source that they expect such notifications from.
  */
-public interface MessageListener<S extends MessageSource<S>> {
+public interface MessageListener<S extends MessageProducer<S>> {
 
     /**
      * Notify the code of a new message becoming available in the log.

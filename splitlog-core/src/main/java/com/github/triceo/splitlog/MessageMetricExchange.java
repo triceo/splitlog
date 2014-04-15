@@ -11,9 +11,9 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
-import com.github.triceo.splitlog.api.MessageSource;
+import com.github.triceo.splitlog.api.MessageProducer;
 
-final class MessageMetricExchange<T extends Number, S extends MessageSource<S>> implements MessageListener<S> {
+final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>> implements MessageListener<S> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageMetricExchange.class);
 
@@ -38,7 +38,7 @@ final class MessageMetricExchange<T extends Number, S extends MessageSource<S>> 
             return;
         }
         MessageMetricExchange.LOGGER
-                .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
+        .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
         this.messageBlockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);
