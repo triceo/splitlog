@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  *
  * They receive all messages that their {@link #getMerged()} receive. It is left
  * to the discretion of users to {@link #waitFor(MidDeliveryMessageCondition)}
- * any message or just for messages from a particular {@link MessageSource}.
+ * any message or just for messages from a particular {@link MessageProducer}.
  *
  * Unlike {@link Follower}, this one can not tag. However, it will retrieve
  * every tag that has been made using any of the {@link #getMerged()}.

@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * The primary point of interaction with this tool. Allows users to start
  * listening to changes in log files.
  */
-public interface LogWatch extends MessageSource<LogWatch> {
+public interface LogWatch extends MessageProducer<LogWatch> {
 
     /**
      * The file that is being tracked by this class.

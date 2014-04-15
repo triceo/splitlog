@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  * @param <S>
  *            Where this is getting its {@link Message}s from.
  */
-public interface MessageMetric<T extends Number, S extends MessageSource<S>> {
+public interface MessageMetric<T extends Number, S extends MessageProducer<S>> {
 
     /**
      * Retrieves the measure that is used to produce the value of this metric.

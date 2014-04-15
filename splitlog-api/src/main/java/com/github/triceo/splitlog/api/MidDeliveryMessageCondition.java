@@ -8,7 +8,7 @@ package com.github.triceo.splitlog.api;
  * @param <S>
  *            Where this is getting its {@link Message}s from.
  */
-public interface MidDeliveryMessageCondition<S extends MessageSource<S>> {
+public interface MidDeliveryMessageCondition<S extends MessageProducer<S>> {
 
     /**
      * Evaluate a message against a user-provided condition.

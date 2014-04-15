@@ -7,10 +7,10 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
-import com.github.triceo.splitlog.api.MessageSource;
+import com.github.triceo.splitlog.api.MessageProducer;
 
-final class DefaultMessageMetric<T extends Number, S extends MessageSource<S>> implements MessageMetric<T, S>,
-MessageListener<S> {
+final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S>,
+        MessageListener<S> {
 
     private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
     private final MessageMeasure<T, S> measure;
