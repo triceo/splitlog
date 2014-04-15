@@ -34,6 +34,8 @@ public interface MessageConsumer<P extends MessageProducer<P>> {
      *            Current status of the message.
      * @param producer
      *            The code that is notifying us of this event.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
      */
     void messageReceived(Message message, MessageDeliveryStatus status, P producer);
 

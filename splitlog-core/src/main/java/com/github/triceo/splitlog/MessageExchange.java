@@ -30,12 +30,14 @@ final class MessageExchange<S extends MessageProducer<S>> implements MessageCons
 
     @Override
     public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
-        MessageExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
-        if (this.messageBlockingCondition == null) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Messsage exchange already stopped.");
+        } else if (this.messageBlockingCondition == null) {
             MessageExchange.LOGGER.debug("Not waiting for message '{}' in state {} from {}.", msg, status, source);
             // this does nothing with the message
             return;
         }
+        MessageExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         // check if the user code accepts the message
         if (!this.messageBlockingCondition.accept(msg, status, source)) {
             return;
@@ -62,6 +64,9 @@ final class MessageExchange<S extends MessageProducer<S>> implements MessageCons
      */
     public synchronized Message waitForMessage(final MidDeliveryMessageCondition<S> condition, final long timeout,
         final TimeUnit unit) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Message exchange already stopped.");
+        }
         this.messageBlockingCondition = condition;
         try {
             MessageExchange.LOGGER.info("Thread blocked waiting for message to pass condition {}.", condition);

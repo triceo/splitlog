@@ -36,7 +36,10 @@ public class ConsumerManager<P extends MessageProducer<P>> implements MessagePro
 
     @Override
     public synchronized void
-        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Consumer manager already stopped.");
+        }
         for (final MessageConsumer<P> consumer : this.consumers) {
             consumer.messageReceived(message, status, producer);
         }
@@ -44,6 +47,9 @@ public class ConsumerManager<P extends MessageProducer<P>> implements MessagePro
 
     @Override
     public synchronized boolean startConsuming(final MessageConsumer<P> consumer) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Consumer manager already stopped.");
+        }
         return this.consumers.add(consumer);
     }
 

@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public interface MergingFollower extends CommonFollower<MergingFollower>, MessageProducer<MergingFollower>,
-MessageConsumer<Follower> {
+        MessageConsumer<Follower> {
 
     /**
      * Retrieve followers that are currently part of this merge.
@@ -54,6 +54,8 @@ MessageConsumer<Follower> {
      * @param condition
      *            Condition that needs to be true for the method to unblock.
      * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
      */
     Message waitFor(MidDeliveryMessageCondition<Follower> condition);
 
@@ -68,6 +70,8 @@ MessageConsumer<Follower> {
      * @param unit
      *            Unit of time.
      * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
      */
     Message waitFor(MidDeliveryMessageCondition<Follower> condition, long timeout, TimeUnit unit);
 

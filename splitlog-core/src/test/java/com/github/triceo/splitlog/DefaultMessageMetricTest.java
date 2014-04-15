@@ -42,9 +42,8 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testIncreases() {
-        final LogWatch watch = this.getLogWatch(); // placeholder
-        final DefaultMessageMetric<Integer, LogWatch> metric = new DefaultMessageMetric<Integer, LogWatch>(
-                this.getLogWatch(), DefaultMessageMetricTest.DEFAULT_MEASURE);
+        final LogWatch watch = this.getLogWatch();
+        final DefaultMessageMetric<Integer, LogWatch> metric = (DefaultMessageMetric<Integer, LogWatch>) watch.startMeasuring(DefaultMessageMetricTest.DEFAULT_MEASURE, "test");
         Assertions.assertThat(metric.getMessageCount(null)).isEqualTo(0);
         Assertions.assertThat(metric.getValue(null)).isNull();
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(0);
@@ -75,8 +74,7 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
     @Test
     public void testWaiting() {
         final LogWatch watch = this.getLogWatch(); // placeholder
-        final DefaultMessageMetric<Integer, LogWatch> metric = new DefaultMessageMetric<Integer, LogWatch>(
-                this.getLogWatch(), DefaultMessageMetricTest.DEFAULT_MEASURE);
+        final DefaultMessageMetric<Integer, LogWatch> metric = (DefaultMessageMetric<Integer, LogWatch>) watch.startMeasuring(DefaultMessageMetricTest.DEFAULT_MEASURE, "test");
         Assertions.assertThat(metric.getValue()).isNull();
         metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getValue()).isEqualTo(1);

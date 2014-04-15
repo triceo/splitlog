@@ -36,18 +36,20 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
 
     @Override
     public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
-        MessageMetricExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
-        if (this.messageBlockingCondition == null) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Metric message exchange already stopped.");
+        } else if (this.messageBlockingCondition == null) {
             MessageMetricExchange.LOGGER.debug("Not blocked.");
             // this does nothing with the message
             return;
         }
+        MessageMetricExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         // check if the user code accepts the message
         if (!this.messageBlockingCondition.accept(this.metric)) {
             return;
         }
         MessageMetricExchange.LOGGER
-                .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
+        .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
         this.messageBlockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);
@@ -69,6 +71,9 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
      */
     public synchronized Message waitForMessage(final MessageMetricCondition<T, S> condition, final long timeout,
         final TimeUnit unit) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Metric message exchange already stopped.");
+        }
         this.messageBlockingCondition = condition;
         try {
             MessageMetricExchange.LOGGER.info("Thread blocked waiting for message to pass condition {}.", condition);

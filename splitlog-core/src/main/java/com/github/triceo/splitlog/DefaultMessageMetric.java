@@ -16,7 +16,7 @@ import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageMetricProducer<S>> implements MessageMetric<T, S>,
-        MessageConsumer<S> {
+MessageConsumer<S> {
 
     private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
     private final MessageMeasure<T, S> measure;
@@ -86,7 +86,9 @@ final class DefaultMessageMetric<T extends Number, S extends MessageMetricProduc
 
     @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
-        if ((msg == null) || (status == null) || (source == null)) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Consumer manager already stopped.");
+        } else if ((msg == null) || (status == null) || (source == null)) {
             throw new IllegalArgumentException("Neither message properties may be null.");
         }
         final T newValue = this.measure.update(this, msg, status, source);

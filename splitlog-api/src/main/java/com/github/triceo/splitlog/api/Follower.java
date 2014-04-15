@@ -46,6 +46,8 @@ public interface Follower extends CommonFollower<Follower>, MessageMetricProduce
      * @param tagLine
      *            Text of the message.
      * @return The tag message that was recorded.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
      */
     Message tag(String tagLine);
 
@@ -55,6 +57,8 @@ public interface Follower extends CommonFollower<Follower>, MessageMetricProduce
      * @param condition
      *            Condition that needs to be true for the method to unblock.
      * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
      */
     Message waitFor(MidDeliveryMessageCondition<LogWatch> condition);
 
@@ -69,6 +73,8 @@ public interface Follower extends CommonFollower<Follower>, MessageMetricProduce
      * @param unit
      *            Unit of time.
      * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
      */
     Message waitFor(MidDeliveryMessageCondition<LogWatch> condition, long timeout, TimeUnit unit);
 

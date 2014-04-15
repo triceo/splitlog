@@ -13,7 +13,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 
 final class MeasuringConsumerManager<P extends MessageMetricProducer<P>> extends ConsumerManager<P> implements
-MessageMetricProducer<P>, MessageConsumer<P> {
+        MessageMetricProducer<P>, MessageConsumer<P> {
 
     private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, P>>();
 
@@ -51,8 +51,10 @@ MessageMetricProducer<P>, MessageConsumer<P> {
 
     @Override
     public synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
-            final String id) {
-        if (measure == null) {
+        final String id) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Measuring consumer manager already stopped.");
+        } else if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
         } else if (id == null) {
             throw new IllegalArgumentException("ID may not be null.");

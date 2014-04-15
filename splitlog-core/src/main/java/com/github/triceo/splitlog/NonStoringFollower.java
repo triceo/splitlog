@@ -42,7 +42,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private final MessageExchange<LogWatch> exchange = new MessageExchange<LogWatch>();
 
     public NonStoringFollower(final DefaultLogWatch watch,
-        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
+            final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.measure(pair.getValue(), pair.getKey(), false);
@@ -88,7 +88,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     private <T extends Number> MessageMetric<T, Follower> measure(final MessageMeasure<T, Follower> measure,
-            final String id, final boolean checkIfFollowing) {
+        final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
@@ -98,7 +98,9 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
         final LogWatch source) {
-        if (source != this.getWatch()) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Follower already stopped.");
+        } else if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
@@ -116,7 +118,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-            final String id) {
+        final String id) {
         return this.measure(measure, id, true);
     }
 

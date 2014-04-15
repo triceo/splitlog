@@ -271,7 +271,9 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean startHandingDown(final MessageMeasure<? extends Number, Follower> measure,
         final String id) {
-        if (measure == null) {
+        if (this.isTerminated()) {
+            throw new IllegalStateException("Log watch already terminated.");
+        } else if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
         } else if (id == null) {
             throw new IllegalArgumentException("ID may not be null.");
@@ -285,9 +287,6 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
             final String id) {
-        if (!this.isTerminated()) {
-            throw new IllegalStateException("Cannot start measuring, log watch already terminated.");
-        }
         return this.messaging.startMeasuring(measure, id);
     }
 
