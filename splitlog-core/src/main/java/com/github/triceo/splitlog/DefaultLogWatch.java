@@ -165,7 +165,7 @@ final class DefaultLogWatch implements LogWatch {
 
     /**
      * Notify {@link Follower} of a message that could not be delivered fully as
-     * the Follower terminated.
+     * the Follower terminated. Will not notify local metrics.
      *
      * @param follower
      *            The follower that was terminated.
@@ -177,7 +177,6 @@ final class DefaultLogWatch implements LogWatch {
         final MessageBuilder messageBuilder) {
         final Message message = messageBuilder.buildIntermediate(this.splitter);
         follower.messageReceived(message, MessageDeliveryStatus.INCOMPLETE, this);
-        this.metrics.messageReceived(message, MessageDeliveryStatus.INCOMPLETE, this);
         return message;
     }
 
