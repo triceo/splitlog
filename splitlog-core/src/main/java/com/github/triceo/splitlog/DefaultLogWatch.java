@@ -19,6 +19,7 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
@@ -210,7 +211,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean startConsuming(final MessageConsumer<LogWatch> consumer) {
+    public MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> consumer) {
         return this.messaging.startConsuming(consumer);
     }
 

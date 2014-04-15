@@ -16,6 +16,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
@@ -112,7 +113,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    public boolean startConsuming(final MessageConsumer<Follower> consumer) {
+    public MessageConsumer<Follower> startConsuming(final MessageListener<Follower> consumer) {
         return this.consumers.startConsuming(consumer);
     }
 

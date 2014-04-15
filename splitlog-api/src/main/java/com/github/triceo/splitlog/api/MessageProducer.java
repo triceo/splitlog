@@ -16,23 +16,24 @@ public interface MessageProducer<P extends MessageProducer<P>> {
      *
      * @param consumer
      *            Consumer in question.
-     * @return True if called between {@link #startConsuming(MessageConsumer)}
+     * @return True if called between {@link #startConsuming(MessageListener)}
      *         and {@link #stopConsuming(MessageConsumer)}.
      */
     boolean isConsuming(MessageConsumer<P> consumer);
 
     /**
-     * Register a consumer to be notified of new messages in this producer.
-     * 
-     * @param consumer
-     *            Consumer in question.
-     * @return True, unless already {@link #isConsuming(MessageConsumer)}.
+     * Register a listener to be notified of new messages in this producer.
+     *
+     * @param listener
+     *            Listener in question.
+     * @return A newly produced consumer. Will return the original object if the
+     *         listener already is a {@link MessageConsumer}.
      */
-    boolean startConsuming(MessageConsumer<P> consumer);
+    MessageConsumer<P> startConsuming(MessageListener<P> listener);
 
     /**
      * Tell a consumer to no longer listen to new messages in this producer.
-     * 
+     *
      * @param consumer
      *            Consumer in question.
      * @return True, unless no longer {@link #isConsuming(MessageConsumer)}.

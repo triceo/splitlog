@@ -14,6 +14,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 
@@ -59,7 +60,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
-    public boolean startConsuming(final MessageConsumer<MergingFollower> consumer) {
+    public MessageConsumer<MergingFollower> startConsuming(final MessageListener<MergingFollower> consumer) {
         return this.consumers.startConsuming(consumer);
     }
 

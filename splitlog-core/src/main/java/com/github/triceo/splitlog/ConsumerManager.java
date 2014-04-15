@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
+import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 
 public class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P> {
@@ -36,7 +37,7 @@ public class ConsumerManager<P extends MessageProducer<P>> implements MessagePro
 
     @Override
     public synchronized void
-    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }
@@ -46,11 +47,14 @@ public class ConsumerManager<P extends MessageProducer<P>> implements MessagePro
     }
 
     @Override
-    public synchronized boolean startConsuming(final MessageConsumer<P> consumer) {
+    public synchronized MessageConsumer<P> startConsuming(final MessageListener<P> listener) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }
-        return this.consumers.add(consumer);
+        final MessageConsumer<P> consumer = (listener instanceof MessageConsumer) ? (MessageConsumer<P>) listener
+                : new DefaultMessageConsumer<P>(this.producer, listener);
+        this.consumers.add(consumer);
+        return consumer;
     }
 
     @Override
