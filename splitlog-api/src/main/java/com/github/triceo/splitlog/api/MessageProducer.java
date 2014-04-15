@@ -2,7 +2,7 @@ package com.github.triceo.splitlog.api;
 
 /**
  * A tagging interface to mark classes that are allowed to send message delivery
- * notifications to {@link CommonFollower}s.
+ * notifications to others.
  *
  * @param <S>
  *            The type to send out {@link Message} notifications. Typically it
