@@ -26,8 +26,10 @@ public interface MessageProducer<P extends MessageProducer<P>> {
      *
      * @param listener
      *            Listener in question.
-     * @return A newly produced consumer. Will return the original object if the
-     *         listener already is a {@link MessageConsumer}.
+     * @return A newly produced consumer.
+     * @throws IllegalArgumentException
+     *             When <code>listener instanceof {@link MessageConsumer}</code>
+     *             .
      */
     MessageConsumer<P> startConsuming(MessageListener<P> listener);
 

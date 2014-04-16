@@ -45,14 +45,19 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
             consumer.messageReceived(message, status, producer);
         }
     }
+    
+    public synchronized void registerConsumer(final MessageConsumer<P> consumer) {
+        this.consumers.add(consumer);
+    }
 
     @Override
     public synchronized MessageConsumer<P> startConsuming(final MessageListener<P> listener) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
+        } else if (listener instanceof MessageConsumer<?>) {
+            throw new IllegalArgumentException("Cannot consume consumers.");
         }
-        final MessageConsumer<P> consumer = (listener instanceof MessageConsumer) ? (MessageConsumer<P>) listener
-                : new DefaultMessageConsumer<P>(this.producer, listener);
+        final MessageConsumer<P> consumer = new DefaultMessageConsumer<P>(this.producer, listener);
         this.consumers.add(consumer);
         return consumer;
     }

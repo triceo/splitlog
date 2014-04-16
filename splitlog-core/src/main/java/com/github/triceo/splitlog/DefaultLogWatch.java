@@ -259,7 +259,7 @@ final class DefaultLogWatch implements LogWatch {
         }
         // register the follower
         final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
-        this.messaging.startConsuming(follower);
+        this.messaging.registerConsumer(follower);
         this.storage.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
         if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
