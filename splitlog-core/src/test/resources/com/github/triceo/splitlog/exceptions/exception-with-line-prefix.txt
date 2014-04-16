@@ -1,0 +1,31 @@
+20:32:13,501 ERROR [org.switchyard.component.http] (http-localhost/127.0.0.1:8080-1) SWITCHYARD036004: Unexpected Exception invoking SwitchYard service: org.switchyard.SwitchYardException: SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleHttpGreetingGateway
+        at org.switchyard.internal.ServiceReferenceImpl.createExchange(ServiceReferenceImpl.java:118) [switchyard-runtime-1.1.1-p5-redhat-1.jar:1.1.1-p5-redhat-1]
+        at org.switchyard.component.http.InboundHandler.invoke(InboundHandler.java:106) [switchyard-component-http-1.1.1-p5-redhat-1.jar:1.1.1-p5-redhat-1]
+        at org.switchyard.component.http.HttpGatewayServlet.handle(HttpGatewayServlet.java:143) [switchyard-component-http-1.1.1-p5-redhat-1.jar:1.1.1-p5-redhat-1]
+        at org.switchyard.component.http.HttpGatewayServlet.service(HttpGatewayServlet.java:114) [switchyard-component-http-1.1.1-p5-redhat-1.jar:1.1.1-p5-redhat-1]
+        at javax.servlet.http.HttpServlet.service(HttpServlet.java:847) [jboss-servlet-api_3.0_spec-1.0.2.Final-redhat-1.jar:1.0.2.Final-redhat-1]
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method) [rt.jar:1.7.0_51]
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57) [rt.jar:1.7.0_51]
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) [rt.jar:1.7.0_51]
+        at java.lang.reflect.Method.invoke(Method.java:606) [rt.jar:1.7.0_51]
+        at org.apache.catalina.security.SecurityUtil$1.run(SecurityUtil.java:263)
+        at org.apache.catalina.security.SecurityUtil$1.run(SecurityUtil.java:261)
+        at java.security.AccessController.doPrivileged(Native Method) [rt.jar:1.7.0_51]
+        at javax.security.auth.Subject.doAsPrivileged(Subject.java:536) [rt.jar:1.7.0_51]
+        at org.apache.catalina.security.SecurityUtil.execute(SecurityUtil.java:295)
+        at org.apache.catalina.security.SecurityUtil.doAsPrivilege(SecurityUtil.java:155)
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:288)
+        at org.apache.catalina.core.ApplicationFilterChain.access$000(ApplicationFilterChain.java:59)
+        at org.apache.catalina.core.ApplicationFilterChain$1.run(ApplicationFilterChain.java:197)
+        at java.security.AccessController.doPrivileged(Native Method) [rt.jar:1.7.0_51]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:193)
+        at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:230)
+        at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:149)
+        at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:145)
+        at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:97)
+        at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:102)
+        at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:336)
+        at org.apache.coyote.http11.Http11Processor.process(Http11Processor.java:856)
+        at org.apache.coyote.http11.Http11Protocol$Http11ConnectionHandler.process(Http11Protocol.java:653)
+        at org.apache.tomcat.util.net.JIoEndpoint$Worker.run(JIoEndpoint.java:920)
+        at java.lang.Thread.run(Thread.java:744) [rt.jar:1.7.0_51]
