@@ -31,7 +31,7 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> implements Follower {
+abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWatch> implements Follower {
 
     private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
 
@@ -63,11 +63,6 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower> imple
 
     protected DefaultLogWatch getWatch() {
         return this.watch;
-    }
-
-    @Override
-    public boolean isFollowing() {
-        return this.watch.isFollowedBy(this);
     }
 
     @Override

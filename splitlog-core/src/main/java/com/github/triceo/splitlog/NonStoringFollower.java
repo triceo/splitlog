@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 
 /**
@@ -40,10 +38,9 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MeasuringConsumerManager<Follower> consumers = new MeasuringConsumerManager<Follower>(this);
-    private final MessageExchange<LogWatch> exchange = new MessageExchange<LogWatch>();
 
     public NonStoringFollower(final DefaultLogWatch watch,
-            final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
+        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.measure(pair.getValue(), pair.getKey(), false);
@@ -89,7 +86,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     private <T extends Number> MessageMetric<T, Follower> measure(final MessageMeasure<T, Follower> measure,
-        final String id, final boolean checkIfFollowing) {
+            final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
@@ -105,7 +102,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
-        this.exchange.messageReceived(msg, status, source);
+        this.getExchange().messageReceived(msg, status, source);
         for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
             mf.messageReceived(msg, status, this);
         }
@@ -119,7 +116,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-        final String id) {
+            final String id) {
         return this.measure(measure, id, true);
     }
 
@@ -136,28 +133,6 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     @Override
     public boolean stopMeasuring(final String id) {
         return this.consumers.stopMeasuring(id);
-    }
-
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
-    @Override
-    public Message waitFor(final MidDeliveryMessageCondition<LogWatch> condition) {
-        return this.exchange.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
-    }
-
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
-    @Override
-    public Message waitFor(final MidDeliveryMessageCondition<LogWatch> condition, final long timeout,
-        final TimeUnit unit) {
-        if (timeout < 1) {
-            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
-        }
-        return this.exchange.waitForMessage(condition, timeout, unit);
     }
 
 }

@@ -1,7 +1,6 @@
 package com.github.triceo.splitlog.api;
 
 import java.util.Collection;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Follower that is capable of merging multiple {@link Follower}s.
@@ -14,8 +13,7 @@ import java.util.concurrent.TimeUnit;
  * every tag that has been made using any of the {@link #getMerged()}.
  *
  */
-public interface MergingFollower extends CommonFollower<MergingFollower>, MessageProducer<MergingFollower>,
-        MessageConsumer<Follower> {
+public interface MergingFollower extends CommonFollower<MergingFollower, Follower>, MessageProducer<MergingFollower> {
 
     /**
      * Retrieve followers that are currently part of this merge.
@@ -23,16 +21,6 @@ public interface MergingFollower extends CommonFollower<MergingFollower>, Messag
      * @return Unmodifiable collections of followers in this merge.
      */
     Collection<? extends Follower> getMerged();
-
-    /**
-     * Whether or not this follower is still capable of receiving any new
-     * messages.
-     *
-     * @return True if any of {@link #getMerged()}'s {@link #isFollowing()} is
-     *         true.
-     */
-    @Deprecated
-    boolean isFollowing();
 
     /**
      * Will remove the follower from {@link #getMerged()}. As a result, this
@@ -47,32 +35,5 @@ public interface MergingFollower extends CommonFollower<MergingFollower>, Messag
      *         already separate or never merged.
      */
     boolean separate(Follower f);
-
-    /**
-     * Will block until a message arrives, for which the condition is true.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    Message waitFor(MidDeliveryMessageCondition<Follower> condition);
-
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @param timeout
-     *            Time before forcibly aborting.
-     * @param unit
-     *            Unit of time.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    Message waitFor(MidDeliveryMessageCondition<Follower> condition, long timeout, TimeUnit unit);
 
 }

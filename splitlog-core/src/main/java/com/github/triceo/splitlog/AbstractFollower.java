@@ -2,6 +2,7 @@ package com.github.triceo.splitlog;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
+import java.util.concurrent.TimeUnit;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -9,6 +10,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
@@ -24,10 +26,13 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractFollower<P extends MessageProducer<P>> implements CommonFollower<P> {
+abstract class AbstractFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> implements
+        CommonFollower<P, C> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
+
+    private final MessageExchange<C> exchange = new MessageExchange<C>();
 
     /**
      * Provide the default formatter for messages in this follower.
@@ -35,6 +40,10 @@ abstract class AbstractFollower<P extends MessageProducer<P>> implements CommonF
      * @return Formatter to use on messages.
      */
     protected abstract MessageFormatter getDefaultFormatter();
+
+    protected MessageExchange<C> getExchange() {
+        return this.exchange;
+    }
 
     @Override
     public SortedSet<Message> getMessages() {
@@ -49,6 +58,32 @@ abstract class AbstractFollower<P extends MessageProducer<P>> implements CommonF
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition) {
         return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
+    }
+
+    @Override
+    public boolean isFollowing() {
+        return !this.isStopped();
+    }
+
+    /**
+     * Will throw an exception if any other thread tries to specify a wait on
+     * the instance while another thread is already waiting.
+     */
+    @Override
+    public Message waitFor(final MidDeliveryMessageCondition<C> condition) {
+        return this.exchange.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
+    }
+
+    /**
+     * Will throw an exception if any other thread tries to specify a wait on
+     * the instance while another thread is already waiting.
+     */
+    @Override
+    public Message waitFor(final MidDeliveryMessageCondition<C> condition, final long timeout, final TimeUnit unit) {
+        if (timeout < 1) {
+            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
+        }
+        return this.exchange.waitForMessage(condition, timeout, unit);
     }
 
     @Override

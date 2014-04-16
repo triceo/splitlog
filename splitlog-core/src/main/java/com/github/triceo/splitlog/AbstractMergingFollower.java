@@ -24,7 +24,7 @@ import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
-abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower> implements MergingFollower {
+abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower, Follower> implements MergingFollower {
 
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
 
@@ -44,11 +44,6 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower>
     @Override
     public Collection<? extends Follower> getMerged() {
         return Collections.unmodifiableSet(this.followers);
-    }
-
-    @Override
-    public boolean isFollowing() {
-        return !this.isStopped();
     }
 
     @Override

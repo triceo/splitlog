@@ -2,6 +2,7 @@ package com.github.triceo.splitlog.api;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Follower's primary function is to allow users to work with their portion of
@@ -12,7 +13,7 @@ import java.util.SortedSet;
  * Alternatively, each {@link Follower#tag(String)} will create a Message within
  * the follower and not notify anyone.
  */
-public interface CommonFollower<P extends MessageProducer<P>> {
+public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends MessageConsumer<C> {
 
     /**
      * Retrieve messages that this follower has been notified of, and tags. They
@@ -58,6 +59,21 @@ public interface CommonFollower<P extends MessageProducer<P>> {
     SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order);
 
     /**
+     * Use {@link #isStopped()} instead.
+     *
+     * Whether or not this follower is still capable of receiving messages. It
+     * is suggested that the reference to this follower be thrown away
+     * immediately after the user has processed the results of
+     * {@link #getMessages()} or {@link #getMessages(SimpleMessageCondition)}.
+     * {@link LogWatch} may then be able to free the memory occupied by those
+     * messages.
+     *
+     * @return True if following.
+     */
+    @Deprecated
+    boolean isFollowing();
+
+    /**
      * Merge this {@link CommonFollower} with another. This
      * {@link CommonFollower} has a responsibility of notifying the resulting
      * {@link MergingFollower} of every {@link Message} that it receives, until
@@ -90,6 +106,33 @@ public interface CommonFollower<P extends MessageProducer<P>> {
      *         compose {@link MergingFollower}s.
      */
     MergingFollower mergeWith(MergingFollower f);
+
+    /**
+     * Will block until a message arrives, for which the condition is true.
+     *
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
+     */
+    Message waitFor(MidDeliveryMessageCondition<C> condition);
+
+    /**
+     * Will block until a message arrives, for which the condition is true. If
+     * none arrives before the timeout, it unblocks anyway.
+     *
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @param timeout
+     *            Time before forcibly aborting.
+     * @param unit
+     *            Unit of time.
+     * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
+     */
+    Message waitFor(MidDeliveryMessageCondition<C> condition, long timeout, TimeUnit unit);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using a

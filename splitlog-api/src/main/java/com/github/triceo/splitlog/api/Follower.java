@@ -1,12 +1,10 @@
 package com.github.triceo.splitlog.api;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * On top of the {@link CommonFollower}'s functions, this allows for merging
  * followers.
  */
-public interface Follower extends CommonFollower<Follower>, MessageMetricProducer<Follower>, MessageConsumer<LogWatch> {
+public interface Follower extends CommonFollower<Follower, LogWatch>, MessageMetricProducer<Follower> {
 
     /**
      * Retrieve the log watch that is being followed.
@@ -15,21 +13,6 @@ public interface Follower extends CommonFollower<Follower>, MessageMetricProduce
      *         called to obtain reference to this follower.
      */
     LogWatch getFollowed();
-
-    /**
-     * Use {@link #isStopped()} instead.
-     *
-     * Whether or not this follower is still capable of receiving messages from
-     * {@link LogWatch}. It is suggested that the reference to this follower be
-     * thrown away immediately after the user has processed the results of
-     * {@link #getMessages()} or {@link #getMessages(SimpleMessageCondition)}.
-     * {@link LogWatch} may then be able to free the memory occupied by those
-     * messages.
-     *
-     * @return True if following.
-     */
-    @Deprecated
-    boolean isFollowing();
 
     /**
      * Mark the current location in the tail by a custom message.
@@ -50,32 +33,5 @@ public interface Follower extends CommonFollower<Follower>, MessageMetricProduce
      *             When already {@link #isStopped()}.
      */
     Message tag(String tagLine);
-
-    /**
-     * Will block until a message arrives, for which the condition is true.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    Message waitFor(MidDeliveryMessageCondition<LogWatch> condition);
-
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @param timeout
-     *            Time before forcibly aborting.
-     * @param unit
-     *            Unit of time.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    Message waitFor(MidDeliveryMessageCondition<LogWatch> condition, long timeout, TimeUnit unit);
 
 }
