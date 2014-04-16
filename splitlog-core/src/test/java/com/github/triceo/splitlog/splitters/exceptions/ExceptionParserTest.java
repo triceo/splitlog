@@ -12,12 +12,6 @@ import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-import com.github.triceo.splitlog.splitters.exceptions.CauseLine;
-import com.github.triceo.splitlog.splitters.exceptions.ExceptionLine;
-import com.github.triceo.splitlog.splitters.exceptions.ExceptionParseException;
-import com.github.triceo.splitlog.splitters.exceptions.ExceptionParser;
-import com.github.triceo.splitlog.splitters.exceptions.StackTraceEndLine;
-import com.github.triceo.splitlog.splitters.exceptions.StackTraceLine;
 import com.github.triceo.splitlog.splitters.exceptions.StackTraceLine.Source;
 
 public class ExceptionParserTest {
@@ -41,12 +35,45 @@ public class ExceptionParserTest {
     }
 
     @Test
+    public void testExceptionWhoseFirstLineDoesntBeginWithClassName() throws ExceptionParseException {
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
+                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
+                        "exception-with-line-prefix.txt"))));
+        // one item per line in the file
+        Assertions.assertThat(lines.size()).isEqualTo(31);
+        // verify the initial cause
+        final CauseLine firstLine = (CauseLine) lines.get(0);
+        Assertions.assertThat(firstLine.getClassName()).isEqualTo("org.switchyard.SwitchYardException");
+        Assertions
+                .assertThat(firstLine.getMessage())
+                .isEqualTo(
+                        "SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleHttpGreetingGateway");
+        // verify one random stack trace line
+        final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(5);
+        Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);
+        Assertions.assertThat(stackTraceLine.getMethodName()).isEqualTo("javax.servlet.http.HttpServlet.service");
+        Assertions.assertThat(stackTraceLine.getLineInCode()).isEqualTo(847);
+        Assertions.assertThat(stackTraceLine.getClassName()).isEqualTo("HttpServlet.java");
+        Assertions.assertThat(stackTraceLine.getClassSource()).isEqualTo(
+                "jboss-servlet-api_3.0_spec-1.0.2.Final-redhat-1.jar");
+        Assertions.assertThat(stackTraceLine.getClassSourceVersion()).isEqualTo("1.0.2.Final-redhat-1");
+        // verify last line
+        final StackTraceLine stackTraceLine2 = (StackTraceLine) lines.get(30);
+        Assertions.assertThat(stackTraceLine2.getSource()).isEqualTo(Source.REGULAR);
+        Assertions.assertThat(stackTraceLine2.getMethodName()).isEqualTo("java.lang.Thread.run");
+        Assertions.assertThat(stackTraceLine2.getLineInCode()).isEqualTo(744);
+        Assertions.assertThat(stackTraceLine2.getClassName()).isEqualTo("Thread.java");
+        Assertions.assertThat(stackTraceLine2.getClassSource()).isEqualTo("rt.jar");
+        Assertions.assertThat(stackTraceLine2.getClassSourceVersion()).isEqualTo("1.7.0_51");
+    }
+
+    @Test
     public void testExceptionWithCauses() throws ExceptionParseException {
         final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
                 ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
                         "exception-with-causes.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(48); // one item per line
-                                                           // in the file
+        // in the file
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);
         Assertions.assertThat(firstLine.getClassName()).isEqualTo("org.jboss.qa.bpms.rest.wb.RequestFailureException");
@@ -72,7 +99,7 @@ public class ExceptionParserTest {
                 ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
                         "exception-with-causes2.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(62); // one item per line
-                                                           // in the file
+        // in the file
         // verify random cause
         final CauseLine cause = (CauseLine) lines.get(29);
         Assertions.assertThat(cause.getClassName()).isEqualTo("org.hibernate.exception.ConstraintViolationException");
@@ -94,14 +121,14 @@ public class ExceptionParserTest {
                 ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
                         "exception-maven.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(33); // one item per line
-                                                           // in the file
+        // in the file
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);
         Assertions.assertThat(firstLine.getClassName()).isEqualTo("java.lang.IllegalStateException");
         Assertions
-                .assertThat(firstLine.getMessage())
-                .isEqualTo(
-                        "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
+        .assertThat(firstLine.getMessage())
+        .isEqualTo(
+                "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
         // verify one random stack trace line
         final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(14);
         Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);
