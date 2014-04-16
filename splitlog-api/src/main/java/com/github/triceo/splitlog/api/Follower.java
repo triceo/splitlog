@@ -1,6 +1,5 @@
 package com.github.triceo.splitlog.api;
 
-import java.util.concurrent.TimeUnit;
 
 /**
  * On top of the {@link CommonFollower}'s functions, this allows for merging
@@ -35,28 +34,5 @@ public interface Follower extends CommonFollower<Follower, LogWatch>, MessageMet
      *             When already {@link #isStopped()}.
      */
     Message tag(String tagLine);
-
-    /**
-     * Will block until a message arrives, for which the condition is true.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     */
-    Message waitFor(MidDeliveryMessageCondition<LogWatch> condition);
-
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @param timeout
-     *            Time before forcibly aborting.
-     * @param unit
-     *            Unit of time.
-     * @return Null if the method unblocked due to some other reason.
-     */
-    Message waitFor(MidDeliveryMessageCondition<LogWatch> condition, long timeout, TimeUnit unit);
 
 }
