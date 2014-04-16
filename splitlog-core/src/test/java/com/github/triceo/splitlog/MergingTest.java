@@ -9,12 +9,6 @@ import com.github.triceo.splitlog.api.MergingFollower;
 public class MergingTest extends DefaultFollowerBaseTest {
 
     @Test(expected = IllegalArgumentException.class)
-    public void testMergeWithNull() {
-        final Follower f = this.getLogWatch().startFollowing();
-        f.mergeWith(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testMergeWithSelf() {
         final Follower f = this.getLogWatch().startFollowing();
         f.mergeWith(f);

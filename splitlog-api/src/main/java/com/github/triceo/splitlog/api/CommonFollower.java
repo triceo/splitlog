@@ -72,7 +72,24 @@ public interface CommonFollower<P extends MessageProducer<P>> {
      *         hold every merged {@link CommonFollower} individually and not
      *         compose {@link MergingFollower}s.
      */
-    MergingFollower mergeWith(CommonFollower<? extends MessageProducer<?>> f);
+    MergingFollower mergeWith(Follower f);
+
+    /**
+     * Merge this {@link CommonFollower} with another. This
+     * {@link CommonFollower} has a responsibility of notifying the resulting
+     * {@link MergingFollower} of every {@link Message} that it receives, until
+     * such time that {@link MergingFollower#separate(Follower)} is called on
+     * it.
+     *
+     * @param f
+     *            To merge with.
+     * @return A new {@link MergingFollower}, that will merge both
+     *         {@link CommonFollower}s. If any of the {@link CommonFollower}s
+     *         already is a {@link MergingFollower}, the returned instance will
+     *         hold every merged {@link CommonFollower} individually and not
+     *         compose {@link MergingFollower}s.
+     */
+    MergingFollower mergeWith(MergingFollower f);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using a

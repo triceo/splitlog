@@ -16,7 +16,6 @@ import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 
-import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
@@ -26,7 +25,7 @@ import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
 abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower> implements MergingFollower,
-        MessageListener<Follower> {
+MessageListener<Follower> {
 
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
 
@@ -59,21 +58,24 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower>
     }
 
     @Override
-    public MergingFollower mergeWith(final CommonFollower<?> f) {
+    public MergingFollower mergeWith(final Follower f) {
+        if (f == null) {
+            throw new IllegalArgumentException("Cannot merge with null.");
+        }
+        final Set<Follower> followers = new HashSet<Follower>(this.followers);
+        followers.add(f);
+        return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
+    }
+
+    @Override
+    public MergingFollower mergeWith(final MergingFollower f) {
         if (f == null) {
             throw new IllegalArgumentException("Cannot merge with null.");
         } else if (f == this) {
             throw new IllegalArgumentException("Cannot merge with self.");
         }
         final Set<Follower> followers = new HashSet<Follower>(this.followers);
-        if (f instanceof MergingFollower) {
-            final MergingFollower mf = (MergingFollower) f;
-            followers.addAll(mf.getMerged());
-        } else if (f instanceof Follower) {
-            followers.add((Follower) f);
-        } else {
-            throw new IllegalArgumentException("Unsupported follower type: " + f.getClass());
-        }
+        followers.addAll(f.getMerged());
         return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
 
