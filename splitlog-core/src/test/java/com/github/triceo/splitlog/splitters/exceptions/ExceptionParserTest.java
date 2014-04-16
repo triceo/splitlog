@@ -36,18 +36,15 @@ public class ExceptionParserTest {
 
     @Test
     public void testExceptionWhoseFirstLineDoesntBeginWithClassName() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
-                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
-                        "exception-with-line-prefix.txt"))));
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+                .parseIntoLines(this.getClass().getResourceAsStream("exception-with-line-prefix.txt"))));
         // one item per line in the file
         Assertions.assertThat(lines.size()).isEqualTo(31);
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);
         Assertions.assertThat(firstLine.getClassName()).isEqualTo("org.switchyard.SwitchYardException");
-        Assertions
-                .assertThat(firstLine.getMessage())
-                .isEqualTo(
-                        "SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleHttpGreetingGateway");
+        Assertions.assertThat(firstLine.getMessage()).isEqualTo(
+                "SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleHttpGreetingGateway");
         // verify one random stack trace line
         final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(5);
         Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);
@@ -69,9 +66,8 @@ public class ExceptionParserTest {
 
     @Test
     public void testExceptionWithCauses() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
-                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
-                        "exception-with-causes.txt"))));
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+                .parseIntoLines(this.getClass().getResourceAsStream("exception-with-causes.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(48); // one item per line
         // in the file
         // verify the initial cause
@@ -95,9 +91,8 @@ public class ExceptionParserTest {
 
     @Test
     public void testExceptionWithCauses2() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
-                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
-                        "exception-with-causes2.txt"))));
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+                .parseIntoLines(this.getClass().getResourceAsStream("exception-with-causes2.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(62); // one item per line
         // in the file
         // verify random cause
@@ -117,18 +112,17 @@ public class ExceptionParserTest {
 
     @Test
     public void testMavenProducedException() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(
-                ExceptionParser.INSTANCE.parse(ExceptionParserTest.parseIntoLines(this.getClass().getResourceAsStream(
-                        "exception-maven.txt"))));
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+                .parseIntoLines(this.getClass().getResourceAsStream("exception-maven.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(33); // one item per line
         // in the file
         // verify the initial cause
         final CauseLine firstLine = (CauseLine) lines.get(0);
         Assertions.assertThat(firstLine.getClassName()).isEqualTo("java.lang.IllegalStateException");
         Assertions
-        .assertThat(firstLine.getMessage())
-        .isEqualTo(
-                "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
+                .assertThat(firstLine.getMessage())
+                .isEqualTo(
+                        "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
         // verify one random stack trace line
         final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(14);
         Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);

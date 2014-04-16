@@ -10,16 +10,13 @@ import java.util.Queue;
 /**
  * A finite automaton for recognizing a Java exception stack trace spanning
  * multiple lines in a random text.
- * 
+ *
  * Each line has a type. When a line is recognized, a new state is reached. Each
  * line type can only be followed by lines of specific types, together forming a
  * transition function. When the next line is not one of these types, that
  * transition is not in the transition function and the parsing is terminated
  * with an exception. After the last line has been read, if the automaton is not
  * in one of the accepting states, the parsing is terminated with an exception.
- * 
- * This class is thread-safe. Each thread will operate on its own
- * {@link ThreadLocal} data structures.
  */
 final class ExceptionParser {
 
@@ -27,8 +24,8 @@ final class ExceptionParser {
      * Various kinds of states for the parser automaton.
      */
     private static enum LineType {
-        PRE_START(true, false), CAUSE(true, false), STACK_TRACE(false, true), SUB_CAUSE(false, false), STACK_TRACE_END(
-                false, true), POST_END(false, true);
+        CAUSE(true, false), POST_END(false, true), PRE_START(true, false), STACK_TRACE(false, true), STACK_TRACE_END(
+                false, true), SUB_CAUSE(false, false);
 
         private final boolean mayBeFirstLine, mayBeLastLine;
         private ExceptionLineParser<?> parser;
@@ -71,7 +68,7 @@ final class ExceptionParser {
 
         /**
          * Parse the line according to this state's parser.
-         * 
+         *
          * @param line
          *            Line to parse.
          * @return Parsed line.
@@ -88,8 +85,6 @@ final class ExceptionParser {
         }
     }
 
-    public static ExceptionParser INSTANCE = new ExceptionParser();
-
     private static String greatestCommonPrefix(final String a, final String b) {
         final int minLength = Math.min(a.length(), b.length());
         for (int i = 0; i < minLength; i++) {
@@ -103,7 +98,7 @@ final class ExceptionParser {
     /**
      * Identifies and removes the common prefix - the longest beginning
      * substring that all the lines share.
-     * 
+     *
      * @param input
      *            Lines to be evaluated.
      * @return The same lines, without the prefix. And stripped of white space
@@ -139,21 +134,12 @@ final class ExceptionParser {
         return result;
     }
 
-    private final ThreadLocal<Collection<ExceptionLine>> parsedLines = new ThreadLocal<Collection<ExceptionLine>>() {
-        @Override
-        protected Collection<ExceptionLine> initialValue() {
-            return new LinkedList<ExceptionLine>();
-        }
-    };
-
-    private ExceptionParser() {
-
-    }
+    private final Collection<ExceptionLine> parsedLines = new LinkedList<ExceptionLine>();
 
     /**
      * Browsers through a random log and returns first exception stack trace it
      * could find.
-     * 
+     *
      * @param input
      *            Lines of the log. May begin and end with any garbage, may or
      *            may not contain exception.
@@ -161,8 +147,8 @@ final class ExceptionParser {
      * @throws ExceptionParseException
      *             If parsing of the log file failed.
      */
-    public Collection<ExceptionLine> parse(final Collection<String> input) throws ExceptionParseException {
-        this.parsedLines.get().clear();
+    public synchronized Collection<ExceptionLine> parse(final Collection<String> input) throws ExceptionParseException {
+        this.parsedLines.clear();
         final Queue<String> linesFromInput = ExceptionParser.removePrefix(new LinkedList<String>(input));
         LineType previousLineType = LineType.PRE_START;
         String currentLine = null;
@@ -181,12 +167,12 @@ final class ExceptionParser {
         if (!previousLineType.isAcceptableAsLastLine()) {
             throw new ExceptionParseException(currentLine, "Invalid line type detected at the end: " + previousLineType);
         }
-        return Collections.unmodifiableCollection(new LinkedList<ExceptionLine>(this.parsedLines.get()));
+        return Collections.unmodifiableCollection(new LinkedList<ExceptionLine>(this.parsedLines));
     }
 
     /**
      * Parse one line in the log.
-     * 
+     *
      * @param previousLineType
      *            Type of the previous line in the log. (The state the automaton
      *            is currently in.)
@@ -217,7 +203,7 @@ final class ExceptionParser {
     /**
      * Parse one line in the log, when knowing the types of lines acceptable at
      * this point in the log.
-     * 
+     *
      * @param line
      *            Line to parse.
      * @param allowedLineTypes
@@ -236,7 +222,7 @@ final class ExceptionParser {
             }
             final ExceptionLine parsedLine = possibleType.parse(line);
             if (parsedLine != null) {
-                this.parsedLines.get().add(parsedLine);
+                this.parsedLines.add(parsedLine);
                 return possibleType;
             }
         }
