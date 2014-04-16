@@ -6,7 +6,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import com.github.triceo.splitlog.api.ExceptionDescriptor;
-import com.github.triceo.splitlog.splitters.exceptions.DefaultExceptionDescriptor;
 
 public class DefaultExceptionDescriptorTest {
 
@@ -52,4 +51,15 @@ public class DefaultExceptionDescriptorTest {
         // TODO could use a bit more validation; but at least it parses
     }
 
+    @Test
+    public void testWithLinePrefix() {
+        final ExceptionDescriptor ex = DefaultExceptionDescriptor.parseStackTrace((ExceptionParserTest
+                .parseIntoLines(this.getClass().getResourceAsStream("exception-with-line-prefix.txt"))));
+        this.assertException(
+                ex,
+                "org.switchyard.SwitchYardException",
+                "SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleHttpGreetingGateway");
+        Assertions.assertThat(ex.getCause()).isNull();
+        // TODO could use a bit more validation; but at least it parses
+    }
 }
