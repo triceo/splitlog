@@ -26,7 +26,7 @@ final class ExceptionParser {
     /**
      * Various kinds of states for the parser automaton.
      */
-    private enum LineType {
+    private static enum LineType {
         PRE_START(true, false), CAUSE(true, false), STACK_TRACE(false, true), SUB_CAUSE(false, false), STACK_TRACE_END(
                 false, true), POST_END(false, true);
 
