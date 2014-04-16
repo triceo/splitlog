@@ -47,9 +47,9 @@ final class DefaultLogWatch implements LogWatch {
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
-        final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-        final int bufferSize, final long delayForTailerStart) {
+        final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
+            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+            final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,

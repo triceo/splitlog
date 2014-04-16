@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog.api;
 
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Follower that is capable of merging multiple {@link Follower}s.
@@ -35,5 +36,28 @@ public interface MergingFollower extends CommonFollower<MergingFollower, Followe
      *         already separate or never merged.
      */
     boolean separate(Follower f);
+
+    /**
+     * Will block until a message arrives, for which the condition is true.
+     *
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @return Null if the method unblocked due to some other reason.
+     */
+    Message waitFor(MidDeliveryMessageCondition<Follower> condition);
+
+    /**
+     * Will block until a message arrives, for which the condition is true. If
+     * none arrives before the timeout, it unblocks anyway.
+     *
+     * @param condition
+     *            Condition that needs to be true for the method to unblock.
+     * @param timeout
+     *            Time before forcibly aborting.
+     * @param unit
+     *            Unit of time.
+     * @return Null if the method unblocked due to some other reason.
+     */
+    Message waitFor(MidDeliveryMessageCondition<Follower> condition, long timeout, TimeUnit unit);
 
 }

@@ -9,7 +9,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
-final public class MessageBuilder {
+final class MessageBuilder {
 
     private static final TailSplitter DEFAULT_TAIL_SPLITTER = new SimpleTailSplitter();
     private static final long NO_MESSAGE_ID_SET = -1;
