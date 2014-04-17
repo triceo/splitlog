@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.triceo.splitlog</groupId>
   <artifactId>splitlog-parent</artifactId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>1.5.0-RC2</version>
   <packaging>pom</packaging>
   <name>splitlog: watching your logs</name>
   <description>Tool to monitor log files from your Java applications as they fill.</description>
@@ -281,18 +281,6 @@
             <configuration>
               <forkCount>1</forkCount>
             </configuration>
-          </plugin>
-          <plugin> <!-- sign artifacts -->
-            <artifactId>maven-gpg-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
