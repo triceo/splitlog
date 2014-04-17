@@ -17,6 +17,11 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
     private static final MessageMeasure<Integer, Follower> MEASURE = new MessageMeasure<Integer, Follower>() {
 
         @Override
+        public Integer initialValue() {
+            return 1;
+        }
+
+        @Override
         public Integer update(final MessageMetric<Integer, Follower> metric, final Message evaluate,
             final MessageDeliveryStatus status, final Follower source) {
             final Integer value = metric.getValue();
@@ -25,6 +30,11 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
 
     };
     private static final MessageMeasure<Integer, Follower> MEASURE2 = new MessageMeasure<Integer, Follower>() {
+
+        @Override
+        public Integer initialValue() {
+            return 1;
+        }
 
         @Override
         public Integer update(final MessageMetric<Integer, Follower> metric, final Message evaluate,

@@ -1,0 +1,160 @@
+
+15:08:59,801 INFO  [org.jboss.modules] (main) JBoss Modules version 1.2.2.Final-redhat-1
+15:08:59,979 INFO  [org.jboss.msc] (main) JBoss MSC version 1.0.4.GA-redhat-1
+15:09:00,047 INFO  [org.jboss.as] (MSC service thread 1-7) JBAS015899: JBoss Red Hat JBoss Fuse Service Works 6.0.0.GA-redhat-2 (AS 7.2.1.Final-redhat-10) starting
+15:09:00,053 DEBUG [org.jboss.as.config] (MSC service thread 1-7) Configured system properties:
+	[Standalone] = 
+	awt.toolkit = sun.awt.X11.XToolkit
+	file.encoding = UTF-8
+	file.encoding.pkg = sun.io
+	file.separator = /
+	java.awt.graphicsenv = sun.awt.X11GraphicsEnvironment
+	java.awt.headless = true
+	java.awt.printerjob = sun.print.PSPrinterJob
+	java.class.path = /home/trohovsk/GA/jboss-eap-6.1/jboss-modules.jar
+	java.class.version = 51.0
+	java.endorsed.dirs = /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/endorsed
+	java.ext.dirs = /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/ext:/usr/java/packages/lib/ext
+	java.home = /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre
+	java.io.tmpdir = /tmp
+	java.library.path = /usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+	java.net.preferIPv4Stack = true
+	java.runtime.name = OpenJDK Runtime Environment
+	java.runtime.version = 1.7.0_51-mockbuild_2014_01_30_18_05-b00
+	java.security.manager = 
+	java.security.policy = bin/security.policy
+	java.specification.name = Java Platform API Specification
+	java.specification.vendor = Oracle Corporation
+	java.specification.version = 1.7
+	java.util.logging.manager = org.jboss.logmanager.LogManager
+	java.vendor = Oracle Corporation
+	java.vendor.url = http://java.oracle.com/
+	java.vendor.url.bug = http://bugreport.sun.com/bugreport/
+	java.version = 1.7.0_51
+	java.vm.info = mixed mode
+	java.vm.name = OpenJDK 64-Bit Server VM
+	java.vm.specification.name = Java Virtual Machine Specification
+	java.vm.specification.vendor = Oracle Corporation
+	java.vm.specification.version = 1.7
+	java.vm.vendor = Oracle Corporation
+	java.vm.version = 24.51-b03
+	javax.management.builder.initial = org.jboss.as.jmx.PluggableMBeanServerBuilder
+	javax.xml.datatype.DatatypeFactory = __redirected.__DatatypeFactory
+	javax.xml.parsers.DocumentBuilderFactory = __redirected.__DocumentBuilderFactory
+	javax.xml.parsers.SAXParserFactory = __redirected.__SAXParserFactory
+	javax.xml.stream.XMLEventFactory = __redirected.__XMLEventFactory
+	javax.xml.stream.XMLInputFactory = __redirected.__XMLInputFactory
+	javax.xml.stream.XMLOutputFactory = __redirected.__XMLOutputFactory
+	javax.xml.transform.TransformerFactory = __redirected.__TransformerFactory
+	javax.xml.validation.SchemaFactory:http://www.w3.org/2001/XMLSchema = __redirected.__SchemaFactory
+	javax.xml.xpath.XPathFactory:http://java.sun.com/jaxp/xpath/dom = __redirected.__XPathFactory
+	jboss.home.dir = /home/trohovsk/GA/jboss-eap-6.1
+	jboss.host.name = merkur
+	jboss.modules.dir = /home/trohovsk/GA/jboss-eap-6.1/modules
+	jboss.modules.system.pkgs = org.jboss.byteman
+	jboss.node.name = merkur
+	jboss.qualified.host.name = merkur
+	jboss.server.base.dir = /home/trohovsk/GA/jboss-eap-6.1/standalone
+	jboss.server.config.dir = /home/trohovsk/GA/jboss-eap-6.1/standalone/configuration
+	jboss.server.data.dir = /home/trohovsk/GA/jboss-eap-6.1/standalone/data
+	jboss.server.deploy.dir = /home/trohovsk/GA/jboss-eap-6.1/standalone/data/content
+	jboss.server.log.dir = /home/trohovsk/GA/jboss-eap-6.1/standalone/log
+	jboss.server.name = merkur
+	jboss.server.persist.config = true
+	jboss.server.temp.dir = /home/trohovsk/GA/jboss-eap-6.1/standalone/tmp
+	kie.security.policy = bin/kie.policy
+	line.separator = 
+
+	logging.configuration = file:/home/trohovsk/GA/jboss-eap-6.1/standalone/configuration/logging.properties
+	module.path = /home/trohovsk/GA/jboss-eap-6.1/modules
+	org.jboss.boot.log.file = /home/trohovsk/GA/jboss-eap-6.1/standalone/log/server.log
+	org.jboss.resolver.warning = true
+	org.xml.sax.driver = __redirected.__XMLReaderFactory
+	os.arch = amd64
+	os.name = Linux
+	os.version = 3.13.9-100.fc19.x86_64
+	path.separator = :
+	rtgov.security.policy = bin/rtgov.policy
+	sun.arch.data.model = 64
+	sun.boot.class.path = /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/resources.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/rt.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/jsse.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/jce.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/charsets.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/netx.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/plugin.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/rhino.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/jfr.jar:/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/classes
+	sun.boot.library.path = /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.60-2.4.5.0.fc19.x86_64/jre/lib/amd64
+	sun.cpu.endian = little
+	sun.cpu.isalist = 
+	sun.desktop = gnome
+	sun.io.unicode.encoding = UnicodeLittle
+	sun.java.command = /home/trohovsk/GA/jboss-eap-6.1/jboss-modules.jar -mp /home/trohovsk/GA/jboss-eap-6.1/modules -jaxpmodule javax.xml.jaxp-provider org.jboss.as.standalone -Djboss.home.dir=/home/trohovsk/GA/jboss-eap-6.1 -Djboss.server.base.dir=/home/trohovsk/GA/jboss-eap-6.1/standalone
+	sun.java.launcher = SUN_STANDARD
+	sun.jnu.encoding = UTF-8
+	sun.management.compiler = HotSpot 64-Bit Tiered Compilers
+	sun.os.patch.level = unknown
+	user.country = US
+	user.dir = /home/trohovsk/GA/jboss-eap-6.1
+	user.home = /home/trohovsk
+	user.language = en
+	user.name = trohovsk
+	user.timezone = Europe/Prague
+15:09:00,055 DEBUG [org.jboss.as.config] (MSC service thread 1-7) VM Arguments: -D[Standalone] -XX:+UseCompressedOops -Xms1303m -Xmx1303m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true -Djava.security.manager -Djava.security.policy=bin/security.policy -Drtgov.security.policy=bin/rtgov.policy -Dkie.security.policy=bin/kie.policy -Dorg.jboss.boot.log.file=/home/trohovsk/GA/jboss-eap-6.1/standalone/log/server.log -Dlogging.configuration=file:/home/trohovsk/GA/jboss-eap-6.1/standalone/configuration/logging.properties 
+15:09:01,004 INFO  [org.switchyard] (ServerService Thread Pool -- 23) SwitchYard version 1.1.1-p5-redhat-1
+15:09:01,179 WARN  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015002: Deployment of 'cmd.jar' requested, but the deployment is not present
+15:09:01,180 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found switchyard-bpel-console-server.war in deployment directory. To trigger deployment create a file called switchyard-bpel-console-server.war.dodeploy
+15:09:01,180 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found overlord-rtgov.war in deployment directory. To trigger deployment create a file called overlord-rtgov.war.dodeploy
+15:09:01,181 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found overlord-rtgov-epn.war in deployment directory. To trigger deployment create a file called overlord-rtgov-epn.war.dodeploy
+15:09:01,182 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found gadgets.war in deployment directory. To trigger deployment create a file called gadgets.war.dodeploy
+15:09:01,182 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found dtgov.war in deployment directory. To trigger deployment create a file called dtgov.war.dodeploy
+15:09:01,183 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found dtgov-ui.war in deployment directory. To trigger deployment create a file called dtgov-ui.war.dodeploy
+15:09:01,183 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found s-ramp-ui.war in deployment directory. To trigger deployment create a file called s-ramp-ui.war.dodeploy
+15:09:01,184 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found switchyard-bpel-console.war in deployment directory. To trigger deployment create a file called switchyard-bpel-console.war.dodeploy
+15:09:01,184 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found overlord-rtgov-acs.war in deployment directory. To trigger deployment create a file called overlord-rtgov-acs.war.dodeploy
+15:09:01,185 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found s-ramp-server.war in deployment directory. To trigger deployment create a file called s-ramp-server.war.dodeploy
+15:09:01,186 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found gadget-web.war in deployment directory. To trigger deployment create a file called gadget-web.war.dodeploy
+15:09:01,186 INFO  [org.jboss.as.server.deployment.scanner] (DeploymentScanner-threads - 1) JBAS015003: Found overlord-commons-idp.war in deployment directory. To trigger deployment create a file called overlord-commons-idp.war.dodeploy
+15:09:01,259 INFO  [org.jboss.security] (Controller Boot Thread) PBOX000361: Default Security Vault Implementation Initialized and Ready
+15:09:01,269 INFO  [org.xnio] (MSC service thread 1-4) XNIO Version 3.0.7.GA-redhat-1
+15:09:01,273 INFO  [org.jboss.as.server] (Controller Boot Thread) JBAS015888: Creating http management service using socket-binding (management-http)
+15:09:01,276 INFO  [org.xnio.nio] (MSC service thread 1-4) XNIO NIO Implementation Version 3.0.7.GA-redhat-1
+15:09:01,285 INFO  [org.jboss.remoting] (MSC service thread 1-4) JBoss Remoting version 3.2.16.GA-redhat-1
+15:09:01,321 INFO  [org.jboss.as.clustering.infinispan] (ServerService Thread Pool -- 32) JBAS010280: Activating Infinispan subsystem.
+15:09:01,348 INFO  [org.jboss.as.security] (ServerService Thread Pool -- 45) JBAS013171: Activating Security Subsystem
+15:09:01,349 INFO  [org.jboss.as.jsf] (ServerService Thread Pool -- 38) JBAS012605: Activated the following JSF Implementations: [main, 1.2]
+15:09:01,356 INFO  [org.jboss.as.naming] (ServerService Thread Pool -- 40) JBAS011800: Activating Naming Subsystem
+15:09:01,369 INFO  [org.jboss.as.webservices] (ServerService Thread Pool -- 49) JBAS015537: Activating WebServices Extension
+15:09:01,377 INFO  [org.jboss.as.connector.logging] (MSC service thread 1-5) JBAS010408: Starting JCA Subsystem (IronJacamar 1.0.19.Final-redhat-2)
+15:09:01,386 INFO  [org.jboss.as.security] (MSC service thread 1-3) JBAS013170: Current PicketBox version=4.0.17.SP2-redhat-2
+15:09:01,407 INFO  [org.switchyard] (ServerService Thread Pool -- 51) Activating SwitchYard Subsystem
+15:09:01,473 INFO  [org.jboss.as.naming] (MSC service thread 1-3) JBAS011802: Starting Naming Service
+15:09:01,481 INFO  [org.jboss.as.mail.extension] (MSC service thread 1-7) JBAS015400: Bound mail session [java:jboss/mail/Default]
+15:09:01,715 INFO  [org.jboss.ws.common.management] (MSC service thread 1-1) JBWS022052: Starting JBoss Web Services - Stack CXF Server 4.1.4.Final-redhat-7
+15:09:01,752 INFO  [org.jboss.as.connector.subsystems.datasources] (ServerService Thread Pool -- 28) JBAS010403: Deploying JDBC-compliant driver class org.h2.Driver (version 1.3)
+15:09:01,920 INFO  [org.apache.coyote.http11] (MSC service thread 1-8) JBWEB003001: Coyote HTTP/1.1 initializing on : http-localhost/127.0.0.1:8080
+15:09:01,933 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221000: live server is starting with configuration HornetQ Configuration (clustered=false,backup=false,sharedStore=true,journalDirectory=/home/trohovsk/GA/jboss-eap-6.1/standalone/data/messagingjournal,bindingsDirectory=/home/trohovsk/GA/jboss-eap-6.1/standalone/data/messagingbindings,largeMessagesDirectory=/home/trohovsk/GA/jboss-eap-6.1/standalone/data/messaginglargemessages,pagingDirectory=/home/trohovsk/GA/jboss-eap-6.1/standalone/data/messagingpaging)
+15:09:01,936 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221006: Waiting to obtain live lock
+15:09:01,993 INFO  [org.apache.coyote.http11] (MSC service thread 1-8) JBWEB003000: Coyote HTTP/1.1 starting on: http-localhost/127.0.0.1:8080
+15:09:02,080 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221013: Using NIO Journal
+15:09:02,272 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221034: Waiting to obtain live lock
+15:09:02,273 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221035: Live Server Obtained live lock
+15:09:02,447 INFO  [org.apache.coyote.http11] (MSC service thread 1-1) JBWEB003001: Coyote HTTP/1.1 initializing on : http-localhost/127.0.0.1:8443
+15:09:02,448 INFO  [org.apache.coyote.http11] (MSC service thread 1-1) JBWEB003000: Coyote HTTP/1.1 starting on: http-localhost/127.0.0.1:8443
+15:09:02,742 INFO  [org.switchyard.component.bpel] (MSC service thread 1-8) SWITCHYARD030800: Init BPEL component
+15:09:02,755 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-4) JBAS010400: Bound data source [java:jboss/datasources/srampDS]
+15:09:02,756 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-6) JBAS010400: Bound data source [java:jboss/datasources/OverlordRTGov]
+15:09:02,757 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-6) JBAS010400: Bound data source [java:jboss/datasources/jbpmDS]
+15:09:02,758 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-6) JBAS010400: Bound data source [java:jboss/datasources/ExampleDS]
+15:09:02,759 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-6) JBAS010400: Bound data source [java:jboss/datasources/GadgetServer]
+15:09:02,759 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-3) JBAS010400: Bound data source [java:jboss/datasources/BpelDS]
+15:09:02,783 INFO  [org.jboss.as.server.deployment.scanner] (MSC service thread 1-5) JBAS015012: Started FileSystemDeploymentService for directory /home/trohovsk/GA/jboss-eap-6.1/standalone/deployments
+15:09:02,794 INFO  [org.jboss.as.remoting] (MSC service thread 1-2) JBAS017100: Listening on 127.0.0.1:9999
+15:09:02,794 INFO  [org.jboss.as.remoting] (MSC service thread 1-8) JBAS017100: Listening on 127.0.0.1:4447
+15:09:03,069 INFO  [org.modeshape.jcr.JcrRepository] (MSC service thread 1-8) ModeShape version 3.3.6.GA-redhat-5
+15:09:03,361 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221020: Started Netty Acceptor version 3.6.6.Final-redhat-1-fd3c6b7 127.0.0.1:5455 for CORE protocol
+15:09:03,362 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221020: Started Netty Acceptor version 3.6.6.Final-redhat-1-fd3c6b7 127.0.0.1:5445 for CORE protocol
+15:09:03,363 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221007: Server is now live
+15:09:03,363 INFO  [org.hornetq.core.server] (MSC service thread 1-7) HQ221001: HornetQ Server version 2.3.5.Final-redhat-2 (Monster Bee, 123) [bbfb0a05-b5bb-11e3-bf01-072e5389e9cf] 
+15:09:03,392 INFO  [org.jboss.as.messaging] (ServerService Thread Pool -- 54) JBAS011601: Bound messaging object to jndi name java:/hornetq/ConnectionFactory
+15:09:03,393 INFO  [org.jboss.as.messaging] (ServerService Thread Pool -- 55) JBAS011601: Bound messaging object to jndi name java:jboss/exported/jms/RemoteConnectionFactory
+15:09:03,429 INFO  [org.jboss.as.connector.deployment] (MSC service thread 1-8) JBAS010406: Registered connection factory java:/JmsXA
+15:09:03,458 INFO  [org.hornetq.ra] (MSC service thread 1-8) HornetQ resource adaptor started
+15:09:03,458 INFO  [org.jboss.as.connector.services.resourceadapters.ResourceAdapterActivatorService$ResourceAdapterActivator] (MSC service thread 1-8) IJ020002: Deployed: file://RaActivatorhornetq-ra
+15:09:03,460 INFO  [org.jboss.as.connector.deployment] (MSC service thread 1-7) JBAS010401: Bound JCA ConnectionFactory [java:/JmsXA]
+15:09:03,533 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015961: Http management interface listening on http://127.0.0.1:9990/management
+15:09:03,533 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015951: Admin console listening on http://127.0.0.1:9990
+15:09:03,533 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015874: JBoss Red Hat JBoss Fuse Service Works 6.0.0.GA-redhat-2 (AS 7.2.1.Final-redhat-10) started in 4114ms - Started 229 of 301 services (66 services are passive or on-demand)

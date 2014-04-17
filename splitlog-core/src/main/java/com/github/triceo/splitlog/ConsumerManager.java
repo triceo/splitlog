@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 
 class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P>,
-        ConsumerRegistrar<P> {
+ConsumerRegistrar<P> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerManager.class);
 
@@ -48,13 +48,22 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
 
     @Override
     public synchronized void
-        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }
+        ConsumerManager.LOGGER.info("{} notified of '{}' with status {}.", this, message, status);
         for (final MessageConsumer<P> consumer : this.consumers) {
-            consumer.messageReceived(message, status, producer);
-            ConsumerManager.LOGGER.debug("{} notified of '{}' with status {}.", consumer, message, status);
+            try {
+                consumer.messageReceived(message, status, producer);
+                ConsumerManager.LOGGER.debug("{} notified of '{}' with status {}.", consumer, message, status);
+            } catch (final Throwable t) {
+                // calling user code; we need to be prepared for anything
+                ConsumerManager.LOGGER.warn("Failed notifying {} of '{}' with status {}. Stack trace on DEBUG.",
+                        consumer, message, status, t.getMessage());
+                ConsumerManager.LOGGER.debug("Failed notifying {} of '{}' with status {}.", consumer, message, status,
+                        t);
+            }
         }
     }
 

@@ -15,10 +15,15 @@ public class MessageMetricManagerTest extends DefaultFollowerBaseTest {
     private static final MessageMeasure<Integer, LogWatch> MEASURE = new MessageMeasure<Integer, LogWatch>() {
 
         @Override
+        public Integer initialValue() {
+            return 1;
+        }
+
+        @Override
         public Integer update(final MessageMetric<Integer, LogWatch> metric, final Message evaluate,
             final MessageDeliveryStatus status, final LogWatch source) {
             final Integer value = metric.getValue();
-            return (value == null) ? 1 : value + 2;
+            return value + 2;
         }
 
     };

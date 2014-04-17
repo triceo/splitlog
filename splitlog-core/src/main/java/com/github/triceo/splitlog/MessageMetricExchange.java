@@ -19,13 +19,16 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageMetricExchange.class);
 
+    private MessageMetricCondition<T, S> blockingCondition = null;
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
-    private MessageMetricCondition<T, S> messageBlockingCondition = null;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
     private final MessageMetric<T, S> metric;
 
     public MessageMetricExchange(final MessageMetric<T, S> metric) {
+        if (metric == null) {
+            throw new IllegalArgumentException("Metric must not be null.");
+        }
         this.metric = metric;
     }
 
@@ -38,19 +41,19 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
     public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
         if (this.isStopped()) {
             throw new IllegalStateException("Metric message exchange already stopped.");
-        } else if (this.messageBlockingCondition == null) {
+        } else if (this.blockingCondition == null) {
             MessageMetricExchange.LOGGER.debug("Not blocked.");
             // this does nothing with the message
             return;
         }
         MessageMetricExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         // check if the user code accepts the message
-        if (!this.messageBlockingCondition.accept(this.metric)) {
+        if (!this.blockingCondition.accept(this.metric)) {
             return;
         }
         MessageMetricExchange.LOGGER
         .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
-        this.messageBlockingCondition = null;
+        this.blockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);
         } catch (final InterruptedException e) {
@@ -61,6 +64,7 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
 
     @Override
     public boolean stop() {
+        this.blockingCondition = null;
         return this.isStopped.compareAndSet(false, true);
     }
 
@@ -74,7 +78,7 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
         if (this.isStopped()) {
             throw new IllegalStateException("Metric message exchange already stopped.");
         }
-        this.messageBlockingCondition = condition;
+        this.blockingCondition = condition;
         try {
             MessageMetricExchange.LOGGER.info("Thread blocked waiting for message to pass condition {}.", condition);
             if (timeout < 0) {
@@ -88,7 +92,7 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
             return null;
         } finally { // just in case
             MessageMetricExchange.LOGGER.info("Thread unblocked.");
-            this.messageBlockingCondition = null;
+            this.blockingCondition = null;
         }
     }
 

@@ -65,14 +65,16 @@ MessageConsumer<S> {
     @Override
     public synchronized T getValue() {
         if (this.stats.isEmpty()) {
-            return null;
+            return this.measure.initialValue();
         }
         return this.stats.get(this.stats.lastKey()).getRight();
     }
 
     @Override
     public synchronized T getValue(final Message timestamp) {
-        if ((timestamp == null) || !this.stats.containsKey(timestamp.getUniqueId())) {
+        if (timestamp == null) {
+            return this.measure.initialValue();
+        } else if (!this.stats.containsKey(timestamp.getUniqueId())) {
             return null;
         } else {
             return this.stats.get(timestamp.getUniqueId()).getRight();

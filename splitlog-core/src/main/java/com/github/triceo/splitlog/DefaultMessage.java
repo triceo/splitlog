@@ -31,7 +31,7 @@ final class DefaultMessage implements Message {
     /**
      * Will call {@link #DefaultMessage(long, Collection, TailSplitter)} with
      * {@link #DEFAULT_SPLITTER}.
-     * 
+     *
      * @param id
      *            Unique ID for the message. No other instance may have this ID,
      *            or else they will be considered equal.
@@ -44,7 +44,7 @@ final class DefaultMessage implements Message {
 
     /**
      * Form a new message and infer its metadata using a given splitter.
-     * 
+     *
      * @param id
      *            Unique ID for the message. No other instance may have this ID,
      *            or else they will be considered equal.
@@ -60,7 +60,7 @@ final class DefaultMessage implements Message {
      *            not include tags from {@link CommonFollower}.
      */
     protected DefaultMessage(final long id, final Collection<String> raw, final long timestamp,
-            final TailSplitter splitter, final Message previousMessage) {
+        final TailSplitter splitter, final Message previousMessage) {
         if ((raw == null) || raw.isEmpty()) {
             throw new IllegalArgumentException("DefaultMessage must not be null.");
         } else if (splitter == null) {
@@ -90,7 +90,7 @@ final class DefaultMessage implements Message {
      * Will call
      * {@link #DefaultMessage(long, Collection, long, TailSplitter, DefaultMessage)}
      * with current time and no previous message.
-     * 
+     *
      * @param id
      *            Unique ID for the message. No other instance may have this ID,
      *            or else they will be considered equal.
@@ -106,7 +106,7 @@ final class DefaultMessage implements Message {
     /**
      * Creates a one-line message of type {@link MessageType#TAG}. The message
      * will point to no previous message.
-     * 
+     *
      * @param id
      *            Unique ID for the message. No other instance may have this ID,
      *            or else they will be considered equal.
@@ -212,6 +212,9 @@ final class DefaultMessage implements Message {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
+        sb.append('#');
+        sb.append(this.getUniqueId());
+        sb.append(" ");
         sb.append(this.getDate());
         sb.append(" (");
         sb.append(this.type);

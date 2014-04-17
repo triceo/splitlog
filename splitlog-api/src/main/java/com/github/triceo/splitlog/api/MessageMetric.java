@@ -36,10 +36,9 @@ public interface MessageMetric<T extends Number, S extends MessageProducer<S>> {
      * processed.
      *
      * @param timestamp
-     *            The point in time after this message was processed. Null will
-     *            retrieve the initial state.
-     * @return A number >= 0. Will return -1 in case no such message was ever
-     *         processed by this metric.
+     *            The point in time after this message was processed.
+     * @return 0 when timestamp is null. -1 in case no such message was ever
+     *         processed by this metric. The proper value otherwise.
      */
     long getMessageCount(Message timestamp);
 
@@ -68,9 +67,10 @@ public interface MessageMetric<T extends Number, S extends MessageProducer<S>> {
      * @param timestamp
      *            The point in time after this message was processed. Null will
      *            retrieve the initial state.
-     * @return Whatever, depends on the measure. Initial value, before any
-     *         messages arrive, is null. Null is also returned in case no such
-     *         message was ever processed by this metric.
+     * @return Whatever, depends on the measure. Initial state, before any
+     *         messages arrive, is {@link MessageMeasure#initialValue()}. Null
+     *         is returned in case no such message was ever processed by this
+     *         metric.
      */
     T getValue(Message timestamp);
 

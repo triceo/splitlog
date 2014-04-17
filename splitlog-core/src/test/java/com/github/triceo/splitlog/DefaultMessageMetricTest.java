@@ -21,10 +21,15 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
     private static final MessageMeasure<Integer, LogWatch> DEFAULT_MEASURE = new MessageMeasure<Integer, LogWatch>() {
 
         @Override
+        public Integer initialValue() {
+            return 1;
+        }
+
+        @Override
         public Integer update(final MessageMetric<Integer, LogWatch> metric, final Message evaluate,
             final MessageDeliveryStatus status, final LogWatch source) {
             final Integer value = metric.getValue();
-            return (value == null) ? 1 : value + 2;
+            return value + 2;
         }
 
     };
@@ -45,22 +50,22 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
         final LogWatch watch = this.getLogWatch();
         final DefaultMessageMetric<Integer, LogWatch> metric = (DefaultMessageMetric<Integer, LogWatch>) watch.startMeasuring(DefaultMessageMetricTest.DEFAULT_MEASURE, "test");
         Assertions.assertThat(metric.getMessageCount(null)).isEqualTo(0);
-        Assertions.assertThat(metric.getValue(null)).isNull();
+        Assertions.assertThat(metric.getValue(null)).isEqualTo(1);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(0);
-        Assertions.assertThat(metric.getValue()).isNull();
+        Assertions.assertThat(metric.getValue()).isEqualTo(1);
         final Message one = DefaultMessageMetricTest.MESSAGE.buildFinal();
         metric.messageReceived(one, MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(1);
-        Assertions.assertThat(metric.getValue()).isEqualTo(1);
+        Assertions.assertThat(metric.getValue()).isEqualTo(3);
         final Message two = DefaultMessageMetricTest.MESSAGE.buildFinal();
         metric.messageReceived(two, MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getMessageCount()).isEqualTo(2);
-        Assertions.assertThat(metric.getValue()).isEqualTo(3);
+        Assertions.assertThat(metric.getValue()).isEqualTo(5);
         // test history
         Assertions.assertThat(metric.getMessageCount(one)).isEqualTo(1);
-        Assertions.assertThat(metric.getValue(one)).isEqualTo(1);
+        Assertions.assertThat(metric.getValue(one)).isEqualTo(3);
         Assertions.assertThat(metric.getMessageCount(two)).isEqualTo(2);
-        Assertions.assertThat(metric.getValue(two)).isEqualTo(3);
+        Assertions.assertThat(metric.getValue(two)).isEqualTo(5);
         final Message none = DefaultMessageMetricTest.MESSAGE.buildFinal();
         Assertions.assertThat(metric.getMessageCount(none)).isEqualTo(-1);
         Assertions.assertThat(metric.getValue(none)).isNull();
@@ -75,9 +80,9 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
     public void testWaiting() {
         final LogWatch watch = this.getLogWatch(); // placeholder
         final DefaultMessageMetric<Integer, LogWatch> metric = (DefaultMessageMetric<Integer, LogWatch>) watch.startMeasuring(DefaultMessageMetricTest.DEFAULT_MEASURE, "test");
-        Assertions.assertThat(metric.getValue()).isNull();
-        metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getValue()).isEqualTo(1);
+        metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
+        Assertions.assertThat(metric.getValue()).isEqualTo(3);
         final Future<Message> expected = this.e.schedule(new Callable<Message>() {
 
             @Override
@@ -100,7 +105,7 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
 
             @Override
             public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                return evaluate.getValue() == 5;
+                return evaluate.getValue() == 7;
             }
 
         }, 10, TimeUnit.SECONDS);
@@ -109,6 +114,6 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
         } catch (final Exception e1) {
             Assertions.fail("Metric condition not triggered.", e1);
         }
-        Assertions.assertThat(metric.getValue()).isEqualTo(7);
+        Assertions.assertThat(metric.getValue()).isEqualTo(9);
     }
 }

@@ -14,6 +14,13 @@ package com.github.triceo.splitlog.api;
 public interface MessageMeasure<T extends Number, S extends MessageProducer<S>> {
 
     /**
+     * The default value for the resulting {@link MessageMetric}.
+     * 
+     * @return Whetever value that the metric should start with.
+     */
+    T initialValue();
+
+    /**
      * Update metric after the arrival of another message.
      *
      * @param metric
