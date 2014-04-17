@@ -322,4 +322,8 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
+  <ciManagement>
+    <system>travis</system>
+    <url>https://travis-ci.org/triceo/splitlog</url>
+  </ciManagement>
 </project>
