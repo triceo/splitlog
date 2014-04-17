@@ -100,23 +100,12 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         if (this.isStopped()) {
             return false;
         }
-        LOGGER.info("Stopping {}.", this);
+        AbstractMergingFollower.LOGGER.info("Stopping {}.", this);
         for (final AbstractLogWatchFollower f : this.followers) {
             f.stop();
         }
-        LOGGER.info("Stopped {}.", this);
+        AbstractMergingFollower.LOGGER.info("Stopped {}.", this);
         return true;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("AbstractMergingFollower [");
-        if (this.followers != null) {
-            builder.append("followers=").append(this.followers).append(", ");
-        }
-        builder.append("isFollowing()=").append(this.isFollowing()).append("]");
-        return builder.toString();
     }
 
     @Override

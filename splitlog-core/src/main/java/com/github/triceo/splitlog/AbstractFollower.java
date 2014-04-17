@@ -60,11 +60,6 @@ abstract class AbstractFollower<P extends MessageProducer<P>, C extends MessageP
         return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
     }
 
-    @Override
-    public boolean isFollowing() {
-        return !this.isStopped();
-    }
-
     /**
      * Will throw an exception if any other thread tries to specify a wait on
      * the instance while another thread is already waiting.

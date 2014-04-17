@@ -59,21 +59,6 @@ public interface CommonFollower<P extends MessageProducer<P>, C extends MessageP
     SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order);
 
     /**
-     * Use {@link #isStopped()} instead.
-     *
-     * Whether or not this follower is still capable of receiving messages. It
-     * is suggested that the reference to this follower be thrown away
-     * immediately after the user has processed the results of
-     * {@link #getMessages()} or {@link #getMessages(SimpleMessageCondition)}.
-     * {@link LogWatch} may then be able to free the memory occupied by those
-     * messages.
-     *
-     * @return True if following.
-     */
-    @Deprecated
-    boolean isFollowing();
-
-    /**
      * Merge this {@link CommonFollower} with another. This
      * {@link CommonFollower} has a responsibility of notifying the resulting
      * {@link MergingFollower} of every {@link Message} that it receives, until

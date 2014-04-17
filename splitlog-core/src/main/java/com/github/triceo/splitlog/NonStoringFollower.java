@@ -137,4 +137,15 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         return this.consumers.stopMeasuring(id);
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("NonStoringFollower [");
+        if (this.getFollowed() != null) {
+            builder.append("getFollowed()=").append(this.getFollowed()).append(", ");
+        }
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
+        return builder.toString();
+    }
+
 }

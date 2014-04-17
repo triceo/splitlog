@@ -12,7 +12,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 
 final class MeasuringConsumerManager<P extends MessageMetricProducer<P>> extends ConsumerManager<P> implements
-        MessageMetricProducer<P> {
+MessageMetricProducer<P> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MeasuringConsumerManager.class);
 
@@ -91,6 +91,17 @@ final class MeasuringConsumerManager<P extends MessageMetricProducer<P>> extends
         this.stopConsuming(removed);
         MeasuringConsumerManager.LOGGER.info("Stopped measuring {} in {}.", id, this.getProducer());
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("MeasuringConsumerManager [");
+        if (this.getProducer() != null) {
+            builder.append("getProducer()=").append(this.getProducer()).append(", ");
+        }
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
+        return builder.toString();
     }
 
 }

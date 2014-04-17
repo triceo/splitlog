@@ -31,7 +31,7 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * messages.
  */
 abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWatch> implements Follower,
-        ConsumerRegistrar<Follower> {
+ConsumerRegistrar<Follower> {
 
     private final Set<Message> tags = new LinkedHashSet<Message>();
 
@@ -94,17 +94,6 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWa
         final Message message = new MessageBuilder(tagLine).buildTag();
         this.tags.add(message);
         return message;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("Follower [");
-        if (this.watch != null) {
-            builder.append("watch=").append(this.watch).append(", ");
-        }
-        builder.append("isFollowing()=").append(this.isFollowing()).append("]");
-        return builder.toString();
     }
 
     @Override

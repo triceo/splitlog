@@ -67,4 +67,15 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
         return this.consumers.stopConsuming(consumer);
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("NonStoringMergingFollower [");
+        if (this.getMerged() != null) {
+            builder.append("getMerged()=").append(this.getMerged()).append(", ");
+        }
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
+        return builder.toString();
+    }
+
 }

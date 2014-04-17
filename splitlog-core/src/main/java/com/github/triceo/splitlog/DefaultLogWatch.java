@@ -48,8 +48,8 @@ final class DefaultLogWatch implements LogWatch {
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
         final SimpleMessageCondition acceptanceCondition, final long delayBetweenReads,
-            final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
-            final int bufferSize, final long delayForTailerStart) {
+        final long delayBetweenSweeps, final boolean ignoreExistingContent, final boolean reopenBetweenReads,
+        final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
         this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
@@ -355,19 +355,12 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public String toString() {
-        // properly size the builder
-        final String filename = this.watchedFile.toString();
-        final int length = 40 + filename.length();
-        final StringBuilder builder = new StringBuilder(length);
-        // build the string
-        builder.append("LogWatch [file=");
-        builder.append(filename);
-        if (this.isTerminated()) {
-            builder.append(", terminated");
-        } else {
-            builder.append(", running");
+        final StringBuilder builder = new StringBuilder();
+        builder.append("DefaultLogWatch [");
+        if (this.getWatchedFile() != null) {
+            builder.append("getWatchedFile()=").append(this.getWatchedFile()).append(", ");
         }
-        builder.append(']');
+        builder.append("isTerminated()=").append(this.isTerminated()).append("]");
         return builder.toString();
     }
 

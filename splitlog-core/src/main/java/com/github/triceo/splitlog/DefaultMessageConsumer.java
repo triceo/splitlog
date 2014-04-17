@@ -31,4 +31,18 @@ final class DefaultMessageConsumer<P extends MessageProducer<P>> implements Mess
         return this.producer.stopConsuming(this);
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("DefaultMessageConsumer [");
+        if (this.producer != null) {
+            builder.append("producer=").append(this.producer).append(", ");
+        }
+        if (this.listener != null) {
+            builder.append("listener=").append(this.listener);
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
 }

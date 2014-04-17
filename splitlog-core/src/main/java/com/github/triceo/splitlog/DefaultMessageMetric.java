@@ -16,7 +16,7 @@ import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageMetricProducer<S>> implements MessageMetric<T, S>,
-        MessageConsumer<S> {
+MessageConsumer<S> {
 
     private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
     private final MessageMeasure<T, S> measure;
@@ -99,6 +99,21 @@ final class DefaultMessageMetric<T extends Number, S extends MessageMetricProduc
     @Override
     public boolean stop() {
         return this.getSource().stopMeasuring(this);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("DefaultMessageMetric [");
+        if (this.source != null) {
+            builder.append("source=").append(this.source).append(", ");
+        }
+        builder.append("getMessageCount()=").append(this.getMessageCount()).append(", ");
+        if (this.getValue() != null) {
+            builder.append("getValue()=").append(this.getValue()).append(", ");
+        }
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
+        return builder.toString();
     }
 
     /**

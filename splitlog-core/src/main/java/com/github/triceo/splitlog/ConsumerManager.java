@@ -96,4 +96,15 @@ ConsumerRegistrar<P> {
 
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("ConsumerManager [");
+        if (this.getProducer() != null) {
+            builder.append("getProducer()=").append(this.getProducer()).append(", ");
+        }
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
+        return builder.toString();
+    }
+
 }
