@@ -43,7 +43,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
-            this.measure(pair.getValue(), pair.getKey(), false);
+            this.startMeasuring(pair.getValue(), pair.getKey(), false);
         }
     }
 
@@ -85,14 +85,6 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         return this.consumers.isMeasuring(id);
     }
 
-    private <T extends Number> MessageMetric<T, Follower> measure(final MessageMeasure<T, Follower> measure,
-            final String id, final boolean checkIfFollowing) {
-        if (checkIfFollowing && this.isStopped()) {
-            throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
-        }
-        return this.consumers.startMeasuring(measure, id);
-    }
-
     @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
         final LogWatch source) {
@@ -103,10 +95,12 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         }
         NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
         this.getExchange().messageReceived(msg, status, source);
-        for (final AbstractMergingFollower mf : this.getMergingFollowersToNotify()) {
-            mf.messageReceived(msg, status, this);
-        }
         this.consumers.messageReceived(msg, status, this);
+    }
+
+    @Override
+    public void registerConsumer(final MessageConsumer<Follower> consumer) {
+        this.consumers.registerConsumer(consumer);
     }
 
     @Override
@@ -117,7 +111,15 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     @Override
     public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
             final String id) {
-        return this.measure(measure, id, true);
+        return this.startMeasuring(measure, id, true);
+    }
+
+    private <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
+            final String id, final boolean checkIfFollowing) {
+        if (checkIfFollowing && this.isStopped()) {
+            throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
+        }
+        return this.consumers.startMeasuring(measure, id);
     }
 
     @Override

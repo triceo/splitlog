@@ -54,6 +54,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
         }
         NonStoringMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
         this.getExchange().messageReceived(msg, status, source);
+        this.consumers.messageReceived(msg, status, this);
     }
 
     @Override

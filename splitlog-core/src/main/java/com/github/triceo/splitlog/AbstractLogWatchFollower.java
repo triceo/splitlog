@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -31,9 +30,8 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWatch> implements Follower {
-
-    private final Set<AbstractMergingFollower> mergingFollowersToNotify = new LinkedHashSet<AbstractMergingFollower>();
+abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWatch> implements Follower,
+        ConsumerRegistrar<Follower> {
 
     private final Set<Message> tags = new LinkedHashSet<Message>();
 
@@ -51,10 +49,6 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWa
     @Override
     public LogWatch getFollowed() {
         return this.getWatch();
-    }
-
-    protected Set<AbstractMergingFollower> getMergingFollowersToNotify() {
-        return Collections.unmodifiableSet(this.mergingFollowersToNotify);
     }
 
     protected Set<Message> getTags() {
@@ -90,10 +84,6 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWa
         return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
 
-    protected boolean registerMerge(final AbstractMergingFollower mf) {
-        return this.mergingFollowersToNotify.add(mf);
-    }
-
     @Override
     public boolean stop() {
         return this.getFollowed().stopFollowing(this);
@@ -115,10 +105,6 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWa
         }
         builder.append("isFollowing()=").append(this.isFollowing()).append("]");
         return builder.toString();
-    }
-
-    protected boolean unregisterMerge(final AbstractMergingFollower mf) {
-        return this.mergingFollowersToNotify.remove(mf);
     }
 
     @Override

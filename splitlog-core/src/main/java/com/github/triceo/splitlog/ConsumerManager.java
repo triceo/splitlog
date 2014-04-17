@@ -11,7 +11,8 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 
-class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P> {
+class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P>,
+        ConsumerRegistrar<P> {
 
     private final Set<MessageConsumer<P>> consumers = new LinkedHashSet<MessageConsumer<P>>();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
@@ -37,7 +38,7 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
 
     @Override
     public synchronized void
-        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }
@@ -45,7 +46,8 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
             consumer.messageReceived(message, status, producer);
         }
     }
-    
+
+    @Override
     public synchronized void registerConsumer(final MessageConsumer<P> consumer) {
         this.consumers.add(consumer);
     }

@@ -32,7 +32,7 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         for (final Follower f : followers) {
             final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
             this.followers.add(af);
-            af.registerMerge(this);
+            af.registerConsumer(this);
         }
     }
 
@@ -80,13 +80,12 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
 
     @Override
     public boolean separate(final Follower f) {
-        if (!this.followers.contains(f)) {
+        if (!this.followers.remove(f)) {
             return false;
         }
         // we know about this follower, so the cast is safe
-        this.followers.remove(f);
         final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
-        return af.unregisterMerge(this);
+        return af.stopConsuming(this);
     }
 
     @Override
