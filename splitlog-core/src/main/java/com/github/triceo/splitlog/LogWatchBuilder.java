@@ -3,6 +3,7 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
@@ -97,9 +98,13 @@ final public class LogWatchBuilder {
 
     /**
      * Build the log watch with previously defined properties, or defaults where
-     * not overriden.
+     * not overriden. Such log watch will not start actually reading
+     * {@link #getFileToWatch()} until after {@link LogWatch#startFollowing()}
+     * or
+     * {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
+     * .
      *
-     * @return The newly build log watch.
+     * @return The newly built log watch.
      */
     public LogWatch build() {
         return this.buildWith(new SimpleTailSplitter());
@@ -107,12 +112,49 @@ final public class LogWatchBuilder {
 
     /**
      * Build the log watch with previously defined properties, or defaults where
-     * not overriden.
+     * not overriden, and immediately start listening for {@link Message}s.
+     *
+     * @return The follower that will receive the initial messages. The actual
+     *         {@link LogWatch} can be retrieved by
+     *         {@link Follower#getFollowed()}.
+     */
+    public Follower buildFollowing() {
+        return this.buildFollowingWith(new SimpleTailSplitter());
+    }
+
+    /**
+     * Build the log watch with previously defined properties, or defaults where
+     * not overriden, and immediately start listening for {@link Message}s
      *
      * @param splitter
      *            The splitter instance to use for the log watch instead of the
      *            default.
-     * @return This.
+     * @return The follower that will receive the initial messages. The actual
+     *         {@link LogWatch} can be retrieved by
+     *         {@link Follower#getFollowed()}.
+     */
+    public Follower buildFollowingWith(final TailSplitter splitter) {
+        if (splitter == null) {
+            throw new IllegalArgumentException("A splitter must be provided.");
+        }
+        return this.buildWith(splitter).startFollowing();
+    }
+
+    /**
+     * Build the log watch with previously defined properties, or defaults where
+     * not overriden. Such log watch will not start actually reading
+     * {@link #getFileToWatch()} until after {@link LogWatch#startFollowing()}
+     * or
+     * {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
+     * .
+     *
+     * @param splitter
+     *            The splitter instance to use for the log watch instead of the
+     *            default.
+     * @return The newly built log watch. This log watch will not start tailing
+     *         until after {@link LogWatch#startFollowing()} or
+     *         {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
+     *         .
      */
     public LogWatch buildWith(final TailSplitter splitter) {
         if (splitter == null) {
