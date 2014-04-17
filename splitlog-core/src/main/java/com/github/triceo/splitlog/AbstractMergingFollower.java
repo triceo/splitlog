@@ -15,6 +15,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.MergingFollower;
@@ -26,14 +28,18 @@ import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 
 abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower, Follower> implements MergingFollower {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMergingFollower.class);
+
     private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
 
     protected AbstractMergingFollower(final Follower... followers) {
+        AbstractMergingFollower.LOGGER.info("Merging followers into {}.", this);
         for (final Follower f : followers) {
             final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
             this.followers.add(af);
             af.registerConsumer(this);
         }
+        AbstractMergingFollower.LOGGER.info("Followers merged: {}.", this);
     }
 
     @Override
@@ -84,6 +90,7 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
             return false;
         }
         // we know about this follower, so the cast is safe
+        AbstractMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
         final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
         return af.stopConsuming(this);
     }
@@ -93,9 +100,11 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         if (this.isStopped()) {
             return false;
         }
+        LOGGER.info("Stopping {}.", this);
         for (final AbstractLogWatchFollower f : this.followers) {
             f.stop();
         }
+        LOGGER.info("Stopped {}.", this);
         return true;
     }
 

@@ -4,13 +4,17 @@ import java.util.HashSet;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
 
 final class MeasuringConsumerManager<P extends MessageMetricProducer<P>> extends ConsumerManager<P> implements
-MessageMetricProducer<P> {
+        MessageMetricProducer<P> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MeasuringConsumerManager.class);
 
     private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, P>>();
 
@@ -50,6 +54,7 @@ MessageMetricProducer<P> {
         } else if (this.metrics.containsKey(id)) {
             throw new IllegalArgumentException("Duplicate ID:" + id);
         }
+        MeasuringConsumerManager.LOGGER.info("Starting measuring {} in {}.", id, this.getProducer());
         final DefaultMessageMetric<T, P> metric = new DefaultMessageMetric<T, P>(this.getProducer(), measure);
         this.metrics.put(id, metric);
         this.registerConsumer(metric);
@@ -61,9 +66,11 @@ MessageMetricProducer<P> {
         if (!super.stop()) {
             return false;
         }
+        MeasuringConsumerManager.LOGGER.info("Stopping metrics consumer manager for {}.", this.getProducer());
         for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
             this.stopMeasuring(metricId);
         }
+        MeasuringConsumerManager.LOGGER.info("Stopped metrics consumer manager for {}.", this.getProducer());
         return true;
     }
 
@@ -82,6 +89,7 @@ MessageMetricProducer<P> {
         }
         final DefaultMessageMetric<? extends Number, P> removed = this.metrics.remove(id);
         this.stopConsuming(removed);
+        MeasuringConsumerManager.LOGGER.info("Stopped measuring {} in {}.", id, this.getProducer());
         return true;
     }
 
