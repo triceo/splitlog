@@ -268,16 +268,18 @@
     <profile>
       <id>perform-release</id>
       <activation>
-        <property>
+        <property> <!-- manually -->
           <name>performRelease</name>
           <value>true</value>
         </property>
+        <file> <!-- for the release plugin -->
+          <exists>release.properties</exists>
+        </file>
       </activation>
       <build>
         <plugins>
           <plugin> <!-- don't run tests in parallel, for Cobertura's sake -->
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>${surefire.version}</version>
             <configuration>
               <forkCount>1</forkCount>
             </configuration>
