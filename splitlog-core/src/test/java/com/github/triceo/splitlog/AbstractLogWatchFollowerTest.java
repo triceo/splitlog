@@ -16,27 +16,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingCondition;
 
+/**
+ * This test has a weird name, due to the Abstract thing. But this is so that
+ * it's always run first in the alphabetical order, and therefore (when parallel
+ * surefire is enabled and more than 1 core is available) the run time of all
+ * tests will be minimized.
+ *
+ */
 @RunWith(Parameterized.class)
-public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
+public class AbstractLogWatchFollowerTest extends DefaultFollowerBaseTest {
 
     private static final class NothingAcceptingMessageCondition implements SimpleMessageCondition {
 
         @Override
         public boolean accept(final Message evaluate) {
             return false;
-        }
-
-    }
-
-    private static final class TestStartingMessageCondition implements SimpleMessageCondition {
-
-        @Override
-        public boolean accept(final Message evaluate) {
-            return (evaluate.getLines().get(0).startsWith("test"));
         }
 
     }
@@ -52,48 +50,20 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
 
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollowerTest.class);
+    private static final class TestStartingMessageCondition implements SimpleMessageCondition {
+
+        @Override
+        public boolean accept(final Message evaluate) {
+            return (evaluate.getLines().get(0).startsWith("test"));
+        }
+
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractLogWatchFollowerTest.class);
     private static final int MESSAGES_TO_WRITE = 10;
 
-    public NonStoringFollowerTest(final LogWatchBuilder builder) {
+    public AbstractLogWatchFollowerTest(final LogWatchBuilder builder) {
         super(builder);
-    }
-
-    private void writeAndTest(final boolean closeBeforeWriting) {
-        final Follower follower = this.getLogWatch().startFollowing();
-        final List<String> messages = new LinkedList<String>();
-        for (int i = 0; i < NonStoringFollowerTest.MESSAGES_TO_WRITE; i++) {
-            messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
-        }
-        messages.remove(messages.size() - 1); // last message will not be
-        // written
-        if (closeBeforeWriting) {
-            this.getLogWatch().stopFollowing(follower);
-        }
-        try {
-            final File f = File.createTempFile("splitlog-", ".log");
-            NonStoringFollowerTest.LOGGER.info("Will write into '{}'.", f);
-            follower.write(new FileOutputStream(f));
-            Assertions.assertThat(f).exists();
-            final List<String> lines = FileUtils.readLines(f, "UTF-8");
-            Assertions.assertThat(lines).isEqualTo(messages);
-        } catch (final Exception e) {
-            Assertions.fail("Couldn't write to file.");
-        } finally {
-            if (this.getLogWatch().isFollowedBy(follower)) {
-                this.getLogWatch().stopFollowing(follower);
-            }
-        }
-    }
-
-    @Test
-    public void testWriteMessages() {
-        this.writeAndTest(false);
-    }
-
-    @Test
-    public void testWriteMessagesAfterTerminated() {
-        this.writeAndTest(true);
     }
 
     @Test
@@ -140,6 +110,42 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     }
 
     @Test
+    public void testNesting() {
+        final String message1 = "test1";
+        final String message2 = "test2";
+        final String message3 = "test3";
+        final String message4 = "test4";
+        final String message5 = "test5";
+        final Follower follower = this.getLogWatch().startFollowing();
+        // make sure the messages are received by the first follower
+        this.getWriter().write(message1, follower);
+        String result = this.getWriter().write(message2, follower);
+        Assertions.assertThat(result).isEqualTo(message2);
+        Assertions.assertThat(follower.getMessages().size()).isEqualTo(1);
+        // start a second follower, send some messages
+        final Follower nestedFollower = this.getLogWatch().startFollowing();
+        result = this.getWriter().write(message3, follower);
+        result = this.getWriter().write(message4, follower);
+        Assertions.assertThat(result).isEqualTo(message4);
+        this.getLogWatch().stopFollowing(nestedFollower);
+        // send another message, so the original follower has something extra
+        Assertions.assertThat(nestedFollower.isStopped()).isTrue();
+        result = this.getWriter().write(message5, follower);
+        // and make sure that the original follower has all messages
+        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
+        Assertions.assertThat(messages.size()).isEqualTo(4);
+        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message1);
+        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message2);
+        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message3);
+        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message4);
+        // and the nested follower has only the two while it was running
+        final List<Message> nestedMessages = new LinkedList<Message>(nestedFollower.getMessages());
+        Assertions.assertThat(nestedFollower.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(nestedMessages.get(0).getLines().get(0)).isEqualTo(message2);
+        Assertions.assertThat(nestedMessages.get(1).getLines().get(0)).isEqualTo(message3);
+    }
+
+    @Test
     public void testTag() {
         final String message1 = "test";
         final String message2 = "test7";
@@ -179,61 +185,25 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
     }
 
     @Test
-    public void testNesting() {
-        final String message1 = "test1";
-        final String message2 = "test2";
-        final String message3 = "test3";
-        final String message4 = "test4";
-        final String message5 = "test5";
-        final Follower follower = this.getLogWatch().startFollowing();
-        // make sure the messages are received by the first follower
-        this.getWriter().write(message1, follower);
-        String result = this.getWriter().write(message2, follower);
-        Assertions.assertThat(result).isEqualTo(message2);
-        Assertions.assertThat(follower.getMessages().size()).isEqualTo(1);
-        // start a second follower, send some messages
-        final Follower nestedFollower = this.getLogWatch().startFollowing();
-        result = this.getWriter().write(message3, follower);
-        result = this.getWriter().write(message4, follower);
-        Assertions.assertThat(result).isEqualTo(message4);
-        this.getLogWatch().stopFollowing(nestedFollower);
-        // send another message, so the original follower has something extra
-        Assertions.assertThat(nestedFollower.isStopped()).isTrue();
-        result = this.getWriter().write(message5, follower);
-        // and make sure that the original follower has all messages
-        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assertions.assertThat(messages.size()).isEqualTo(4);
-        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message1);
-        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message2);
-        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message3);
-        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message4);
-        // and the nested follower has only the two while it was running
-        final List<Message> nestedMessages = new LinkedList<Message>(nestedFollower.getMessages());
-        Assertions.assertThat(nestedFollower.getMessages().size()).isEqualTo(2);
-        Assertions.assertThat(nestedMessages.get(0).getLines().get(0)).isEqualTo(message2);
-        Assertions.assertThat(nestedMessages.get(1).getLines().get(0)).isEqualTo(message3);
-    }
-
-    @Test
     public void testTermination() {
         Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch terminated immediately after starting.")
-                .isFalse();
+        .isFalse();
         final Follower follower1 = this.getLogWatch().startFollowing();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
-                .as("Follower terminated immediately after starting.").isTrue();
+        .as("Follower terminated immediately after starting.").isTrue();
         final Follower follower2 = this.getLogWatch().startFollowing();
         Assertions.assertThat(this.getLogWatch().stopFollowing(follower1)).as("Wrong termination result.").isTrue();
         Assertions.assertThat(this.getLogWatch().stopFollowing(follower1)).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
-                .as("Follower terminated without termination.").isTrue();
+        .as("Follower terminated without termination.").isTrue();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
-                .as("Follower not terminated after termination.").isFalse();
+        .as("Follower not terminated after termination.").isFalse();
         Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isTrue();
         Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
-                .as("Follower not terminated after termination.").isFalse();
+        .as("Follower not terminated after termination.").isFalse();
         Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch not terminated after termination.")
-                .isTrue();
+        .isTrue();
     }
 
     @Test
@@ -252,6 +222,43 @@ public class NonStoringFollowerTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(messages.size()).isEqualTo(1);
         Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message);
         this.getLogWatch().stopFollowing(follower);
+    }
+
+    @Test
+    public void testWriteMessages() {
+        this.writeAndTest(false);
+    }
+
+    @Test
+    public void testWriteMessagesAfterTerminated() {
+        this.writeAndTest(true);
+    }
+
+    private void writeAndTest(final boolean closeBeforeWriting) {
+        final Follower follower = this.getLogWatch().startFollowing();
+        final List<String> messages = new LinkedList<String>();
+        for (int i = 0; i < AbstractLogWatchFollowerTest.MESSAGES_TO_WRITE; i++) {
+            messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
+        }
+        messages.remove(messages.size() - 1); // last message will not be
+        // written
+        if (closeBeforeWriting) {
+            this.getLogWatch().stopFollowing(follower);
+        }
+        try {
+            final File f = File.createTempFile("splitlog-", ".log");
+            AbstractLogWatchFollowerTest.LOGGER.info("Will write into '{}'.", f);
+            follower.write(new FileOutputStream(f));
+            Assertions.assertThat(f).exists();
+            final List<String> lines = FileUtils.readLines(f, "UTF-8");
+            Assertions.assertThat(lines).isEqualTo(messages);
+        } catch (final Exception e) {
+            Assertions.fail("Couldn't write to file.");
+        } finally {
+            if (this.getLogWatch().isFollowedBy(follower)) {
+                this.getLogWatch().stopFollowing(follower);
+            }
+        }
     }
 
 }
