@@ -7,14 +7,14 @@ class CauseParser extends ExceptionLineParser<CauseLine> {
     private static final String SEPARATOR = ":";
 
     private static String merge(final String[] chunks, final int firstIndex) {
-        String result = "";
+        final StringBuilder result = new StringBuilder();
         for (int i = firstIndex; i < chunks.length; i++) {
-            result += chunks[i];
+            result.append(chunks[i]);
             if (i != (chunks.length - 1)) {
-                result += CauseParser.SEPARATOR;
+                result.append(CauseParser.SEPARATOR);
             }
         }
-        return result;
+        return result.toString();
     }
 
     @Override
