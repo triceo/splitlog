@@ -10,6 +10,15 @@ package com.github.triceo.splitlog.api;
 public interface MessageMetricProducer<P extends MessageProducer<P>> extends MessageProducer<P> {
 
     /**
+     * Return the number of metrics that have been
+     * {@link #startMeasuring(MessageMeasure, String)}'d and not
+     * {@link #stopMeasuring(String)}'d.
+     *
+     * @return Always >= 0.
+     */
+    int countMetrics();
+
+    /**
      * Retrieve the metric for a particular ID.
      *
      * @param id

@@ -23,6 +23,11 @@ MessageMetricProducer<P> {
     }
 
     @Override
+    public int countMetrics() {
+        return this.metrics.size();
+    }
+
+    @Override
     public synchronized MessageMetric<? extends Number, P> getMetric(final String id) {
         return this.metrics.get(id);
     }
