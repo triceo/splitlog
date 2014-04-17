@@ -8,7 +8,6 @@
   <name>splitlog: watching your logs</name>
   <description>Tool to monitor log files from your Java applications as they fill.</description>
   <properties>
-    <splitlog.version>${project.version}</splitlog.version>
     <java.version>1.6</java.version>
     <surefire.version>2.17</surefire.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,12 +21,12 @@
       <dependency>
         <groupId>com.github.triceo.splitlog</groupId>
         <artifactId>splitlog-api</artifactId>
-        <version>${splitlog.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.triceo.splitlog</groupId>
         <artifactId>splitlog-core</artifactId>
-        <version>${splitlog.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
