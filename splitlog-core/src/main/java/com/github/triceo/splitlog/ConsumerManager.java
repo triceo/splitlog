@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 
 class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P>,
-ConsumerRegistrar<P> {
+        ConsumerRegistrar<P> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerManager.class);
 
@@ -25,6 +25,11 @@ ConsumerRegistrar<P> {
 
     public ConsumerManager(final P producer) {
         this.producer = producer;
+    }
+
+    @Override
+    public int countConsumers() {
+        return this.consumers.size();
     }
 
     public P getProducer() {
@@ -43,7 +48,7 @@ ConsumerRegistrar<P> {
 
     @Override
     public synchronized void
-    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }

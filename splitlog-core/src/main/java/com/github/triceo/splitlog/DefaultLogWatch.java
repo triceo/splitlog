@@ -5,7 +5,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -38,7 +37,6 @@ final class DefaultLogWatch implements LogWatch {
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
     private boolean isTerminated = false;
     private final MeasuringConsumerManager<LogWatch> messaging = new MeasuringConsumerManager<LogWatch>(this);
-    private final AtomicInteger numberOfActiveFollowers = new AtomicInteger(0);
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
     private final LogWatchStorageManager storage;
@@ -84,6 +82,11 @@ final class DefaultLogWatch implements LogWatch {
         this.handleIncomingMessage(this.currentlyProcessedMessage);
     }
 
+    @Override
+    public int countConsumers() {
+        return this.messaging.countConsumers();
+    }
+
     /**
      * <strong>This is not part of the public API.</strong> Purely for purposes
      * of testing the automated message sweep.
@@ -126,7 +129,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     /**
-     * Notify {@link Follower}s of a message that is either
+     * Notify {@link MessageConsumer}s of a message that is either
      * {@link MessageDeliveryStatus#ACCEPTED} or
      * {@link MessageDeliveryStatus#REJECTED}.
      *
@@ -145,7 +148,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     /**
-     * Notify {@link Follower}s of a message that is
+     * Notify {@link MessageConsumer}s of a message that is
      * {@link MessageDeliveryStatus#INCOMING}.
      *
      * @param messageBuilder
@@ -211,35 +214,33 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> consumer) {
-        return this.messaging.startConsuming(consumer);
+    public synchronized MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> consumer) {
+        final MessageConsumer<LogWatch> result = this.messaging.startConsuming(consumer);
+        this.startTailingIfNecessary(false);
+        return result;
     }
 
     @Override
-    public Follower startFollowing() {
+    public synchronized Follower startFollowing() {
         final Follower f = this.startFollowingActually(false);
         this.tailing.waitUntilStarted();
         return f;
     }
 
     @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor) {
+    public synchronized Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor) {
         final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor));
     }
 
     @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
+    public synchronized Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
             final long howLong, final TimeUnit unit) {
         final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
 
     /**
-     * First invocation of the method on an instance will trigger
-     * {@link LogWatchStorageSweeper} to be scheduled for periodical sweeping of
-     * unreachable messages.
-     *
      * @param boolean If the tailer needs a delayed start because of
      *        {@link #startFollowing(MidDeliveryMessageCondition)}, as explained
      *        in {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
@@ -262,10 +263,7 @@ final class DefaultLogWatch implements LogWatch {
         this.messaging.registerConsumer(follower);
         this.storage.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
-        if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
-            // we have listeners, let's start tailing
-            this.tailing.start(needsToWait);
-        }
+        this.startTailingIfNecessary(needsToWait);
         return follower;
     }
 
@@ -291,9 +289,18 @@ final class DefaultLogWatch implements LogWatch {
         return this.messaging.startMeasuring(measure, id);
     }
 
+    private synchronized void startTailingIfNecessary(final boolean needsToWait) {
+        if (this.messaging.countConsumers() == 1) {
+            // we have listeners, let's start tailing
+            this.tailing.start(needsToWait);
+        }
+    }
+
     @Override
-    public boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
-        return this.messaging.stopConsuming(consumer);
+    public synchronized boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
+        final boolean result = this.messaging.stopConsuming(consumer);
+        this.stopTailingIfNecessary();
+        return result;
     }
 
     @Override
@@ -307,10 +314,7 @@ final class DefaultLogWatch implements LogWatch {
         this.messaging.stopConsuming(follower);
         this.storage.followerTerminated(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
-        if (this.numberOfActiveFollowers.decrementAndGet() == 0) {
-            this.tailing.stop();
-            this.currentlyProcessedMessage = null;
-        }
+        this.stopTailingIfNecessary();
         return true;
     }
 
@@ -332,6 +336,13 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public boolean stopMeasuring(final String id) {
         return this.messaging.stopMeasuring(id);
+    }
+
+    private synchronized void stopTailingIfNecessary() {
+        if (this.messaging.countConsumers() == 0) {
+            this.tailing.stop();
+            this.currentlyProcessedMessage = null;
+        }
     }
 
     /**

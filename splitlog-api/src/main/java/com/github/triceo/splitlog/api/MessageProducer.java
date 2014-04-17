@@ -11,6 +11,15 @@ package com.github.triceo.splitlog.api;
 public interface MessageProducer<P extends MessageProducer<P>> {
 
     /**
+     * Return the number of consumers that have been
+     * {@link #startConsuming(MessageListener)}'d and not
+     * {@link #stopConsuming(MessageConsumer)}'d.
+     *
+     * @return Always >= 0.
+     */
+    int countConsumers();
+
+    /**
      * Whether or not the particular message consumer is being notified of new
      * messages.
      *

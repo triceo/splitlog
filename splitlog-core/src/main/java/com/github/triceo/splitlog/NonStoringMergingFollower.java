@@ -27,6 +27,11 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
+    public int countConsumers() {
+        return this.consumers.countConsumers();
+    }
+
+    @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
