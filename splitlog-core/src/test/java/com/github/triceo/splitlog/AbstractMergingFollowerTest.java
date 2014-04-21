@@ -1,14 +1,19 @@
 package com.github.triceo.splitlog;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.MergingFollower;
+import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
 
 public class AbstractMergingFollowerTest {
 
@@ -55,11 +60,38 @@ public class AbstractMergingFollowerTest {
         writer1.write(AbstractMergingFollowerTest.MESSAGE_5, follower3);
         Assertions.assertThat(merge.getMessages()).hasSize(3);
         Assertions.assertThat(merge2.getMessages()).hasSize(3);
+        // test writing
+        final List<String> messages = new LinkedList<String>();
+        messages.add(AbstractMergingFollowerTest.MESSAGE_1);
+        messages.add(AbstractMergingFollowerTest.MESSAGE_2);
+        messages.add(AbstractMergingFollowerTest.MESSAGE_4);
+        try {
+            final File f = AbstractMergingFollowerTest.createTempFile();
+            merge2.write(new FileOutputStream(f), NoopMessageFormatter.INSTANCE);
+            Assertions.assertThat(f).exists();
+            final List<String> lines = FileUtils.readLines(f, "UTF-8");
+            Assertions.assertThat(lines).isEqualTo(messages);
+        } catch (final Exception e) {
+            Assertions.fail("Couldn't write to file.");
+        }
         // and now separate the second, making MESSAGE_2 disappear
         Assertions.assertThat(merge2.separate(follower2)).isTrue();
         Assertions.assertThat(merge2.getMessages()).hasSize(2);
         // now only MESSAGE_4 remains ACCEPTED
         Assertions.assertThat(merge2.separate(follower1)).isTrue();
         Assertions.assertThat(merge2.getMessages()).hasSize(1);
+        // and now stop the followers to see what happens to the merges
+        follower3.stop();
+        Assertions.assertThat(merge2.isStopped()).isTrue();
+        Assertions.assertThat(merge.isStopped()).isFalse();
+        watch1.terminate();
+        Assertions.assertThat(follower1.isStopped());
+        Assertions.assertThat(merge2.isStopped()).isTrue();
+        Assertions.assertThat(merge.isStopped()).isFalse();
+        merge.stop();
+        Assertions.assertThat(merge.isStopped()).isTrue();
+        Assertions.assertThat(merge2.isStopped()).isTrue();
+        Assertions.assertThat(follower2.isStopped()).isTrue();
     }
+
 }
