@@ -20,7 +20,7 @@ public interface MergingFollower extends CommonFollower<MergingFollower, Followe
      *
      * @return Unmodifiable collections of followers in this merge.
      */
-    Collection<? extends Follower> getMerged();
+    Collection<Follower> getMerged();
 
     /**
      * Will remove the follower from {@link #getMerged()}. As a result, this

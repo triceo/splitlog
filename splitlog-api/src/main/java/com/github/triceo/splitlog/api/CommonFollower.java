@@ -16,16 +16,17 @@ import java.util.concurrent.TimeUnit;
 public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends MessageConsumer<C> {
 
     /**
-     * Retrieve messages that this follower has been notified of, and tags. They
-     * will appear in the order in which we have been notified of them.
+     * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this
+     * follower has been notified of, and tags. They will appear in the order in
+     * which we have been notified of them.
      *
      * @return Messages we have been notified of, and tags.
      */
     SortedSet<Message> getMessages();
 
     /**
-     * Retrieve messages that this follower has been notified of, and tags, in a
-     * given order.
+     * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this
+     * follower has been notified of, and tags, in a given order.
      *
      * @param order
      *            The comparator that will be used to order the messages.
@@ -34,8 +35,9 @@ public interface CommonFollower<P extends MessageProducer<P>, C extends MessageP
     SortedSet<Message> getMessages(MessageComparator order);
 
     /**
-     * Retrieve messages that this follower has been notified of, if a certain
-     * condition holds true for them, and tags. They will be in the order given.
+     * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this
+     * follower has been notified of, if a certain condition holds true for
+     * them, and tags. They will be in the order given.
      *
      * @param condition
      *            The condition.
@@ -45,9 +47,10 @@ public interface CommonFollower<P extends MessageProducer<P>, C extends MessageP
     SortedSet<Message> getMessages(final SimpleMessageCondition condition);
 
     /**
-     * Retrieve messages that this follower has been notified of, if a certain
-     * condition holds true for them, and tags. They will be in the order in
-     * which we have been notified of them.
+     * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this
+     * follower has been notified of, if a certain condition holds true for
+     * them, and tags. They will be in the order in which we have been notified
+     * of them.
      *
      * @param condition
      *            The condition.

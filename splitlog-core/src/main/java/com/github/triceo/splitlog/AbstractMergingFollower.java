@@ -30,7 +30,7 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMergingFollower.class);
 
-    private final Set<AbstractLogWatchFollower> followers = new LinkedHashSet<AbstractLogWatchFollower>();
+    private final Set<Follower> followers = new LinkedHashSet<Follower>();
 
     protected AbstractMergingFollower(final Follower... followers) {
         AbstractMergingFollower.LOGGER.info("Merging followers into {}.", this);
@@ -48,13 +48,13 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
     }
 
     @Override
-    public Collection<? extends Follower> getMerged() {
+    public Collection<Follower> getMerged() {
         return Collections.unmodifiableSet(this.followers);
     }
 
     @Override
     public synchronized boolean isStopped() {
-        for (final AbstractLogWatchFollower f : this.followers) {
+        for (final Follower f : this.followers) {
             if (!f.isStopped()) {
                 return false;
             }
@@ -101,7 +101,7 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
             return false;
         }
         AbstractMergingFollower.LOGGER.info("Stopping {}.", this);
-        for (final AbstractLogWatchFollower f : this.followers) {
+        for (final Follower f : this.followers) {
             f.stop();
         }
         AbstractMergingFollower.LOGGER.info("Stopped {}.", this);
