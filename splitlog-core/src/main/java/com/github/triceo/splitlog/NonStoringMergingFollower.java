@@ -68,6 +68,20 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
     }
 
     @Override
+    public synchronized boolean stop() {
+        if (this.isStopped()) {
+            return false;
+        }
+        NonStoringMergingFollower.LOGGER.info("Stopping {}.", this);
+        for (final Follower f : this.getMerged()) {
+            f.stop();
+        }
+        this.consumers.stop();
+        NonStoringMergingFollower.LOGGER.info("Stopped {}.", this);
+        return this.isStopped();
+    }
+
+    @Override
     public boolean stopConsuming(final MessageConsumer<MergingFollower> consumer) {
         return this.consumers.stopConsuming(consumer);
     }
