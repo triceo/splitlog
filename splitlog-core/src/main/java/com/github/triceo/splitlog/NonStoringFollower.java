@@ -57,6 +57,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         return this.consumers.countMetrics();
     }
 
+    // FIXME should be synchronized; but then the tests hang weirdly
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> messages = new TreeSet<Message>(order);
@@ -124,8 +125,8 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         return this.startMeasuring(measure, id, true);
     }
 
-    private <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-        final String id, final boolean checkIfFollowing) {
+    private synchronized <T extends Number> MessageMetric<T, Follower> startMeasuring(
+        final MessageMeasure<T, Follower> measure, final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
@@ -133,13 +134,13 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    public boolean stop() {
+    public synchronized boolean stop() {
         if (this.isStopped()) {
             return false;
         }
         this.getFollowed().stopFollowing(this);
         this.consumers.stop();
-        return this.isStopped();
+        return true;
     }
 
     @Override
@@ -160,7 +161,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("NonStoringFollower [");
+        builder.append("NonStoringFollower [getUniqueId()=").append(this.getUniqueId()).append(", ");
         if (this.getFollowed() != null) {
             builder.append("getFollowed()=").append(this.getFollowed()).append(", ");
         }

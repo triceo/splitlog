@@ -3,6 +3,7 @@ package com.github.triceo.splitlog;
 import java.io.OutputStream;
 import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -27,13 +28,15 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * messages.
  */
 abstract class AbstractFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> implements
-        CommonFollower<P, C> {
+CommonFollower<P, C> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
+    private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 
     private final MessageExchange<C> exchange = new MessageExchange<C>();
 
+    private final long uniqueId = AbstractFollower.ID_GENERATOR.getAndIncrement();
     /**
      * Provide the default formatter for messages in this follower.
      *
@@ -58,6 +61,10 @@ abstract class AbstractFollower<P extends MessageProducer<P>, C extends MessageP
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition) {
         return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
+    }
+
+    public long getUniqueId() {
+        return this.uniqueId;
     }
 
     /**

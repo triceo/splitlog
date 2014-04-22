@@ -72,11 +72,14 @@ public class MergingTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(merge2.getMessages()).hasSize(1);
         // and now stop the followers to see what happens to the merges
         follower3.stop();
+        Assertions.assertThat(follower3.isStopped()).isTrue();
         Assertions.assertThat(merge2.isStopped()).isTrue();
         Assertions.assertThat(merge.isStopped()).isFalse();
+        // first watch is terminated, second one remains alive
         watch1.terminate();
-        Assertions.assertThat(follower1.isStopped());
+        Assertions.assertThat(follower1.isStopped()).isTrue();
         Assertions.assertThat(merge2.isStopped()).isTrue();
+        Assertions.assertThat(follower2.isStopped()).isFalse();
         Assertions.assertThat(merge.isStopped()).isFalse();
         merge.stop();
         Assertions.assertThat(merge.isStopped()).isTrue();

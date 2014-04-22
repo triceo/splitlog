@@ -82,7 +82,7 @@ ConsumerRegistrar<P> {
         }
         final MessageConsumer<P> consumer = new DefaultMessageConsumer<P>(this.producer, listener);
         this.consumers.add(consumer);
-        ConsumerManager.LOGGER.info("Started consumer {} for {}.", consumer, this.producer);
+        ConsumerManager.LOGGER.info("Added consumer {} for {}.", consumer, this.producer);
         return consumer;
     }
 
@@ -93,7 +93,7 @@ ConsumerRegistrar<P> {
         }
         ConsumerManager.LOGGER.info("Stopping consumer manager for {}.", this.producer);
         for (final MessageConsumer<P> consumer : new LinkedList<MessageConsumer<P>>(this.consumers)) {
-            consumer.stop();
+            this.stopConsuming(consumer);
         }
         ConsumerManager.LOGGER.info("Stopped consumer manager for {}.", this.producer);
         return true;
@@ -102,7 +102,7 @@ ConsumerRegistrar<P> {
     @Override
     public synchronized boolean stopConsuming(final MessageConsumer<P> consumer) {
         if (this.consumers.remove(consumer)) {
-            ConsumerManager.LOGGER.info("Stopped consumer {} for {}.", consumer, this.producer);
+            ConsumerManager.LOGGER.info("Removed consumer {} for {}.", consumer, this.producer);
             return true;
         } else {
             return false;
