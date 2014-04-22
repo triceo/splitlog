@@ -91,8 +91,7 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         }
         // we know about this follower, so the cast is safe
         AbstractMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
-        final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
-        return af.stopConsuming(this);
+        return f.stopConsuming(this);
     }
 
     @Override

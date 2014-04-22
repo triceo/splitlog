@@ -5,6 +5,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -36,6 +37,7 @@ import com.github.triceo.splitlog.api.TailSplitter;
  */
 final class DefaultLogWatch implements LogWatch {
 
+    private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
 
     private final MeasuringConsumerManager<LogWatch> consumers = new MeasuringConsumerManager<LogWatch>(this);
@@ -47,6 +49,7 @@ final class DefaultLogWatch implements LogWatch {
     private final LogWatchStorageManager storage;
     private final LogWatchSweepingManager sweeping;
     private final LogWatchTailingManager tailing;
+    private final long uniqueId = DefaultLogWatch.ID_GENERATOR.getAndIncrement();
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
@@ -131,6 +134,10 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public String getMetricId(final MessageMetric<? extends Number, LogWatch> measure) {
         return this.consumers.getMetricId(measure);
+    }
+
+    public long getUniqueId() {
+        return this.uniqueId;
     }
 
     @Override
@@ -372,18 +379,20 @@ final class DefaultLogWatch implements LogWatch {
         if (this.isTerminated()) {
             return false;
         }
+        DefaultLogWatch.LOGGER.info("Terminating {}.", this);
         this.isTerminated = true;
         this.consumers.stop();
         this.handingDown.clear();
         this.sweeping.stop();
         this.previousAcceptedMessage = null;
+        DefaultLogWatch.LOGGER.info("Terminated {}.", this);
         return true;
     }
 
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("DefaultLogWatch [");
+        builder.append("DefaultLogWatch [getUniqueId()=").append(this.getUniqueId()).append(", ");
         if (this.getWatchedFile() != null) {
             builder.append("getWatchedFile()=").append(this.getWatchedFile()).append(", ");
         }

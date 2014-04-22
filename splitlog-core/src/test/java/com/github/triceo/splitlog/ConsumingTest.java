@@ -14,6 +14,24 @@ import com.github.triceo.splitlog.api.MessageProducer;
 
 public class ConsumingTest extends DefaultFollowerBaseTest {
 
+    private static final class CountingMessageListener<T extends MessageProducer<T>> implements MessageListener<T> {
+
+        private int numCalls = 0;
+
+        public int getNumberOfTimesCalled() {
+            return this.numCalls;
+        }
+
+        @Override
+        public void messageReceived(final Message message, final MessageDeliveryStatus status, final T producer) {
+            if (status != MessageDeliveryStatus.INCOMING) {
+                return;
+            }
+            this.numCalls++;
+        }
+
+    }
+
     private static final class FailingMessageListener<T extends MessageProducer<T>> implements MessageListener<T> {
 
         @Override
@@ -21,6 +39,37 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
             Assertions.fail("This shouldn't have been executed.");
         }
 
+    }
+
+    @Test
+    public void testCallPropagation1() {
+        final DefaultLogWatch w = (DefaultLogWatch) this.getLogWatch();
+        final CountingMessageListener<LogWatch> l1 = new CountingMessageListener<LogWatch>();
+        // direct consumption
+        w.startConsuming(l1);
+        w.addLine("test");
+        Assertions.assertThat(l1.getNumberOfTimesCalled()).isEqualTo(1);
+        // indirection of first order
+        final CountingMessageListener<Follower> l2 = new CountingMessageListener<Follower>();
+        final Follower f = w.startFollowing();
+        f.startConsuming(l2);
+        w.addLine("test2");
+        Assertions.assertThat(l2.getNumberOfTimesCalled()).isEqualTo(1);
+        // indirection of second order
+        final CountingMessageListener<MergingFollower> l3 = new CountingMessageListener<MergingFollower>();
+        final Follower f2 = w.startFollowing();
+        final MergingFollower mf = f2.mergeWith(f);
+        mf.startConsuming(l3);
+        w.addLine("test3");
+        /*
+         * will receive the same message from two followers
+         */
+        Assertions.assertThat(l3.getNumberOfTimesCalled()).isEqualTo(2);
+        /*
+         * and check the state of all other consumers
+         */
+        Assertions.assertThat(l2.getNumberOfTimesCalled()).isEqualTo(2);
+        Assertions.assertThat(l1.getNumberOfTimesCalled()).isEqualTo(3);
     }
 
     @Test
