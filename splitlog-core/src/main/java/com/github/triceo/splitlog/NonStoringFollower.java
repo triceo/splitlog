@@ -40,7 +40,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     private final MeasuringConsumerManager<Follower> consumers = new MeasuringConsumerManager<Follower>(this);
 
     public NonStoringFollower(final DefaultLogWatch watch,
-        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
+            final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.startMeasuring(pair.getValue(), pair.getKey(), false);
@@ -120,16 +120,26 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-            final String id) {
+        final String id) {
         return this.startMeasuring(measure, id, true);
     }
 
     private <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-            final String id, final boolean checkIfFollowing) {
+        final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
         return this.consumers.startMeasuring(measure, id);
+    }
+
+    @Override
+    public boolean stop() {
+        if (this.isStopped()) {
+            return false;
+        }
+        this.getFollowed().stopFollowing(this);
+        this.consumers.stop();
+        return this.isStopped();
     }
 
     @Override

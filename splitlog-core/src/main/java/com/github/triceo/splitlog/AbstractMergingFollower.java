@@ -96,19 +96,6 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
     }
 
     @Override
-    public synchronized boolean stop() {
-        if (this.isStopped()) {
-            return false;
-        }
-        AbstractMergingFollower.LOGGER.info("Stopping {}.", this);
-        for (final Follower f : this.followers) {
-            f.stop();
-        }
-        AbstractMergingFollower.LOGGER.info("Stopped {}.", this);
-        return true;
-    }
-
-    @Override
     public boolean write(final OutputStream stream, final SimpleMessageCondition condition,
         final MessageComparator order, final MessageFormatter formatter) {
         if (stream == null) {
