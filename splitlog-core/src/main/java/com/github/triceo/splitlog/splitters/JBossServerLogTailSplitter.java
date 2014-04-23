@@ -15,17 +15,17 @@ import com.github.triceo.splitlog.api.MessageType;
  */
 final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
 
-    private static final int HOURS = 2;
-    private static final int MINUTES = 5;
-    private static final int SECONDS = 6;
-    private static final int MILLIS = 7;
-    private static final int SEVERITY = 8;
-    private static final int TYPE = 9;
     private static final int BODY = 11;
     // hh:mm:ss,mmm
     private static final String DATE_SUBPATTERN = "(([01]?[0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9]),([0-9][0-9][0-9])";
+    private static final int HOURS = 2;
+    private static final int MILLIS = 7;
+    private static final int MINUTES = 5;
+    private static final int SECONDS = 6;
+    private static final int SEVERITY = 8;
     // we will try to match any severity string
     private static final String SEVERITY_SUBPATTERN = "[A-Z]+";
+    private static final int TYPE = 9;
     // will match fully qualified Java class names, or stderr, stdout etc.
     private static final String TYPE_SUBPATTERN = "([a-zA-Z_$][a-zA-Z\\d_$]*\\.)*[a-zA-Z_$][a-zA-Z\\d_$]+";
     private final Pattern pattern = Pattern.compile("^\\s*(" + JBossServerLogTailSplitter.DATE_SUBPATTERN + ")\\s+("
@@ -46,6 +46,22 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
         c.set(Calendar.SECOND, Integer.valueOf(seconds));
         c.set(Calendar.MILLISECOND, Integer.valueOf(millis));
         return c.getTime();
+    }
+
+    @Override
+    public String determineLogger(final List<String> raw) {
+        return this.determineLogger(raw.get(0));
+    }
+
+    private String determineLogger(final String line) {
+        final Matcher m = this.pattern.matcher(line);
+        m.matches();
+        final String type = m.group(JBossServerLogTailSplitter.TYPE);
+        if (type.equals("stderr") || type.equals("stdout")) {
+            return null;
+        } else {
+            return type;
+        }
     }
 
     @Override

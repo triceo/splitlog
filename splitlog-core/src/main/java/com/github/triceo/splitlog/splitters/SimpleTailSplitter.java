@@ -14,6 +14,11 @@ final public class SimpleTailSplitter extends AbstractTailSplitter {
     }
 
     @Override
+    public String determineLogger(final List<String> line) {
+        return null;
+    }
+
+    @Override
     public MessageSeverity determineSeverity(final List<String> raw) {
         return MessageSeverity.UNKNOWN;
     }
