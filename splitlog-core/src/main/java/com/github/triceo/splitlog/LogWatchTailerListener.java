@@ -3,11 +3,12 @@ package com.github.triceo.splitlog;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 final class LogWatchTailerListener implements TailerListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchTailerListener.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchTailerListener.class);
 
     private final DefaultLogWatch watcher;
 

@@ -25,6 +25,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * Default log watch implementation which provides all the bells and whistles so
@@ -38,7 +39,22 @@ import com.github.triceo.splitlog.api.TailSplitter;
 final class DefaultLogWatch implements LogWatch {
 
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogWatch.class);
+
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultLogWatch.class);
+    static {
+        /*
+         * intentionally using the original logger so that this message can not
+         * be silenced
+         */
+        final Logger l = LoggerFactory.getLogger(DefaultLogWatch.class);
+        if (SplitlogLoggerFactory.isLoggingEnabled()) {
+            l.info("Splitlog's internal logging system can be disabled by setting '{}' system property to '{}'.",
+                    SplitlogLoggerFactory.LOGGING_PROPERTY_NAME, SplitlogLoggerFactory.OFF_STATE);
+        } else {
+            l.warn("This will be the last message from Splitlog, unless you enable Splitlog's internal logging system by setting '{}' system property to '{}'.",
+                    SplitlogLoggerFactory.LOGGING_PROPERTY_NAME, SplitlogLoggerFactory.ON_STATE);
+        }
+    }
 
     private final MeasuringConsumerManager<LogWatch> consumers = new MeasuringConsumerManager<LogWatch>(this);
     private MessageBuilder currentlyProcessedMessage;

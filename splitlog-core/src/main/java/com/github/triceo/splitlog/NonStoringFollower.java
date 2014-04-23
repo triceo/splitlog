@@ -7,7 +7,6 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -19,6 +18,7 @@ import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * This is a log follower that holds no message data, just the tags. For message
@@ -35,12 +35,12 @@ import com.github.triceo.splitlog.api.SimpleMessageCondition;
  */
 final class NonStoringFollower extends AbstractLogWatchFollower {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(NonStoringFollower.class);
 
     private final MeasuringConsumerManager<Follower> consumers = new MeasuringConsumerManager<Follower>(this);
 
     public NonStoringFollower(final DefaultLogWatch watch,
-            final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
+        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.startMeasuring(pair.getValue(), pair.getKey(), false);
@@ -121,12 +121,12 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     @Override
     public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-        final String id) {
+            final String id) {
         return this.startMeasuring(measure, id, true);
     }
 
     private synchronized <T extends Number> MessageMetric<T, Follower> startMeasuring(
-        final MessageMeasure<T, Follower> measure, final String id, final boolean checkIfFollowing) {
+            final MessageMeasure<T, Follower> measure, final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }

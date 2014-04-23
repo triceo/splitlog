@@ -6,16 +6,16 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 final class LogWatchStorageManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchStorageManager.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchStorageManager.class);
     private final SimpleMessageCondition acceptanceCondition;
     private final LogWatch logWatch;
     private final MessageStore messages;
@@ -29,7 +29,7 @@ final class LogWatchStorageManager {
             endingMessageIds = new WeakHashMap<Follower, Integer>();
 
     public LogWatchStorageManager(final LogWatch watch, final int capacity,
-        final SimpleMessageCondition acceptanceCondition) {
+            final SimpleMessageCondition acceptanceCondition) {
         this.logWatch = watch;
         this.messages = new MessageStore(capacity);
         this.acceptanceCondition = acceptanceCondition;

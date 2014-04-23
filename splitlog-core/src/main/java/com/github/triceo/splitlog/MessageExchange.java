@@ -6,17 +6,17 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 final class MessageExchange<S extends MessageProducer<S>> implements MessageConsumer<S> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageExchange.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(MessageExchange.class);
 
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private MidDeliveryMessageCondition<S> messageBlockingCondition = null;

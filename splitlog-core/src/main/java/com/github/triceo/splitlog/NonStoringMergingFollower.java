@@ -5,7 +5,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.MergingFollower;
@@ -15,10 +14,11 @@ import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 final class NonStoringMergingFollower extends AbstractMergingFollower {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NonStoringFollower.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(NonStoringFollower.class);
 
     private final ConsumerManager<MergingFollower> consumers = new ConsumerManager<MergingFollower>(this);
 
@@ -33,7 +33,7 @@ final class NonStoringMergingFollower extends AbstractMergingFollower {
 
     @Override
     public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
-            final MessageComparator order) {
+        final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {

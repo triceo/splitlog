@@ -5,16 +5,16 @@ import java.util.HashSet;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricProducer;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 final class MeasuringConsumerManager<P extends MessageMetricProducer<P>> extends ConsumerManager<P> implements
-MessageMetricProducer<P> {
+        MessageMetricProducer<P> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MeasuringConsumerManager.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(MeasuringConsumerManager.class);
 
     private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, P>>();
 
@@ -49,7 +49,7 @@ MessageMetricProducer<P> {
 
     @Override
     public synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
-            final String id) {
+        final String id) {
         if (this.isStopped()) {
             throw new IllegalStateException("Measuring consumer manager already stopped.");
         } else if (measure == null) {

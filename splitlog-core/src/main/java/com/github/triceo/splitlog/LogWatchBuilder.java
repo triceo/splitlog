@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -15,6 +14,7 @@ import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.SplitlogMessagesRejectingCondition;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
 /**
@@ -53,7 +53,7 @@ final public class LogWatchBuilder {
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
     public static final long DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchBuilder.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchBuilder.class);
 
     /**
      * Used to construct a {@link LogWatch} for a particular log file.
@@ -166,14 +166,14 @@ final public class LogWatchBuilder {
     public LogWatch buildWith(final TailSplitter splitter) {
         if (splitter == null) {
             throw new IllegalArgumentException("A splitter must be provided.");
-        } else if ((splitter instanceof SimpleTailSplitter) && (this.gateCondition instanceof SplitlogMessagesRejectingCondition)) {
+        } else if ((splitter instanceof SimpleTailSplitter)
+                && (this.gateCondition instanceof SplitlogMessagesRejectingCondition)) {
             LogWatchBuilder.LOGGER
-                    .warn("Using default TailSplitter with default gating condition. All messages will pass through gate, as the TailSplitter will not provide all the necessary information.");
+            .warn("Using default TailSplitter with default gating condition. All messages will pass through gate, as the TailSplitter will not provide all the necessary information.");
         }
         return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.gateCondition,
-                this.storageCondition,
-                this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning, this.closingBetweenReads,
-                this.bufferSize, this.delayBeforeTailingStarts);
+                this.storageCondition, this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning,
+                this.closingBetweenReads, this.bufferSize, this.delayBeforeTailingStarts);
     }
 
     /**
@@ -310,9 +310,9 @@ final public class LogWatchBuilder {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [bufferSize=").append(this.bufferSize).append(", closingBetweenReads=")
-        .append(this.closingBetweenReads).append(", delayBeforeTailingStarts=")
-        .append(this.delayBeforeTailingStarts).append(", delayBetweenReads=").append(this.delayBetweenReads)
-        .append(", delayBetweenSweeps=").append(this.delayBetweenSweeps).append(", ");
+                .append(this.closingBetweenReads).append(", delayBeforeTailingStarts=")
+                .append(this.delayBeforeTailingStarts).append(", delayBetweenReads=").append(this.delayBetweenReads)
+                .append(", delayBetweenSweeps=").append(this.delayBetweenSweeps).append(", ");
         if (this.fileToWatch != null) {
             builder.append("fileToWatch=").append(this.fileToWatch).append(", ");
         }
@@ -320,7 +320,7 @@ final public class LogWatchBuilder {
             builder.append("gateCondition=").append(this.gateCondition).append(", ");
         }
         builder.append("limitCapacityTo=").append(this.limitCapacityTo).append(", readingFromBeginning=")
-        .append(this.readingFromBeginning).append(", ");
+                .append(this.readingFromBeginning).append(", ");
         if (this.storageCondition != null) {
             builder.append("storageCondition=").append(this.storageCondition);
         }

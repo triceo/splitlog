@@ -7,24 +7,24 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * Data storage for a particular {@link LogWatch}.
- * 
+ *
  * This class is thread-safe.
  */
 final class MessageStore {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageStore.class);
     private static final int INITIAL_MESSAGE_POSITION = 0;
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(MessageStore.class);
 
-    private final SortedMap<Integer, Message> store = new TreeMap<Integer, Message>();
     private final int messageLimit;
     private int nextMessagePosition = MessageStore.INITIAL_MESSAGE_POSITION;
+    private final SortedMap<Integer, Message> store = new TreeMap<Integer, Message>();
 
     /**
      * Create a message store with a maximum capacity of
@@ -48,10 +48,45 @@ final class MessageStore {
     }
 
     /**
+     * Add message to the storage.
+     *
+     * Every call will change values returned by {@link #getNextPosition()} and
+     * {@link #getLatestPosition()}. Any call may change value returned by
+     * {@link #getFirstPosition()}, which will happen if a message is discarded
+     * due to hitting the message store capacity.
+     *
+     * @param msg
+     *            Message in question.
+     * @return Position of the message.
+     */
+    public synchronized int add(final Message msg) {
+        final int nextKey = this.getNextPosition();
+        this.store.put(nextKey, msg);
+        this.nextMessagePosition++;
+        if (this.store.size() > this.messageLimit) {
+            // discard first message if we're over limit
+            this.store.remove(this.store.firstKey());
+        }
+        return nextKey;
+    }
+
+    /**
+     * The maximum number of messages that will be held by this store at a time.
+     * When a message is added that pushes the store over the limit, first
+     * inserted message will be removed.
+     *
+     * @return Maximum possible amount of messages this store can hold before it
+     *         starts discarding messages.
+     */
+    public int capacity() {
+        return this.messageLimit;
+    }
+
+    /**
      * Remove messages from the queue that come before the given position. If
      * the ID is larger than {@link #getLatestPosition()}, all messages will be
      * discarded while marking no future messages for discarding.
-     * 
+     *
      * @param firstPositionNotToDiscard
      *            Messages be kept from this position onward, inclusive.
      * @return Number of messages actually discarded.
@@ -84,40 +119,21 @@ final class MessageStore {
     }
 
     /**
-     * Add message to the storage.
-     * 
-     * Every call will change values returned by {@link #getNextPosition()} and
-     * {@link #getLatestPosition()}. Any call may change value returned by
-     * {@link #getFirstPosition()}, which will happen if a message is discarded
-     * due to hitting the message store capacity.
-     * 
-     * @param msg
-     *            Message in question.
-     * @return Position of the message.
+     * Return all messages currently present.
+     *
+     * @return Unmodifiable list containing those messages.
      */
-    public synchronized int add(final Message msg) {
-        final int nextKey = this.getNextPosition();
-        this.store.put(nextKey, msg);
-        this.nextMessagePosition++;
-        if (this.store.size() > this.messageLimit) {
-            // discard first message if we're over limit
-            this.store.remove(this.store.firstKey());
+    public synchronized List<Message> getAll() {
+        final int firstMessagePosition = this.getFirstPosition();
+        if (firstMessagePosition < MessageStore.INITIAL_MESSAGE_POSITION) {
+            return Collections.unmodifiableList(Collections.<Message> emptyList());
         }
-        return nextKey;
-    }
-
-    /**
-     * The latest position that has already been filled with a message.
-     * 
-     * @return -1 if no messages yet.
-     */
-    public synchronized int getLatestPosition() {
-        return (this.store.isEmpty()) ? this.nextMessagePosition - 1 : this.store.lastKey();
+        return this.getFrom(firstMessagePosition);
     }
 
     /**
      * The first position that is occupied by a message.
-     * 
+     *
      * @return -1 if no messages yet. 0 if no messages have been discarded. Add
      *         one for every discarded message.
      */
@@ -130,18 +146,19 @@ final class MessageStore {
     }
 
     /**
-     * The position that will be occupied by the message that goes through the
-     * very next {@link #add(Message)} call.
-     * 
-     * @return 0 if no messages have been inserted yet.
+     * Return all messages on positions higher or equal to the given.
+     *
+     * @param startPosition
+     *            Least position, inclusive.
+     * @return Unmodifiable list containing those messages.
      */
-    public synchronized int getNextPosition() {
-        return this.nextMessagePosition;
+    public synchronized List<Message> getFrom(final int startPosition) {
+        return this.getFromRange(startPosition, this.getNextPosition());
     }
 
     /**
      * Return all messages on positions in the given range.
-     * 
+     *
      * @param startPosition
      *            Least position, inclusive.
      * @param endPosition
@@ -169,32 +186,27 @@ final class MessageStore {
     }
 
     /**
-     * Return all messages on positions higher or equal to the given.
-     * 
-     * @param startPosition
-     *            Least position, inclusive.
-     * @return Unmodifiable list containing those messages.
+     * The latest position that has already been filled with a message.
+     *
+     * @return -1 if no messages yet.
      */
-    public synchronized List<Message> getFrom(final int startPosition) {
-        return this.getFromRange(startPosition, this.getNextPosition());
+    public synchronized int getLatestPosition() {
+        return (this.store.isEmpty()) ? this.nextMessagePosition - 1 : this.store.lastKey();
     }
 
     /**
-     * Return all messages currently present.
-     * 
-     * @return Unmodifiable list containing those messages.
+     * The position that will be occupied by the message that goes through the
+     * very next {@link #add(Message)} call.
+     *
+     * @return 0 if no messages have been inserted yet.
      */
-    public synchronized List<Message> getAll() {
-        final int firstMessagePosition = this.getFirstPosition();
-        if (firstMessagePosition < MessageStore.INITIAL_MESSAGE_POSITION) {
-            return Collections.unmodifiableList(Collections.<Message> emptyList());
-        }
-        return this.getFrom(firstMessagePosition);
+    public synchronized int getNextPosition() {
+        return this.nextMessagePosition;
     }
 
     /**
      * Whether or not this message store currently holds any messages.
-     * 
+     *
      * @return True if so, false if not. Will be false even if there were some
      *         messages before that got discarded and now there are none.
      */
@@ -204,27 +216,15 @@ final class MessageStore {
 
     /**
      * How many messages are currently stored here.
-     * 
+     *
      * It is the number of messages that went through {@link #add(Message)} and
      * that have not been discarded since, either through
      * {@link #discardBefore(int)} or automatically due to capacity.
-     * 
+     *
      * @return
      */
     public synchronized int size() {
         return this.store.size();
-    }
-
-    /**
-     * The maximum number of messages that will be held by this store at a time.
-     * When a message is added that pushes the store over the limit, first
-     * inserted message will be removed.
-     * 
-     * @return Maximum possible amount of messages this store can hold before it
-     *         starts discarding messages.
-     */
-    public int capacity() {
-        return this.messageLimit;
     }
 
 }

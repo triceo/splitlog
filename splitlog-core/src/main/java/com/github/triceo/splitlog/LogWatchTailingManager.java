@@ -8,10 +8,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.input.Tailer;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * Has a sole responsibility of starting and stopping {@link Tailer} thread when
@@ -19,7 +19,7 @@ import com.github.triceo.splitlog.api.Message;
  */
 final class LogWatchTailingManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchTailingManager.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchTailingManager.class);
 
     private final int bufferSize;
     private final long delayBetweenReads;
@@ -31,8 +31,8 @@ final class LogWatchTailingManager {
     private final DefaultLogWatch watch;
 
     public LogWatchTailingManager(final DefaultLogWatch watch, final long delayBetweenReads,
-            final long delayForTailerStart, final boolean readFromEnd, final boolean reopenBetweenReads,
-            final int bufferSize) {
+        final long delayForTailerStart, final boolean readFromEnd, final boolean reopenBetweenReads,
+        final int bufferSize) {
         this.watch = watch;
         this.delayBetweenReads = delayBetweenReads;
         this.delayedTailerStartInMilliseconds = delayForTailerStart;
@@ -48,7 +48,7 @@ final class LogWatchTailingManager {
     /**
      * Start the tailer on a separate thread. Only when a tailer is running can
      * {@link Follower}s be notified of new {@link Message}s from the log.
-     * 
+     *
      * @param needsToWait
      *            Whether the start of the tailer needs to be delayed by
      *            {@link #delayedTailerStartInMilliseconds} milliseconds, as
@@ -78,7 +78,7 @@ final class LogWatchTailingManager {
     /**
      * Stop the tailer thread, preventing any {@link Follower}s from receiving
      * {@link Message}s.
-     * 
+     *
      * @return True if stopped, false if never running.
      */
     public boolean stop() {
