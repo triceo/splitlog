@@ -37,7 +37,7 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  * why this is necessary.</dd>
  * </dl>
  *
- * By default, the instance will allow every message through.
+ * By default, the instance will store every message.
  */
 final public class LogWatchBuilder {
 
@@ -87,10 +87,10 @@ final public class LogWatchBuilder {
     private final File fileToWatch;
     private int limitCapacityTo = Integer.MAX_VALUE;
 
-    // will accept all messages
-    private SimpleMessageCondition messageAcceptanceCondition = AllLogWatchMessagesAcceptingCondition.INSTANCE;
-
     private boolean readingFromBeginning = true;
+
+    // will accept all messages
+    private SimpleMessageCondition storageCondition = AllLogWatchMessagesAcceptingCondition.INSTANCE;
 
     protected LogWatchBuilder(final File fileToWatch) {
         this.fileToWatch = fileToWatch;
@@ -160,7 +160,7 @@ final public class LogWatchBuilder {
         if (splitter == null) {
             throw new IllegalArgumentException("A splitter must be provided.");
         }
-        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.messageAcceptanceCondition,
+        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.storageCondition,
                 this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning, this.closingBetweenReads,
                 this.bufferSize, this.delayBeforeTailingStarts);
     }
@@ -225,22 +225,21 @@ final public class LogWatchBuilder {
     }
 
     /**
-     * The condition that will be used for accepting messages into the log
-     * watch.
-     *
-     * @return The condition.
-     */
-    public SimpleMessageCondition getMessageAcceptanceCondition() {
-        return this.messageAcceptanceCondition;
-    }
-
-    /**
      * Get the buffer size for the log watch.
      *
      * @return In bytes.
      */
     public int getReadingBufferSize() {
         return this.bufferSize;
+    }
+
+    /**
+     * The condition that will be used for storing a {@link Message} within {@link LogWatch}.
+     *
+     * @return The condition.
+     */
+    public SimpleMessageCondition getStorageCondition() {
+        return this.storageCondition;
     }
 
     /**
@@ -290,10 +289,10 @@ final public class LogWatchBuilder {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [");
         builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
+        .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
+        .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
+        .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
+        .append(", storageCondition=").append(this.storageCondition);
         builder.append(']');
         return builder.toString();
     }
@@ -350,23 +349,6 @@ final public class LogWatchBuilder {
     }
 
     /**
-     * Only the messages for which
-     * {@link SimpleMessageCondition#accept(Message)} is true will be registered
-     * by the future log watch.
-     *
-     * @param condition
-     *            The condition.
-     * @return This.
-     */
-    public LogWatchBuilder withMessageAcceptanceCondition(final SimpleMessageCondition condition) {
-        if (condition == null) {
-            throw new IllegalArgumentException("Message acceptance condition must not be null.");
-        }
-        this.messageAcceptanceCondition = condition;
-        return this;
-    }
-
-    /**
      * Specify the buffer size that will be used for reading changes made to the
      * watched file.
      *
@@ -379,6 +361,24 @@ final public class LogWatchBuilder {
             throw new IllegalArgumentException("Buffer size must be at least 1.");
         }
         this.bufferSize = bufferSize;
+        return this;
+    }
+
+    /**
+     * Only the messages for which
+     * {@link SimpleMessageCondition#accept(Message)} is true will be stored
+     * within the future {@link Logwatch}. However, {@link MessageConsumers}
+     * will be notified of them either way.
+     *
+     * @param condition
+     *            The condition.
+     * @return This.
+     */
+    public LogWatchBuilder withStorageCondition(final SimpleMessageCondition condition) {
+        if (condition == null) {
+            throw new IllegalArgumentException("Storage acceptance condition must not be null.");
+        }
+        this.storageCondition = condition;
         return this;
     }
 

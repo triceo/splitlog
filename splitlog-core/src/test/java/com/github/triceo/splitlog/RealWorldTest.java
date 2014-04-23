@@ -100,7 +100,7 @@ public class RealWorldTest {
         }
         // log watch will accept anything not DEBUG
         final LogWatch watch = LogWatchBuilder.forFile(tmp).ignoringPreexistingContent()
-                .withMessageAcceptanceCondition(new SimpleMessageCondition() {
+                .withStorageCondition(new SimpleMessageCondition() {
 
                     @Override
                     public boolean accept(final Message evaluate) {
