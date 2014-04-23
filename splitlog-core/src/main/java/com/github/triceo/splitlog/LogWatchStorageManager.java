@@ -29,7 +29,7 @@ final class LogWatchStorageManager {
             endingMessageIds = new WeakHashMap<Follower, Integer>();
 
     public LogWatchStorageManager(final LogWatch watch, final int capacity,
-            final SimpleMessageCondition acceptanceCondition) {
+        final SimpleMessageCondition acceptanceCondition) {
         this.logWatch = watch;
         this.messages = new MessageStore(capacity);
         this.acceptanceCondition = acceptanceCondition;
@@ -146,10 +146,8 @@ final class LogWatchStorageManager {
         }
         final boolean messageAccepted = this.acceptanceCondition.accept(message);
         if (messageAccepted) {
-            LogWatchStorageManager.LOGGER.info("Filter accepted message '{}' from {}.", message, source);
+            LogWatchStorageManager.LOGGER.info("Message '{}' stored into {}.", message, source);
             this.messages.add(message);
-        } else {
-            LogWatchStorageManager.LOGGER.info("Filter rejected message '{}' from {}.", message, source);
         }
         return messageAccepted;
     }
