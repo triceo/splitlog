@@ -12,11 +12,8 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
-import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageMeasure;
-import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
@@ -37,24 +34,12 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(NonStoringFollower.class);
 
-    private final ConsumerManager<Follower> consumers = new ConsumerManager<Follower>(this);
-
     public NonStoringFollower(final DefaultLogWatch watch,
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         super(watch);
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.startMeasuring(pair.getValue(), pair.getKey(), false);
         }
-    }
-
-    @Override
-    public int countConsumers() {
-        return this.consumers.countConsumers();
-    }
-
-    @Override
-    public int countMetrics() {
-        return this.consumers.countMetrics();
     }
 
     // FIXME should be synchronized; but then the tests hang weirdly
@@ -72,31 +57,6 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
     }
 
     @Override
-    public MessageMetric<? extends Number, Follower> getMetric(final String id) {
-        return this.consumers.getMetric(id);
-    }
-
-    @Override
-    public String getMetricId(final MessageMetric<? extends Number, Follower> measure) {
-        return this.consumers.getMetricId(measure);
-    }
-
-    @Override
-    public boolean isConsuming(final MessageConsumer<Follower> consumer) {
-        return this.consumers.isConsuming(consumer);
-    }
-
-    @Override
-    public boolean isMeasuring(final MessageMetric<? extends Number, Follower> metric) {
-        return this.consumers.isMeasuring(metric);
-    }
-
-    @Override
-    public boolean isMeasuring(final String id) {
-        return this.consumers.isMeasuring(id);
-    }
-
-    @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
         final LogWatch source) {
         if (this.isStopped()) {
@@ -106,56 +66,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
         }
         NonStoringFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
         this.getExchange().messageReceived(msg, status, source);
-        this.consumers.messageReceived(msg, status, this);
-    }
-
-    @Override
-    public void registerConsumer(final MessageConsumer<Follower> consumer) {
-        this.consumers.registerConsumer(consumer);
-    }
-
-    @Override
-    public MessageConsumer<Follower> startConsuming(final MessageListener<Follower> consumer) {
-        return this.consumers.startConsuming(consumer);
-    }
-
-    @Override
-    public <T extends Number> MessageMetric<T, Follower> startMeasuring(final MessageMeasure<T, Follower> measure,
-            final String id) {
-        return this.startMeasuring(measure, id, true);
-    }
-
-    private synchronized <T extends Number> MessageMetric<T, Follower> startMeasuring(
-            final MessageMeasure<T, Follower> measure, final String id, final boolean checkIfFollowing) {
-        if (checkIfFollowing && this.isStopped()) {
-            throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
-        }
-        return this.consumers.startMeasuring(measure, id);
-    }
-
-    @Override
-    public synchronized boolean stop() {
-        if (this.isStopped()) {
-            return false;
-        }
-        this.getFollowed().stopFollowing(this);
-        this.consumers.stop();
-        return true;
-    }
-
-    @Override
-    public boolean stopConsuming(final MessageConsumer<Follower> consumer) {
-        return this.consumers.stopConsuming(consumer);
-    }
-
-    @Override
-    public boolean stopMeasuring(final MessageMetric<? extends Number, Follower> metric) {
-        return this.consumers.stopMeasuring(metric);
-    }
-
-    @Override
-    public boolean stopMeasuring(final String id) {
-        return this.consumers.stopMeasuring(id);
+        this.getConsumerManager().messageReceived(msg, status, this);
     }
 
     @Override

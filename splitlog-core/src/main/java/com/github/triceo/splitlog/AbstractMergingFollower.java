@@ -30,6 +30,8 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractMergingFollower.class);
 
+    private final ConsumerManager<MergingFollower> consumers = new ConsumerManager<MergingFollower>(this);
+
     private final Set<Follower> followers = new LinkedHashSet<Follower>();
 
     protected AbstractMergingFollower(final Follower... followers) {
@@ -40,6 +42,11 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
             af.registerConsumer(this);
         }
         AbstractMergingFollower.LOGGER.info("Followers merged: {}.", this);
+    }
+
+    @Override
+    protected ConsumerManager<MergingFollower> getConsumerManager() {
+        return this.consumers;
     }
 
     @Override
@@ -92,6 +99,20 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         // we know about this follower, so the cast is safe
         AbstractMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
         return f.stopConsuming(this);
+    }
+
+    @Override
+    public synchronized boolean stop() {
+        if (this.isStopped()) {
+            return false;
+        }
+        AbstractMergingFollower.LOGGER.info("Stopping {}.", this);
+        for (final Follower f : this.getMerged()) {
+            f.stop();
+        }
+        this.getConsumerManager().stop();
+        AbstractMergingFollower.LOGGER.info("Stopped {}.", this);
+        return true;
     }
 
     @Override

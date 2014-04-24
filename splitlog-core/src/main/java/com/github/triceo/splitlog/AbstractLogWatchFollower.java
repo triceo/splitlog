@@ -30,8 +30,9 @@ import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWatch> implements Follower,
-        ConsumerRegistrar<Follower> {
+abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWatch> implements Follower {
+
+    private final ConsumerManager<Follower> consumers = new ConsumerManager<Follower>(this);
 
     private final Set<Message> tags = new LinkedHashSet<Message>();
 
@@ -39,6 +40,11 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWa
 
     protected AbstractLogWatchFollower(final DefaultLogWatch watch) {
         this.watch = watch;
+    }
+
+    @Override
+    protected ConsumerManager<Follower> getConsumerManager() {
+        return this.consumers;
     }
 
     @Override
@@ -82,6 +88,16 @@ abstract class AbstractLogWatchFollower extends AbstractFollower<Follower, LogWa
         final Set<Follower> followers = new HashSet<Follower>(f.getMerged());
         followers.add(this);
         return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
+    }
+
+    @Override
+    public synchronized boolean stop() {
+        if (this.isStopped()) {
+            return false;
+        }
+        this.getFollowed().stopFollowing(this);
+        this.getConsumerManager().stop();
+        return true;
     }
 
     @Override

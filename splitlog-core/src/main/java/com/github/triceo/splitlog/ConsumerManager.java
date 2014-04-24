@@ -20,7 +20,7 @@ import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P>,
-        ConsumerRegistrar<P> {
+ConsumerRegistrar<P> {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(ConsumerManager.class);
 
@@ -80,7 +80,7 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
 
     @Override
     public synchronized void
-        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }
@@ -120,7 +120,7 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
 
     @Override
     public synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
-        final String id) {
+            final String id) {
         if (this.isStopped()) {
             throw new IllegalStateException("Measuring consumer manager already stopped.");
         } else if (measure == null) {

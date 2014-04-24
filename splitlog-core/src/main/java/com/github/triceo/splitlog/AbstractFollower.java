@@ -9,7 +9,11 @@ import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageFormatter;
+import com.github.triceo.splitlog.api.MessageListener;
+import com.github.triceo.splitlog.api.MessageMeasure;
+import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
@@ -28,7 +32,7 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * messages.
  */
 abstract class AbstractFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> implements
-CommonFollower<P, C> {
+CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
@@ -37,6 +41,19 @@ CommonFollower<P, C> {
     private final MessageExchange<C> exchange = new MessageExchange<C>();
 
     private final long uniqueId = AbstractFollower.ID_GENERATOR.getAndIncrement();
+
+    @Override
+    public int countConsumers() {
+        return this.getConsumerManager().countConsumers();
+    }
+
+    @Override
+    public int countMetrics() {
+        return this.getConsumerManager().countMetrics();
+    }
+
+    protected abstract ConsumerManager<P> getConsumerManager();
+
     /**
      * Provide the default formatter for messages in this follower.
      *
@@ -63,8 +80,71 @@ CommonFollower<P, C> {
         return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
     }
 
+    @Override
+    public MessageMetric<? extends Number, P> getMetric(final String id) {
+        return this.getConsumerManager().getMetric(id);
+    }
+
+    @Override
+    public String getMetricId(final MessageMetric<? extends Number, P> measure) {
+        return this.getConsumerManager().getMetricId(measure);
+    }
+
     public long getUniqueId() {
         return this.uniqueId;
+    }
+
+    @Override
+    public boolean isConsuming(final MessageConsumer<P> consumer) {
+        return this.getConsumerManager().isConsuming(consumer);
+    }
+
+    @Override
+    public boolean isMeasuring(final MessageMetric<? extends Number, P> metric) {
+        return this.getConsumerManager().isMeasuring(metric);
+    }
+
+    @Override
+    public boolean isMeasuring(final String id) {
+        return this.getConsumerManager().isMeasuring(id);
+    }
+
+    @Override
+    public void registerConsumer(final MessageConsumer<P> consumer) {
+        this.getConsumerManager().registerConsumer(consumer);
+    }
+
+    @Override
+    public MessageConsumer<P> startConsuming(final MessageListener<P> listener) {
+        return this.getConsumerManager().startConsuming(listener);
+    }
+
+    @Override
+    public <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure, final String id) {
+        return this.startMeasuring(measure, id, true);
+    }
+
+    protected synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
+            final String id, final boolean checkIfFollowing) {
+        if (checkIfFollowing && this.isStopped()) {
+            throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
+        }
+        return this.getConsumerManager().startMeasuring(measure, id);
+    }
+
+    @Override
+    public boolean stopConsuming(final MessageConsumer<P> consumer) {
+        return this.getConsumerManager().stopConsuming(consumer);
+    }
+
+    @Override
+    public boolean stopMeasuring(final MessageMetric<? extends Number, P> metric) {
+        return this.getConsumerManager().stopMeasuring(metric);
+    }
+
+    @Override
+    public boolean stopMeasuring(final String id) {
+        return this.getConsumerManager().stopMeasuring(id);
     }
 
     /**
