@@ -100,6 +100,9 @@
             <runOrder>alphabetical</runOrder>
             <reuseForks>false</reuseForks>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <systemPropertyVariables>
+              <splitlog.logging>on</splitlog.logging> <!-- for debugging purposes -->
+            </systemPropertyVariables>
           </configuration>
         </plugin>
         <plugin>

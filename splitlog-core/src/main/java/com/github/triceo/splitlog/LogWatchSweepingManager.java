@@ -6,7 +6,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * Has a sole responsibility of starting and stopping
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 final class LogWatchSweepingManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchSweepingManager.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchSweepingManager.class);
     private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> currentlyRunningSweeper = null;
     private final long delayBetweenSweeps;
@@ -32,7 +33,7 @@ final class LogWatchSweepingManager {
 
     /**
      * Start the sweeping if not started already.
-     * 
+     *
      * @return True is started, false if already running.
      */
     public boolean start() {
@@ -50,7 +51,7 @@ final class LogWatchSweepingManager {
 
     /**
      * Stop the sweeping if not stopped already.
-     * 
+     *
      * @return True if stopped, false if stopped already.
      */
     public boolean stop() {

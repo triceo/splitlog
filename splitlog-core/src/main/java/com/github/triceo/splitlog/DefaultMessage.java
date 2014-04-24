@@ -21,6 +21,7 @@ final class DefaultMessage implements Message {
 
     private final ExceptionDescriptor exceptionDescriptor;
     private final List<String> lines;
+    private final String logger;
     private final long millisecondsSinceJanuary1st1970;
     private final WeakReference<Message> previousMessage;
     private final MessageSeverity severity;
@@ -74,6 +75,8 @@ final class DefaultMessage implements Message {
         this.uniqueId = id;
         this.splitter = splitter;
         this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
+        final String logger = splitter.determineLogger(this.lines);
+        this.logger = (logger == null) ? "" : logger;
         this.severity = splitter.determineSeverity(this.lines);
         this.type = splitter.determineType(this.lines);
         this.exceptionDescriptor = splitter.determineException(this.lines);
@@ -117,6 +120,7 @@ final class DefaultMessage implements Message {
         if ((message == null) || (message.length() == 0)) {
             throw new IllegalArgumentException("DefaultMessage must not be empty.");
         }
+        this.logger = "";
         this.uniqueId = id;
         this.previousMessage = null;
         this.splitter = null;
@@ -174,6 +178,11 @@ final class DefaultMessage implements Message {
     }
 
     @Override
+    public String getLogger() {
+        return this.logger;
+    }
+
+    @Override
     public Message getPreviousMessage() {
         if (this.previousMessage == null) {
             return null;
@@ -215,6 +224,9 @@ final class DefaultMessage implements Message {
         sb.append('#');
         sb.append(this.getUniqueId());
         sb.append(" ");
+        sb.append(" [");
+        sb.append(this.logger);
+        sb.append("] ");
         sb.append(this.getDate());
         sb.append(" (");
         sb.append(this.type);

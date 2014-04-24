@@ -30,6 +30,17 @@ public interface TailSplitter {
     ExceptionDescriptor determineException(final List<String> raw);
 
     /**
+     * Messages in the log can contain information as to what logged them. This
+     * would typically be a Java package name. This method will try to return
+     * that.
+     *
+     * @param raw
+     *            Raw, untreated lines of the message.
+     * @return Null if not found.
+     */
+    String determineLogger(final List<String> raw);
+
+    /**
      * Read the message and try to find its severity.
      *
      * @param raw

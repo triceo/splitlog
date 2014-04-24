@@ -16,7 +16,6 @@ import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.MergingFollower;
@@ -25,10 +24,11 @@ import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower, Follower> implements MergingFollower {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMergingFollower.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractMergingFollower.class);
 
     private final Set<Follower> followers = new LinkedHashSet<Follower>();
 

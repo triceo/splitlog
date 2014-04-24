@@ -42,6 +42,14 @@ public interface Message {
     List<String> getLinesWithoutMetadata();
 
     /**
+     * Will return the name of the logger that was used to write the log
+     * message.
+     *
+     * @return Empty string if none found.
+     */
+    String getLogger();
+
+    /**
      * Return a message that preceded this one in the same log stream.
      *
      * @return Null if there was no such message, the message already got GC'd,

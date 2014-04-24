@@ -6,7 +6,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
@@ -14,10 +13,11 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>> implements MessageConsumer<S> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageMetricExchange.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(MessageMetricExchange.class);
 
     private MessageMetricCondition<T, S> blockingCondition = null;
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
@@ -52,7 +52,7 @@ final class MessageMetricExchange<T extends Number, S extends MessageProducer<S>
             return;
         }
         MessageMetricExchange.LOGGER
-        .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
+                .debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
         this.blockingCondition = null;
         try {
             this.messageExchanger.exchange(msg);

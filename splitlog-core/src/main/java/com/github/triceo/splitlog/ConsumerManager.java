@@ -6,18 +6,18 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P>,
-ConsumerRegistrar<P> {
+        ConsumerRegistrar<P> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerManager.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(ConsumerManager.class);
 
     private final Set<MessageConsumer<P>> consumers = new LinkedHashSet<MessageConsumer<P>>();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
@@ -48,7 +48,7 @@ ConsumerRegistrar<P> {
 
     @Override
     public synchronized void
-    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }

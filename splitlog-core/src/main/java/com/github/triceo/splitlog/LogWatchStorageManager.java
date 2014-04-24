@@ -6,16 +6,16 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 final class LogWatchStorageManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchStorageManager.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchStorageManager.class);
     private final SimpleMessageCondition acceptanceCondition;
     private final LogWatch logWatch;
     private final MessageStore messages;
@@ -146,10 +146,8 @@ final class LogWatchStorageManager {
         }
         final boolean messageAccepted = this.acceptanceCondition.accept(message);
         if (messageAccepted) {
-            LogWatchStorageManager.LOGGER.info("Filter accepted message '{}' from {}.", message, source);
+            LogWatchStorageManager.LOGGER.info("Message '{}' stored into {}.", message, source);
             this.messages.add(message);
-        } else {
-            LogWatchStorageManager.LOGGER.info("Filter rejected message '{}' from {}.", message, source);
         }
         return messageAccepted;
     }

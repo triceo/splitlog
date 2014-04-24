@@ -3,9 +3,9 @@ package com.github.triceo.splitlog;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * As followers are terminated via {@link #stopFollowing(Follower)} and then
@@ -21,7 +21,7 @@ import com.github.triceo.splitlog.api.Follower;
  */
 final class LogWatchStorageSweeper implements Runnable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogWatchStorageSweeper.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchStorageSweeper.class);
     private final LogWatchStorageManager toSweep;
 
     public LogWatchStorageSweeper(final LogWatchStorageManager watch) {

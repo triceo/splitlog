@@ -2,7 +2,7 @@
 <configuration>
   <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} %5p [%-17t :: %-35C{35}] %m%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} %5p [%-17t :: %-35c{35}] %m%n</pattern>
     </encoder>
   </appender>
   <appender name="asyncConsoleAppender" class="ch.qos.logback.classic.AsyncAppender">

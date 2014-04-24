@@ -3,13 +3,18 @@ package com.github.triceo.splitlog;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.api.TailSplitter;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.SplitlogMessagesRejectingCondition;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
 /**
@@ -37,14 +42,18 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  * why this is necessary.</dd>
  * </dl>
  *
- * By default, the instance will allow every message through.
+ * By default, the instance will store (and notify of) every message that has
+ * passed {@link SplitlogMessagesRejectingCondition} and not do so for all
+ * others.
  */
 final public class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS = 5;
+
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
     public static final long DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchBuilder.class);
 
     /**
      * Used to construct a {@link LogWatch} for a particular log file.
@@ -85,12 +94,10 @@ final public class LogWatchBuilder {
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
     private final File fileToWatch;
+    private SimpleMessageCondition gateCondition = SplitlogMessagesRejectingCondition.INSTANCE;
     private int limitCapacityTo = Integer.MAX_VALUE;
-
-    // will accept all messages
-    private SimpleMessageCondition messageAcceptanceCondition = AllLogWatchMessagesAcceptingCondition.INSTANCE;
-
     private boolean readingFromBeginning = true;
+    private SimpleMessageCondition storageCondition = AllLogWatchMessagesAcceptingCondition.INSTANCE;
 
     protected LogWatchBuilder(final File fileToWatch) {
         this.fileToWatch = fileToWatch;
@@ -159,10 +166,14 @@ final public class LogWatchBuilder {
     public LogWatch buildWith(final TailSplitter splitter) {
         if (splitter == null) {
             throw new IllegalArgumentException("A splitter must be provided.");
+        } else if ((splitter instanceof SimpleTailSplitter)
+                && (this.gateCondition instanceof SplitlogMessagesRejectingCondition)) {
+            LogWatchBuilder.LOGGER
+            .warn("Using default TailSplitter with default gating condition. All messages will pass through gate, as the TailSplitter will not provide all the necessary information.");
         }
-        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.messageAcceptanceCondition,
-                this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning, this.closingBetweenReads,
-                this.bufferSize, this.delayBeforeTailingStarts);
+        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.gateCondition,
+                this.storageCondition, this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning,
+                this.closingBetweenReads, this.bufferSize, this.delayBeforeTailingStarts);
     }
 
     /**
@@ -225,13 +236,13 @@ final public class LogWatchBuilder {
     }
 
     /**
-     * The condition that will be used for accepting messages into the log
-     * watch.
+     * The condition that will be used for accepting a {@link Message} into
+     * {@link LogWatch}.
      *
      * @return The condition.
      */
-    public SimpleMessageCondition getMessageAcceptanceCondition() {
-        return this.messageAcceptanceCondition;
+    public SimpleMessageCondition getGateCondition() {
+        return this.gateCondition;
     }
 
     /**
@@ -241,6 +252,16 @@ final public class LogWatchBuilder {
      */
     public int getReadingBufferSize() {
         return this.bufferSize;
+    }
+
+    /**
+     * The condition that will be used for storing a {@link Message} within
+     * {@link LogWatch}.
+     *
+     * @return The condition.
+     */
+    public SimpleMessageCondition getStorageCondition() {
+        return this.storageCondition;
     }
 
     /**
@@ -288,13 +309,22 @@ final public class LogWatchBuilder {
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("LogWatchBuilder [");
-        builder.append("fileToWatch=").append(this.fileToWatch).append(", limitCapacityTo=")
-                .append(this.limitCapacityTo).append(", bufferSize=").append(this.bufferSize)
-                .append(", readingFromBeginning=").append(this.readingFromBeginning).append(", delayBetweenReads=")
-                .append(this.delayBetweenReads).append(", closingBetweenReads=").append(this.closingBetweenReads)
-                .append(", messageAcceptanceCondition=").append(this.messageAcceptanceCondition);
-        builder.append(']');
+        builder.append("LogWatchBuilder [bufferSize=").append(this.bufferSize).append(", closingBetweenReads=")
+        .append(this.closingBetweenReads).append(", delayBeforeTailingStarts=")
+        .append(this.delayBeforeTailingStarts).append(", delayBetweenReads=").append(this.delayBetweenReads)
+        .append(", delayBetweenSweeps=").append(this.delayBetweenSweeps).append(", ");
+        if (this.fileToWatch != null) {
+            builder.append("fileToWatch=").append(this.fileToWatch).append(", ");
+        }
+        if (this.gateCondition != null) {
+            builder.append("gateCondition=").append(this.gateCondition).append(", ");
+        }
+        builder.append("limitCapacityTo=").append(this.limitCapacityTo).append(", readingFromBeginning=")
+        .append(this.readingFromBeginning).append(", ");
+        if (this.storageCondition != null) {
+            builder.append("storageCondition=").append(this.storageCondition);
+        }
+        builder.append("]");
         return builder.toString();
     }
 
@@ -350,19 +380,21 @@ final public class LogWatchBuilder {
     }
 
     /**
-     * Only the messages for which
-     * {@link SimpleMessageCondition#accept(Message)} is true will be registered
-     * by the future log watch.
+     * Only the {@link Message}s for which
+     * {@link SimpleMessageCondition#accept(Message)} is true will be passed to
+     * {@link Follower}s and other {@link MessageConsumer}s. Such
+     * {@link Message}s will also never be stored. For the purposes of Splitlog,
+     * if it fails this condition, it's as if it never existed.
      *
      * @param condition
      *            The condition.
      * @return This.
      */
-    public LogWatchBuilder withMessageAcceptanceCondition(final SimpleMessageCondition condition) {
+    public LogWatchBuilder withGateCondition(final SimpleMessageCondition condition) {
         if (condition == null) {
-            throw new IllegalArgumentException("Message acceptance condition must not be null.");
+            throw new IllegalArgumentException("Gate condition must not be null.");
         }
-        this.messageAcceptanceCondition = condition;
+        this.gateCondition = condition;
         return this;
     }
 
@@ -379,6 +411,27 @@ final public class LogWatchBuilder {
             throw new IllegalArgumentException("Buffer size must be at least 1.");
         }
         this.bufferSize = bufferSize;
+        return this;
+    }
+
+    /**
+     * Only the messages for which
+     * {@link SimpleMessageCondition#accept(Message)} is true will be stored
+     * within the future {@link LogWatch}. However, {@link MessageConsumer}s
+     * will be notified of them either way.
+     *
+     * The condition in question will only ever be called on {@link Message}s
+     * that have already passed the {@link #getGateCondition()}.
+     *
+     * @param condition
+     *            The condition.
+     * @return This.
+     */
+    public LogWatchBuilder withStorageCondition(final SimpleMessageCondition condition) {
+        if (condition == null) {
+            throw new IllegalArgumentException("Storage acceptance condition must not be null.");
+        }
+        this.storageCondition = condition;
         return this;
     }
 
