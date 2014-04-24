@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Allows users to track various statistics on classes implementing
- * {@link MessageMetricProducer}. These classes are intended for measuring only,
+ * {@link MessageProducer}. These classes are intended for measuring only,
  * and will therefore not store the {@link Message}s that have passed through
  * them.
  *

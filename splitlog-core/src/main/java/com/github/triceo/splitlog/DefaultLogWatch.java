@@ -56,7 +56,7 @@ final class DefaultLogWatch implements LogWatch {
         }
     }
 
-    private final MeasuringConsumerManager<LogWatch> consumers = new MeasuringConsumerManager<LogWatch>(this);
+    private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
     private MessageBuilder currentlyProcessedMessage;
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();

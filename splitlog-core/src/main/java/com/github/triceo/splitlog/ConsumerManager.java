@@ -1,16 +1,21 @@
 package com.github.triceo.splitlog;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.slf4j.Logger;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
+import com.github.triceo.splitlog.api.MessageMeasure;
+import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
@@ -21,6 +26,8 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
 
     private final Set<MessageConsumer<P>> consumers = new LinkedHashSet<MessageConsumer<P>>();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
+    private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, P>>();
+
     private final P producer;
 
     public ConsumerManager(final P producer) {
@@ -32,6 +39,21 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
         return this.consumers.size();
     }
 
+    @Override
+    public int countMetrics() {
+        return this.metrics.size();
+    }
+
+    @Override
+    public synchronized MessageMetric<? extends Number, P> getMetric(final String id) {
+        return this.metrics.get(id);
+    }
+
+    @Override
+    public synchronized String getMetricId(final MessageMetric<? extends Number, P> measure) {
+        return this.metrics.getKey(measure);
+    }
+
     public P getProducer() {
         return this.producer;
     }
@@ -39,6 +61,16 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
     @Override
     public boolean isConsuming(final MessageConsumer<P> consumer) {
         return this.consumers.contains(consumer);
+    }
+
+    @Override
+    public boolean isMeasuring(final MessageMetric<? extends Number, P> metric) {
+        return this.metrics.containsValue(metric);
+    }
+
+    @Override
+    public boolean isMeasuring(final String id) {
+        return this.metrics.containsKey(id);
     }
 
     @Override
@@ -87,6 +119,25 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
     }
 
     @Override
+    public synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
+        final String id) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Measuring consumer manager already stopped.");
+        } else if (measure == null) {
+            throw new IllegalArgumentException("Measure may not be null.");
+        } else if (id == null) {
+            throw new IllegalArgumentException("ID may not be null.");
+        } else if (this.metrics.containsKey(id)) {
+            throw new IllegalArgumentException("Duplicate ID:" + id);
+        }
+        ConsumerManager.LOGGER.info("Starting measuring {} in {}.", id, this.getProducer());
+        final DefaultMessageMetric<T, P> metric = new DefaultMessageMetric<T, P>(this.getProducer(), measure);
+        this.metrics.put(id, metric);
+        this.registerConsumer(metric);
+        return metric;
+    }
+
+    @Override
     public synchronized boolean stop() {
         if (!this.isStopped.compareAndSet(false, true)) {
             return false;
@@ -95,7 +146,10 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
         for (final MessageConsumer<P> consumer : new LinkedList<MessageConsumer<P>>(this.consumers)) {
             this.stopConsuming(consumer);
         }
-        ConsumerManager.LOGGER.info("Stopped consumer manager for {}.", this.producer);
+        for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
+            this.stopMeasuring(metricId);
+        }
+        ConsumerManager.LOGGER.info("Stopped metrics consumer manager for {}.", this.getProducer());
         return true;
     }
 
@@ -108,6 +162,25 @@ class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P
             return false;
         }
 
+    }
+
+    @Override
+    public synchronized boolean stopMeasuring(final MessageMetric<? extends Number, P> measure) {
+        if (!this.isMeasuring(measure)) {
+            return false;
+        }
+        return this.stopMeasuring(this.metrics.getKey(measure));
+    }
+
+    @Override
+    public synchronized boolean stopMeasuring(final String id) {
+        if (!this.isMeasuring(id)) {
+            return false;
+        }
+        final DefaultMessageMetric<? extends Number, P> removed = this.metrics.remove(id);
+        this.stopConsuming(removed);
+        ConsumerManager.LOGGER.info("Stopped measuring {} in {}.", id, this.getProducer());
+        return true;
     }
 
     @Override

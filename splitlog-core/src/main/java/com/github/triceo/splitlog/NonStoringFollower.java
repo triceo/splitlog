@@ -37,7 +37,7 @@ final class NonStoringFollower extends AbstractLogWatchFollower {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(NonStoringFollower.class);
 
-    private final MeasuringConsumerManager<Follower> consumers = new MeasuringConsumerManager<Follower>(this);
+    private final ConsumerManager<Follower> consumers = new ConsumerManager<Follower>(this);
 
     public NonStoringFollower(final DefaultLogWatch watch,
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
