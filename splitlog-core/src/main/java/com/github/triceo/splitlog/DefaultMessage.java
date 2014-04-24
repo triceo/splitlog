@@ -76,7 +76,7 @@ final class DefaultMessage implements Message {
         this.splitter = splitter;
         this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
         final String logger = splitter.determineLogger(this.lines);
-        this.logger = (logger == null) ? new String("") : logger;
+        this.logger = (logger == null) ? "" : logger;
         this.severity = splitter.determineSeverity(this.lines);
         this.type = splitter.determineType(this.lines);
         this.exceptionDescriptor = splitter.determineException(this.lines);
