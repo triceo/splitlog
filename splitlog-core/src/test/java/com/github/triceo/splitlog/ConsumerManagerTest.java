@@ -9,7 +9,7 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 
-public class MessageMetricManagerTest extends DefaultFollowerBaseTest {
+public class ConsumerManagerTest extends DefaultFollowerBaseTest {
 
     private static final String ID = "ID";
     private static final MessageMeasure<Integer, LogWatch> MEASURE = new MessageMeasure<Integer, LogWatch>() {
@@ -31,55 +31,55 @@ public class MessageMetricManagerTest extends DefaultFollowerBaseTest {
     @Test(expected = IllegalArgumentException.class)
     public void testDuplicateId() {
         final ConsumerManager<LogWatch> manager = new ConsumerManager<LogWatch>(this.getLogWatch());
-        manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
-        manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
+        manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullId() {
-        new ConsumerManager<LogWatch>(this.getLogWatch()).startMeasuring(MessageMetricManagerTest.MEASURE, null);
+        new ConsumerManager<LogWatch>(this.getLogWatch()).startMeasuring(ConsumerManagerTest.MEASURE, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullMeasure() {
-        new ConsumerManager<LogWatch>(this.getLogWatch()).startMeasuring(null, MessageMetricManagerTest.ID);
+        new ConsumerManager<LogWatch>(this.getLogWatch()).startMeasuring(null, ConsumerManagerTest.ID);
     }
 
     @Test
     public void testProperRetrieval() {
         final ConsumerManager<LogWatch> manager = new ConsumerManager<LogWatch>(this.getLogWatch());
-        Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
-        final MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE,
-                MessageMetricManagerTest.ID);
-        Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isSameAs(metric);
-        Assertions.assertThat(manager.getMetricId(metric)).isSameAs(MessageMetricManagerTest.ID);
-        Assertions.assertThat(manager.stopMeasuring(MessageMetricManagerTest.ID)).isTrue();
+        Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
+        final MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(ConsumerManagerTest.MEASURE,
+                ConsumerManagerTest.ID);
+        Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isSameAs(metric);
+        Assertions.assertThat(manager.getMetricId(metric)).isSameAs(ConsumerManagerTest.ID);
+        Assertions.assertThat(manager.stopMeasuring(ConsumerManagerTest.ID)).isTrue();
         Assertions.assertThat(manager.stopMeasuring(metric)).isFalse();
-        Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
+        Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
     }
 
     @Test
     public void testTermination() {
         final ConsumerManager<LogWatch> manager = new ConsumerManager<LogWatch>(this.getLogWatch());
-        Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
+        Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         // terminate by ID
-        MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE,
-                MessageMetricManagerTest.ID);
-        Assertions.assertThat(manager.stopMeasuring(MessageMetricManagerTest.ID)).isTrue();
+        MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(ConsumerManagerTest.MEASURE,
+                ConsumerManagerTest.ID);
+        Assertions.assertThat(manager.stopMeasuring(ConsumerManagerTest.ID)).isTrue();
         Assertions.assertThat(manager.stopMeasuring(metric)).isFalse();
-        Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
+        Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
         // terminate by metric
-        metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        metric = manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
         Assertions.assertThat(manager.stopMeasuring(metric)).isTrue();
-        Assertions.assertThat(manager.stopMeasuring(MessageMetricManagerTest.ID)).isFalse();
-        Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
+        Assertions.assertThat(manager.stopMeasuring(ConsumerManagerTest.ID)).isFalse();
+        Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
         // terminate all
-        metric = manager.startMeasuring(MessageMetricManagerTest.MEASURE, MessageMetricManagerTest.ID);
+        metric = manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
         manager.stop();
-        Assertions.assertThat(manager.getMetric(MessageMetricManagerTest.ID)).isNull();
+        Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         Assertions.assertThat(manager.getMetricId(metric)).isNull();
     }
 }
