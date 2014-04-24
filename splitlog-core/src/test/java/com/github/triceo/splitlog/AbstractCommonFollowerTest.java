@@ -28,7 +28,7 @@ import com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingConditi
  *
  */
 @RunWith(Parameterized.class)
-public class AbstractLogWatchFollowerTest extends DefaultFollowerBaseTest {
+public class AbstractCommonFollowerTest extends DefaultFollowerBaseTest {
 
     private static final class NothingAcceptingMessageCondition implements SimpleMessageCondition {
 
@@ -59,10 +59,10 @@ public class AbstractLogWatchFollowerTest extends DefaultFollowerBaseTest {
 
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractLogWatchFollowerTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractCommonFollowerTest.class);
     private static final int MESSAGES_TO_WRITE = 10;
 
-    public AbstractLogWatchFollowerTest(final LogWatchBuilder builder) {
+    public AbstractCommonFollowerTest(final LogWatchBuilder builder) {
         super(builder);
     }
 
@@ -237,7 +237,7 @@ public class AbstractLogWatchFollowerTest extends DefaultFollowerBaseTest {
     private void writeAndTest(final boolean closeBeforeWriting) {
         final Follower follower = this.getLogWatch().startFollowing();
         final List<String> messages = new LinkedList<String>();
-        for (int i = 0; i < AbstractLogWatchFollowerTest.MESSAGES_TO_WRITE; i++) {
+        for (int i = 0; i < AbstractCommonFollowerTest.MESSAGES_TO_WRITE; i++) {
             messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
         }
         messages.remove(messages.size() - 1); // last message will not be
@@ -247,7 +247,7 @@ public class AbstractLogWatchFollowerTest extends DefaultFollowerBaseTest {
         }
         try {
             final File f = File.createTempFile("splitlog-", ".log");
-            AbstractLogWatchFollowerTest.LOGGER.info("Will write into '{}'.", f);
+            AbstractCommonFollowerTest.LOGGER.info("Will write into '{}'.", f);
             follower.write(new FileOutputStream(f));
             Assertions.assertThat(f).exists();
             final List<String> lines = FileUtils.readLines(f, "UTF-8");

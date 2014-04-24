@@ -61,9 +61,12 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
         watch.startHandingDown(HandingDownTest.MEASURE, HandingDownTest.ID);
         final Follower handDown = watch.startFollowing(); // this gets handed
         // down one
+        final MessageMetric<? extends Number, Follower> handedDown = handDown.getMetric(HandingDownTest.ID);
         Assertions.assertThat(noHandDowns.getMetric(HandingDownTest.ID)).isNull();
-        Assertions.assertThat(handDown.getMetric(HandingDownTest.ID)).isNotNull();
-        Assertions.assertThat(handDown.getMetric(HandingDownTest.ID).getMeasure()).isEqualTo(HandingDownTest.MEASURE);
+        Assertions.assertThat(handedDown).isNotNull();
+        Assertions.assertThat(handedDown.getMeasure()).isEqualTo(HandingDownTest.MEASURE);
+        Assertions.assertThat(handDown.isMeasuring(HandingDownTest.ID)).isTrue();
+        Assertions.assertThat(handDown.isMeasuring(handedDown)).isTrue();
         // stop hand-down
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.ID)).isTrue();
         Assertions.assertThat(watch.stopHandingDown(HandingDownTest.ID)).isFalse();
@@ -74,6 +77,15 @@ public class HandingDownTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID)).isNotNull();
         Assertions.assertThat(handDown.getMetric(HandingDownTest.ID).getMeasure()).isEqualTo(HandingDownTest.MEASURE);
         Assertions.assertThat(noHandDowns2.getMetric(HandingDownTest.ID)).isNull();
+        // and test stopping
+        Assertions.assertThat(handDown.isMeasuring(HandingDownTest.ID)).isTrue();
+        Assertions.assertThat(handDown.isMeasuring(handedDown)).isTrue();
+        final MessageMetric<? extends Number, Follower> handedDown2 = handDown.getMetric(HandingDownTest.ID);
+        Assertions.assertThat(handedDown2.stop()).isTrue();
+        Assertions.assertThat(handDown.isMeasuring(HandingDownTest.ID)).isFalse();
+        Assertions.assertThat(handDown.isMeasuring(handedDown2)).isFalse();
+        Assertions.assertThat(handDown.getMetric(HandingDownTest.ID)).isNull();
+        Assertions.assertThat(handDown.getMetricId(handedDown2)).isNull();
     }
 
     @Test(expected = IllegalArgumentException.class)

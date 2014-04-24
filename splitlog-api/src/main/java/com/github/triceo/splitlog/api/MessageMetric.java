@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Allows users to track various statistics on classes implementing
- * {@link MessageMetricProducer}. These classes are intended for measuring only,
+ * {@link MessageProducer}. These classes are intended for measuring only,
  * and will therefore not store the {@link Message}s that have passed through
  * them.
  *
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  * @param <S>
  *            Where this is getting its {@link Message}s from.
  */
-public interface MessageMetric<T extends Number, S extends MessageProducer<S>> {
+public interface MessageMetric<T extends Number, S extends MessageProducer<S>> extends MessageConsumer<S> {
 
     /**
      * Retrieves the measure that is used to produce the value of this metric.

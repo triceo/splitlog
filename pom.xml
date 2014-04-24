@@ -201,6 +201,13 @@
   <reporting>
     <plugins>
       <plugin>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <configuration>
+          <aggregate>true</aggregate>
+          <minimumPriority>3</minimumPriority>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
         <configuration>

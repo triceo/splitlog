@@ -5,7 +5,7 @@ package com.github.triceo.splitlog.api;
  * On top of the {@link CommonFollower}'s functions, this allows for merging
  * followers.
  */
-public interface Follower extends CommonFollower<Follower, LogWatch>, MessageMetricProducer<Follower> {
+public interface Follower extends CommonFollower<Follower, LogWatch>, MessageProducer<Follower> {
 
     /**
      * Retrieve the log watch that is being followed.

@@ -13,7 +13,8 @@ import java.util.concurrent.TimeUnit;
  * Alternatively, each {@link Follower#tag(String)} will create a Message within
  * the follower and not notify anyone.
  */
-public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends MessageConsumer<C> {
+public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends
+        MessageProducer<P>, MessageConsumer<C> {
 
     /**
      * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this

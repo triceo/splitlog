@@ -13,7 +13,7 @@ import java.util.Collection;
  * every tag that has been made using any of the {@link #getMerged()}.
  *
  */
-public interface MergingFollower extends CommonFollower<MergingFollower, Follower>, MessageProducer<MergingFollower> {
+public interface MergingFollower extends CommonFollower<MergingFollower, Follower> {
 
     /**
      * Retrieve followers that are currently part of this merge.

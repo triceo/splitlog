@@ -56,7 +56,7 @@ final class DefaultLogWatch implements LogWatch {
         }
     }
 
-    private final MeasuringConsumerManager<LogWatch> consumers = new MeasuringConsumerManager<LogWatch>(this);
+    private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
     private MessageBuilder currentlyProcessedMessage;
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
@@ -70,9 +70,9 @@ final class DefaultLogWatch implements LogWatch {
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-        final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
-        final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
-        final boolean reopenBetweenReads, final int bufferSize, final long delayForTailerStart) {
+            final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
+            final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
+            final boolean reopenBetweenReads, final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.gateCondition = gateCondition;
         this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
@@ -297,7 +297,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
-            final long howLong, final TimeUnit unit) {
+        final long howLong, final TimeUnit unit) {
         final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
@@ -321,7 +321,7 @@ final class DefaultLogWatch implements LogWatch {
                     entry.getValue()));
         }
         // register the follower
-        final AbstractLogWatchFollower follower = new NonStoringFollower(this, pairs);
+        final Follower follower = new DefaultFollower(this, pairs);
         this.consumers.registerConsumer(follower);
         this.storage.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
@@ -347,7 +347,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
-            final String id) {
+        final String id) {
         return this.consumers.startMeasuring(measure, id);
     }
 
