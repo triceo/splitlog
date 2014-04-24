@@ -150,7 +150,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("NonStoringMergingFollower [getUniqueId()=").append(this.getUniqueId()).append(", ");
+        builder.append("DefaultMergingFollower [getUniqueId()=").append(this.getUniqueId()).append(", ");
         if (this.getMerged() != null) {
             builder.append("getMerged()=").append(this.getMerged()).append(", ");
         }

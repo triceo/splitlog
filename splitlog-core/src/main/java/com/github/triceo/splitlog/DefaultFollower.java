@@ -154,7 +154,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("NonStoringFollower [getUniqueId()=").append(this.getUniqueId()).append(", ");
+        builder.append("DefaultFollower [getUniqueId()=").append(this.getUniqueId()).append(", ");
         if (this.getFollowed() != null) {
             builder.append("getFollowed()=").append(this.getFollowed()).append(", ");
         }
