@@ -31,7 +31,7 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * methods. Will use {@link #DEFAULT_COMPARATOR} as a default order for the
  * messages.
  */
-abstract class AbstractFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> implements
+abstract class AbstractCommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> implements
 CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
@@ -40,7 +40,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private final MessageExchange<C> exchange = new MessageExchange<C>();
 
-    private final long uniqueId = AbstractFollower.ID_GENERATOR.getAndIncrement();
+    private final long uniqueId = AbstractCommonFollower.ID_GENERATOR.getAndIncrement();
 
     @Override
     public int countConsumers() {
@@ -67,17 +67,17 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     @Override
     public SortedSet<Message> getMessages() {
-        return this.getMessages(AbstractFollower.DEFAULT_COMPARATOR);
+        return this.getMessages(AbstractCommonFollower.DEFAULT_COMPARATOR);
     }
 
     @Override
     public SortedSet<Message> getMessages(final MessageComparator order) {
-        return this.getMessages(AbstractFollower.DEFAULT_CONDITION, order);
+        return this.getMessages(AbstractCommonFollower.DEFAULT_CONDITION, order);
     }
 
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition) {
-        return this.getMessages(condition, AbstractFollower.DEFAULT_COMPARATOR);
+        return this.getMessages(condition, AbstractCommonFollower.DEFAULT_COMPARATOR);
     }
 
     @Override
@@ -180,12 +180,12 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     @Override
     public boolean write(final OutputStream stream, final MessageComparator order, final MessageFormatter formatter) {
-        return this.write(stream, AbstractFollower.DEFAULT_CONDITION, order, formatter);
+        return this.write(stream, AbstractCommonFollower.DEFAULT_CONDITION, order, formatter);
     }
 
     @Override
     public boolean write(final OutputStream stream, final MessageFormatter formatter) {
-        return this.write(stream, AbstractFollower.DEFAULT_CONDITION, formatter);
+        return this.write(stream, AbstractCommonFollower.DEFAULT_CONDITION, formatter);
     }
 
     @Override
@@ -202,7 +202,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
     @Override
     public boolean write(final OutputStream stream, final SimpleMessageCondition condition,
         final MessageFormatter formatter) {
-        return this.write(stream, condition, AbstractFollower.DEFAULT_COMPARATOR, formatter);
+        return this.write(stream, condition, AbstractCommonFollower.DEFAULT_COMPARATOR, formatter);
     }
 
 }

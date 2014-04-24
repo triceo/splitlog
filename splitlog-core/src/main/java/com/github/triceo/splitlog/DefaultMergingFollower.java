@@ -21,27 +21,31 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
+import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
-abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower, Follower> implements MergingFollower {
+/**
+ * Will use {@link UnifyingMessageFormatter} as default message formatter.
+ *
+ */
+final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollower, Follower> implements MergingFollower {
 
-    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractMergingFollower.class);
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultMergingFollower.class);
 
     private final ConsumerManager<MergingFollower> consumers = new ConsumerManager<MergingFollower>(this);
-
     private final Set<Follower> followers = new LinkedHashSet<Follower>();
 
-    protected AbstractMergingFollower(final Follower... followers) {
-        AbstractMergingFollower.LOGGER.info("Merging followers into {}.", this);
+    protected DefaultMergingFollower(final Follower... followers) {
+        DefaultMergingFollower.LOGGER.info("Merging followers into {}.", this);
         for (final Follower f : followers) {
-            final AbstractLogWatchFollower af = (AbstractLogWatchFollower) f;
+            final DefaultFollower af = (DefaultFollower) f;
             this.followers.add(af);
             af.registerConsumer(this);
         }
-        AbstractMergingFollower.LOGGER.info("Followers merged: {}.", this);
+        DefaultMergingFollower.LOGGER.info("Followers merged: {}.", this);
     }
 
     @Override
@@ -57,6 +61,21 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
     @Override
     public Collection<Follower> getMerged() {
         return Collections.unmodifiableSet(this.followers);
+    }
+
+    @Override
+    public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
+            final MessageComparator order) {
+        final SortedSet<Message> sorted = new TreeSet<Message>(order);
+        for (final Follower f : this.getMerged()) {
+            for (final Message m : f.getMessages()) {
+                if (!condition.accept(m)) {
+                    continue;
+                }
+                sorted.add(m);
+            }
+        }
+        return Collections.unmodifiableSortedSet(sorted);
     }
 
     @Override
@@ -76,7 +95,7 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         }
         final Set<Follower> followers = new HashSet<Follower>(this.followers);
         followers.add(f);
-        return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
+        return new DefaultMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
 
     @Override
@@ -88,7 +107,20 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         }
         final Set<Follower> followers = new HashSet<Follower>(this.followers);
         followers.addAll(f.getMerged());
-        return new NonStoringMergingFollower(followers.toArray(new Follower[followers.size()]));
+        return new DefaultMergingFollower(followers.toArray(new Follower[followers.size()]));
+    }
+
+    @Override
+    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
+        final Follower source) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Follower already stopped.");
+        } else if (!this.getMerged().contains(source)) {
+            throw new IllegalArgumentException("Forbidden notification source: " + source);
+        }
+        DefaultMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
+        this.getExchange().messageReceived(msg, status, source);
+        this.getConsumerManager().messageReceived(msg, status, this);
     }
 
     @Override
@@ -97,7 +129,7 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
             return false;
         }
         // we know about this follower, so the cast is safe
-        AbstractMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
+        DefaultMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
         return f.stopConsuming(this);
     }
 
@@ -106,13 +138,24 @@ abstract class AbstractMergingFollower extends AbstractFollower<MergingFollower,
         if (this.isStopped()) {
             return false;
         }
-        AbstractMergingFollower.LOGGER.info("Stopping {}.", this);
+        DefaultMergingFollower.LOGGER.info("Stopping {}.", this);
         for (final Follower f : this.getMerged()) {
             f.stop();
         }
         this.getConsumerManager().stop();
-        AbstractMergingFollower.LOGGER.info("Stopped {}.", this);
+        DefaultMergingFollower.LOGGER.info("Stopped {}.", this);
         return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("NonStoringMergingFollower [getUniqueId()=").append(this.getUniqueId()).append(", ");
+        if (this.getMerged() != null) {
+            builder.append("getMerged()=").append(this.getMerged()).append(", ");
+        }
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
+        return builder.toString();
     }
 
     @Override
