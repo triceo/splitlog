@@ -20,6 +20,7 @@
   <modules>
     <module>splitlog-api</module>
     <module>splitlog-core</module>
+    <module>splitlog-parsers</module>
   </modules>
   <dependencyManagement>
     <dependencies>
@@ -33,6 +34,12 @@
         <artifactId>splitlog-core</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.github.triceo.splitlog</groupId>
+        <artifactId>splitlog-parsers</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
