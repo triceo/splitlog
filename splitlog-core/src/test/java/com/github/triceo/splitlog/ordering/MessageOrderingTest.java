@@ -11,10 +11,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.triceo.splitlog.LogWatchBuilder;
 import com.github.triceo.splitlog.LogWriter;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.splitters.JBossServerLogTailSplitter;
 
@@ -32,12 +32,12 @@ public class MessageOrderingTest {
 
     private final File target = MessageOrderingTest.createTempCopy(new File(
             "src/test/resources/com/github/triceo/splitlog/ordering/", "ordering.log"));
-    private final LogWriter writer = LogWriter.forFile(this.target);
     private LogWatch watch;
+    private final LogWriter writer = LogWriter.forFile(this.target);
 
     @Before
     public void buildWatch() {
-        this.watch = LogWatchBuilder.forFile(this.target).buildWith(new JBossServerLogTailSplitter());
+        this.watch = LogWatchBuilder.getDefault().watchingFile(this.target).buildWith(new JBossServerLogTailSplitter());
     }
 
     @After
@@ -54,7 +54,7 @@ public class MessageOrderingTest {
         // messages will be ordered exactly as they came in
         final List<Message> messages = new LinkedList<Message>(f.getMessages());
         Assertions.assertThat(messages.size()).isEqualTo(3); // 3 ACCEPTED, 1
-                                                             // INCOMING
+        // INCOMING
         Assertions.assertThat(messages.get(0).getUniqueId()).isEqualTo(0);
         Assertions.assertThat(messages.get(1).getUniqueId()).isEqualTo(1);
         Assertions.assertThat(messages.get(2).getUniqueId()).isEqualTo(2);
@@ -70,7 +70,7 @@ public class MessageOrderingTest {
         final List<Message> messages = new LinkedList<Message>(
                 f.getMessages(TimestampOrderingMessageComparator.INSTANCE));
         Assertions.assertThat(messages.size()).isEqualTo(3); // 3 ACCEPTED, 1
-                                                             // INCOMING
+        // INCOMING
         // number 3 was dropped as INCOMING in previous test method
         Assertions.assertThat(messages.get(0).getUniqueId()).isEqualTo(4);
         Assertions.assertThat(messages.get(1).getUniqueId()).isEqualTo(6);

@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 
 /**
  * See <a href="https://github.com/triceo/splitlog/pull/15">Splitlog Pull
@@ -22,6 +23,11 @@ public class LimitedMessageStoreTest extends DefaultFollowerBaseTest {
     private static final int CAPACITY = 1;
     private static final int TIMEOUT_MILLIS = 10000;
     private ExecutorService es;
+
+    @Override
+    protected LogWatchBuilder getBuilder() {
+        return super.getBuilder().limitCapacityTo(LimitedMessageStoreTest.CAPACITY);
+    }
 
     @Before
     public void setUp() {
@@ -36,11 +42,6 @@ public class LimitedMessageStoreTest extends DefaultFollowerBaseTest {
         } catch (final InterruptedException ex) {
             System.err.println("Executor service failed to terminate.");
         }
-    }
-
-    @Override
-    protected LogWatchBuilder getBuilder() {
-        return super.getBuilder().limitCapacityTo(LimitedMessageStoreTest.CAPACITY);
     }
 
     @Test(timeout = LimitedMessageStoreTest.TIMEOUT_MILLIS)

@@ -1,21 +1,8 @@
-package com.github.triceo.splitlog;
+package com.github.triceo.splitlog.api;
 
 import java.io.File;
+import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-
-import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.LogWatch;
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageConsumer;
-import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
-import com.github.triceo.splitlog.api.SimpleMessageCondition;
-import com.github.triceo.splitlog.api.TailSplitter;
-import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
-import com.github.triceo.splitlog.conditions.SplitlogMessagesRejectingCondition;
-import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
-import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
 /**
  * Prepares an instance of {@link LogWatch}. Unless overriden by the user, the
@@ -30,10 +17,8 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  * <dd>See {@link #DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS}.</dd>
  * <dt>The buffer size for reading</dt>
  * <dd>See {@link #DEFAULT_READ_BUFFER_SIZE_IN_BYTES}.</dd>
- * <dt>Default tail splitter</dt>
- * <dd>See {@link SimpleTailSplitter}</dd>
  * <dt>Default message capacity</dt>
- * <dd>{@link Integer#MAX_VALUE}, the maximum possible. See {@link MessageStore}
+ * <dd>{@link Integer#MAX_VALUE}, the maximum possible.</dd>
  * <dt>Interval between two sweeps for unreachable messages.</dt>
  * <dd>See {@link #DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS}.</dd>
  * <dt>Interval between requesting tailing and the actual start of tailing.</dt>
@@ -43,28 +28,28 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  * </dl>
  *
  * By default, the instance will store (and notify of) every message that has
- * passed {@link SplitlogMessagesRejectingCondition} and not do so for all
- * others.
+ * passed the {@link #getGateCondition()} and not do so for all others.
  */
-final public class LogWatchBuilder {
+public abstract class LogWatchBuilder {
 
     public static final long DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS = 5;
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
     public static final long DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
     public static final int DEFAULT_READ_BUFFER_SIZE_IN_BYTES = 4096;
-    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchBuilder.class);
 
     /**
      * Used to construct a {@link LogWatch} for a particular log file.
      *
-     * @param f
-     *            File to watch.
      * @return Builder that is used to configure the new log watch instance
      *         before using.
      */
-    public static LogWatchBuilder forFile(final File f) {
-        return new LogWatchBuilder(f);
+    public static LogWatchBuilder getDefault() {
+        final ServiceLoader<LogWatchBuilder> ldr = ServiceLoader.load(LogWatchBuilder.class);
+        if (!ldr.iterator().hasNext()) {
+            throw new IllegalStateException("No LogWatchBuilder implementation registered.");
+        }
+        return ldr.iterator().next();
     }
 
     private static long getDelay(final int length, final TimeUnit unit) {
@@ -93,15 +78,11 @@ final public class LogWatchBuilder {
     private long delayBeforeTailingStarts = LogWatchBuilder.DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
-    private final File fileToWatch;
-    private SimpleMessageCondition gateCondition = SplitlogMessagesRejectingCondition.INSTANCE;
+    private File fileToWatch;
+    private SimpleMessageCondition gateCondition;
     private int limitCapacityTo = Integer.MAX_VALUE;
     private boolean readingFromBeginning = true;
-    private SimpleMessageCondition storageCondition = AllLogWatchMessagesAcceptingCondition.INSTANCE;
-
-    protected LogWatchBuilder(final File fileToWatch) {
-        this.fileToWatch = fileToWatch;
-    }
+    private SimpleMessageCondition storageCondition;
 
     /**
      * Build the log watch with previously defined properties, or defaults where
@@ -113,9 +94,7 @@ final public class LogWatchBuilder {
      *
      * @return The newly built log watch.
      */
-    public LogWatch build() {
-        return this.buildWith(new SimpleTailSplitter());
-    }
+    public abstract LogWatch build();
 
     /**
      * Build the log watch with previously defined properties, or defaults where
@@ -125,9 +104,7 @@ final public class LogWatchBuilder {
      *         {@link LogWatch} can be retrieved by
      *         {@link Follower#getFollowed()}.
      */
-    public Follower buildFollowing() {
-        return this.buildFollowingWith(new SimpleTailSplitter());
-    }
+    public abstract Follower buildFollowing();
 
     /**
      * Build the log watch with previously defined properties, or defaults where
@@ -140,12 +117,7 @@ final public class LogWatchBuilder {
      *         {@link LogWatch} can be retrieved by
      *         {@link Follower#getFollowed()}.
      */
-    public Follower buildFollowingWith(final TailSplitter splitter) {
-        if (splitter == null) {
-            throw new IllegalArgumentException("A splitter must be provided.");
-        }
-        return this.buildWith(splitter).startFollowing();
-    }
+    public abstract Follower buildFollowingWith(final TailSplitter splitter);
 
     /**
      * Build the log watch with previously defined properties, or defaults where
@@ -163,18 +135,7 @@ final public class LogWatchBuilder {
      *         {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
      *         .
      */
-    public LogWatch buildWith(final TailSplitter splitter) {
-        if (splitter == null) {
-            throw new IllegalArgumentException("A splitter must be provided.");
-        } else if ((splitter instanceof SimpleTailSplitter)
-                && (this.gateCondition instanceof SplitlogMessagesRejectingCondition)) {
-            LogWatchBuilder.LOGGER
-            .warn("Using default TailSplitter with default gating condition. All messages will pass through gate, as the TailSplitter will not provide all the necessary information.");
-        }
-        return new DefaultLogWatch(this.fileToWatch, splitter, this.limitCapacityTo, this.gateCondition,
-                this.storageCondition, this.delayBetweenReads, this.delayBetweenSweeps, !this.readingFromBeginning,
-                this.closingBetweenReads, this.bufferSize, this.delayBeforeTailingStarts);
-    }
+    public abstract LogWatch buildWith(final TailSplitter splitter);
 
     /**
      * Change the default behavior of the future log watch to close the watched
@@ -326,6 +287,21 @@ final public class LogWatchBuilder {
         }
         builder.append("]");
         return builder.toString();
+    }
+
+    /**
+     * Set the file that the future {@link LogWatch} will be tailing.
+     *
+     * @param f
+     *            File to watch.
+     * @return This.
+     */
+    public LogWatchBuilder watchingFile(final File f) {
+        if (f == null) {
+            throw new IllegalArgumentException("File can not be null.");
+        }
+        this.fileToWatch = f;
+        return this;
     }
 
     /**

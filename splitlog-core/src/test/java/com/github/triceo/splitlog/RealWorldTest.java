@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
@@ -99,7 +100,7 @@ public class RealWorldTest {
             }
         }
         // log watch will accept anything not DEBUG
-        final LogWatch watch = LogWatchBuilder.forFile(tmp).ignoringPreexistingContent()
+        final LogWatch watch = LogWatchBuilder.getDefault().watchingFile(tmp).ignoringPreexistingContent()
                 .withStorageCondition(new SimpleMessageCondition() {
 
                     @Override

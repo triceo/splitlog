@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 
 public abstract class DefaultFollowerBaseTest {
@@ -24,29 +25,10 @@ public abstract class DefaultFollowerBaseTest {
     private static final String INITIAL_MESSAGE = "INITIAL";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultFollowerBaseTest.class);
 
-    // will verify various configs of log watch
-    @Parameters(name = "{index}: {0}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()) },
-                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()).closingAfterReading()
-                        .ignoringPreexistingContent() },
-                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()).closingAfterReading() },
-                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()).ignoringPreexistingContent() } });
-    }
-
-    protected static File getTempFile() {
-        try {
-            return File.createTempFile("splitlog-", ".log");
-        } catch (final IOException e) {
-            throw new IllegalStateException("Cannot create temp files.", e);
-        }
-    }
-
     /**
      * Will fail unless the messages provided equal to those in the collection,
      * and are present in the exact same order.
-     * 
+     *
      * @param messages
      *            Messages from some {@link Follower}.
      * @param expectedMessages
@@ -67,16 +49,46 @@ public abstract class DefaultFollowerBaseTest {
         }
     }
 
+    // will verify various configs of log watch
+    @Parameters(name = "{index}: {0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()) },
+                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                        .closingAfterReading()
+                    .ignoringPreexistingContent() },
+                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                        .closingAfterReading() },
+                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                        .ignoringPreexistingContent() } });
+    }
+
+    protected static File getTempFile() {
+        try {
+            return File.createTempFile("splitlog-", ".log");
+        } catch (final IOException e) {
+            throw new IllegalStateException("Cannot create temp files.", e);
+        }
+    }
+
     private final LogWatchBuilder builder;
     private LogWatch logwatch;
     private LogWriter writer;
 
     public DefaultFollowerBaseTest() {
-        this(LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()));
+        this(LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()));
     }
 
     public DefaultFollowerBaseTest(final LogWatchBuilder builder) {
         this.builder = builder;
+    }
+
+    @After
+    public void destroyEverything() {
+        this.writer.dispose();
+        if (!this.logwatch.isTerminated()) {
+            this.logwatch.terminate();
+        }
     }
 
     protected LogWatchBuilder getBuilder() {
@@ -127,13 +139,5 @@ public abstract class DefaultFollowerBaseTest {
         }
         this.getLogWatch().stopFollowing(f);
         DefaultFollowerBaseTest.LOGGER.info("@Before finished.");
-    }
-
-    @After
-    public void destroyEverything() {
-        this.writer.dispose();
-        if (!this.logwatch.isTerminated()) {
-            this.logwatch.terminate();
-        }
     }
 }

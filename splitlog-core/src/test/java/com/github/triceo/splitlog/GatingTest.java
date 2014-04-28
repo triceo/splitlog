@@ -10,6 +10,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
@@ -26,10 +27,10 @@ public class GatingTest extends DefaultFollowerBaseTest {
     @Parameters(name = "{index}: {0}, {1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()), false },
+                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()), false },
                 {
-                    LogWatchBuilder.forFile(DefaultFollowerBaseTest.getTempFile()).withGateCondition(
-                            AllLogWatchMessagesAcceptingCondition.INSTANCE), true } });
+                        LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                                .withGateCondition(AllLogWatchMessagesAcceptingCondition.INSTANCE), true } });
     }
 
     private final boolean isGatingDisabled;
