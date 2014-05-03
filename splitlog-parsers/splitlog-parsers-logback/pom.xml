@@ -7,4 +7,24 @@
   </parent>
   <artifactId>splitlog-parsers-logback</artifactId>
   <name>splitlog-parsers-logback: support for Logback pattern layout</name>
+  <dependencies>
+    <dependency>
+      <groupId>com.github.triceo.splitlog</groupId>
+      <artifactId>splitlog-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.triceo.splitlog</groupId>
+      <artifactId>splitlog-parsers-common</artifactId>
+    </dependency>
+    
+    <dependency>
+      <artifactId>junit</artifactId>
+      <groupId>junit</groupId>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+    </dependency>
+  </dependencies>
 </project>

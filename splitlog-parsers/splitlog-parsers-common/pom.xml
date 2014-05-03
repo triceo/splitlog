@@ -2,14 +2,9 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.github.triceo.splitlog</groupId>
-    <artifactId>splitlog-parent</artifactId>
+    <artifactId>splitlog-parsers</artifactId>
     <version>1.6.0-SNAPSHOT</version>
   </parent>
-  <packaging>pom</packaging>
-  <artifactId>splitlog-parsers</artifactId>
-  <name>splitlog-parsers: support for various types of log files</name>
-  <modules>
-  	<module>splitlog-parsers-logback</module>
-  	<module>splitlog-parsers-common</module>
-  </modules>
+  <artifactId>splitlog-parsers-common</artifactId>
+  <name>splitlog-parsers-common: classes shared by all parsers</name>
 </project>
