@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.github.triceo.splitlog.parsers.SplitlogPatternParser;
 import com.github.triceo.splitlog.parsers.logback.LogbackPatternTranslator;
 
 @RunWith(Parameterized.class)
@@ -23,7 +24,7 @@ public class LogbackPatternTranslatorTest {
         patterns.add(new String[] {"%-4relative [%thread] %-5level - %msg%n%caller{2, DISP_CALLER_EVAL, OTHER_EVAL_NAME, THIRD_EVAL_NAME}"});
         patterns.add(new String[] {"%-5level - %replace(%msg){'\\d{14,16}', 'XXXX'}%n"});
         patterns.add(new String[] {"%-30(%d{HH:mm:ss.SSS} [%thread]) %-5level %logger{32} - %msg%n"});
-        patterns.add(new String[] {"[%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n"});
+        patterns.add(new String[] {"[%thread] %highlight(%-5level) %cyan(%logger{15}) - [%msg %n]"});
         patterns.add(new String[] {"%-4relative [%thread] %-5level - %msg%n%caller{2, DISP_CALLER_EVAL}"});
         patterns.add(new String[] {"%d ${CONTEXT_NAME} %level %msg %logger{50}%n"});
         return patterns;
@@ -37,7 +38,7 @@ public class LogbackPatternTranslatorTest {
     
     @Test
     public void test() {
-        new LogbackPatternTranslator().parse(pattern);
+        SplitlogPatternParser.build(new LogbackPatternTranslator(), pattern);
     }
 
 }

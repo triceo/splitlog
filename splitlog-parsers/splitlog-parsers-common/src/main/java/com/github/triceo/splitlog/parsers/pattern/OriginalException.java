@@ -16,13 +16,13 @@ public class OriginalException extends FormattedPatternPart {
     }
 
     public OriginalException(final Formatting format, final boolean includePackaging, final boolean rootCauseFirst,
-            final int depthOfStackTrace) {
+        final int depthOfStackTrace) {
         this(format, includePackaging, rootCauseFirst, depthOfStackTrace, Collections.<String> emptyList());
     }
 
     public OriginalException(final Formatting format, final boolean includePackaging, final boolean rootCauseFirst,
-        final int depthOfStackTrace, final List<String> evaluators) {
-        super(format, ContentType.LOGGER_PROVIDED);
+            final int depthOfStackTrace, final List<String> evaluators) {
+        super(format, ContentType.LOGGER_PROVIDED_MULTILINE);
         this.stackTraceDepth = depthOfStackTrace;
         this.includePackaging = includePackaging;
         this.rootCauseFirst = rootCauseFirst;

@@ -7,4 +7,10 @@
   </parent>
   <artifactId>splitlog-parsers-common</artifactId>
   <name>splitlog-parsers-common: classes shared by all parsers</name>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+  </dependencies>
 </project>

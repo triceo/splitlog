@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import ch.qos.logback.core.pattern.FormatInfo;
 import ch.qos.logback.core.pattern.parser.SimpleKeywordNode;
 
+import com.github.triceo.splitlog.parsers.SplitlogPatternParser;
 import com.github.triceo.splitlog.parsers.pattern.Caller;
 import com.github.triceo.splitlog.parsers.pattern.ContextName;
 import com.github.triceo.splitlog.parsers.pattern.Diagnostic;
@@ -20,14 +21,15 @@ import com.github.triceo.splitlog.parsers.pattern.Formatting.Truncate;
 import com.github.triceo.splitlog.parsers.pattern.IssuingClass;
 import com.github.triceo.splitlog.parsers.pattern.Level;
 import com.github.triceo.splitlog.parsers.pattern.Line;
+import com.github.triceo.splitlog.parsers.pattern.Literal;
 import com.github.triceo.splitlog.parsers.pattern.LoggingDate;
 import com.github.triceo.splitlog.parsers.pattern.Marker;
-import com.github.triceo.splitlog.parsers.pattern.NewLine;
 import com.github.triceo.splitlog.parsers.pattern.NopException;
 import com.github.triceo.splitlog.parsers.pattern.OriginMethod;
 import com.github.triceo.splitlog.parsers.pattern.OriginThread;
 import com.github.triceo.splitlog.parsers.pattern.OriginalException;
 import com.github.triceo.splitlog.parsers.pattern.OriginalLogger;
+import com.github.triceo.splitlog.parsers.pattern.PatternPart;
 import com.github.triceo.splitlog.parsers.pattern.Payload;
 import com.github.triceo.splitlog.parsers.pattern.Property;
 import com.github.triceo.splitlog.parsers.pattern.Relative;
@@ -36,7 +38,7 @@ import com.github.triceo.splitlog.parsers.pattern.SourceFile;
 public enum ConversionWord {
     CALLER("caller") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             final Formatting f = this.getFormatting(node);
             final List<String> options = this.getOptions(node);
             switch (options.size()) {
@@ -51,14 +53,14 @@ public enum ConversionWord {
     },
     CONTEXT_NAME("contextName", "cn") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new ContextName(this.getFormatting(node));
         }
     },
     DATE("d", "date") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             final Formatting format = this.getFormatting(node);
             final List<String> options = this.getOptions(node);
             switch (options.size()) {
@@ -75,14 +77,14 @@ public enum ConversionWord {
     },
     FILE("F", "file") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new SourceFile(this.getFormatting(node));
         }
     },
     ISSUING_CLASS("C", "class") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             final Formatting format = this.getFormatting(node);
             final List<String> options = this.getOptions(node);
             switch (options.size()) {
@@ -97,28 +99,28 @@ public enum ConversionWord {
     },
     LEVEL("p", "le", "level") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new Level(this.getFormatting(node));
         }
     },
     LINE("L", "line") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new Line(this.getFormatting(node));
         }
     },
     MARKER("marker") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new Marker(this.getFormatting(node));
         }
     },
     MDC("X", "mdc") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             final Formatting format = this.getFormatting(node);
             final List<String> options = this.getOptions(node);
             switch (options.size()) {
@@ -140,35 +142,35 @@ public enum ConversionWord {
     },
     MESSAGE("m", "msg", "message") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new Payload(this.getFormatting(node));
         }
     },
     METHOD("M", "method") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new OriginMethod(this.getFormatting(node));
         }
     },
     NEWLINE("n") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
-            return new NewLine(this.getFormatting(node));
+            return new Literal(SplitlogPatternParser.NEWLINE);
         }
     },
     NO_EXCEPTION("nopex", "nopexception") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new NopException(this.getFormatting(node));
         }
     },
     ORIGIN("c", "lo", "logger") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             final Formatting format = this.getFormatting(node);
             final List<String> options = this.getOptions(node);
             switch (options.size()) {
@@ -183,40 +185,40 @@ public enum ConversionWord {
     },
     PROPERTY("property") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             final String option = this.assertOneOption(node);
             return new Property(this.getFormatting(node), option);
         }
     },
     RELATIVE("r", "relative") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new Relative(this.getFormatting(node));
         }
     },
     THREAD("t", "thread") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             this.assertNoOptions(node);
             return new OriginThread(this.getFormatting(node));
         }
     },
     THROWABLE("ex", "exception", "throwable") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             return this.processException(node, false, false);
         }
     },
     THROWABLE_ROOT_FIRST("rEx", "rException", "rThrowable") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             return this.processException(node, true, true);
         }
     },
     THROWABLE_WITH_PACKAGING("xEx", "xException", "xThrowable") {
         @Override
-        public FormattedPatternPart convert(final SimpleKeywordNode node) {
+        public PatternPart convert(final SimpleKeywordNode node) {
             return this.processException(node, true, false);
         }
     };
@@ -243,7 +245,7 @@ public enum ConversionWord {
         return options.get(0);
     }
 
-    public abstract FormattedPatternPart convert(SimpleKeywordNode node);
+    public abstract PatternPart convert(SimpleKeywordNode node);
 
     public Collection<String> getAliases() {
         return this.aliases;

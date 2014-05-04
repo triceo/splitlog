@@ -4,6 +4,10 @@ public final class Literal implements PatternPart {
 
     private final String sequence;
 
+    public Literal(final char literal) {
+        this.sequence = String.valueOf(literal);
+    }
+
     public Literal(final String literal) {
         this.sequence = literal;
     }
@@ -22,7 +26,7 @@ public final class Literal implements PatternPart {
         final StringBuilder builder = new StringBuilder();
         builder.append("Literal [");
         if (this.sequence != null) {
-            builder.append("sequence=").append(this.sequence);
+            builder.append("sequence='").append(this.sequence).append("'");
         }
         builder.append("]");
         return builder.toString();

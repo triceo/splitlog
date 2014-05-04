@@ -12,15 +12,15 @@ import ch.qos.logback.core.pattern.parser.Parser;
 import ch.qos.logback.core.pattern.parser.SimpleKeywordNode;
 import ch.qos.logback.core.spi.ScanException;
 
+import com.github.triceo.splitlog.parsers.PatternTranslator;
 import com.github.triceo.splitlog.parsers.pattern.CompositePatternPart;
-import com.github.triceo.splitlog.parsers.pattern.FormattedPatternPart;
 import com.github.triceo.splitlog.parsers.pattern.Formatting;
 import com.github.triceo.splitlog.parsers.pattern.Formatting.Padding;
 import com.github.triceo.splitlog.parsers.pattern.Formatting.Truncate;
 import com.github.triceo.splitlog.parsers.pattern.Literal;
 import com.github.triceo.splitlog.parsers.pattern.PatternPart;
 
-public class LogbackPatternTranslator {
+public class LogbackPatternTranslator implements PatternTranslator {
 
     private static final Map<String, Parser<CompositeNode>> PARSERS = new LinkedHashMap<String, Parser<CompositeNode>>();
 
@@ -44,7 +44,7 @@ public class LogbackPatternTranslator {
         }
     }
 
-    private static FormattedPatternPart convertSimpleKeywordNode(final SimpleKeywordNode n) {
+    private static PatternPart convertSimpleKeywordNode(final SimpleKeywordNode n) {
         for (final ConversionWord w : ConversionWord.values()) {
             if (w.getAliases().contains(n.getValue())) {
                 return w.convert(n);

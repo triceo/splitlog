@@ -18,7 +18,7 @@ public class Caller extends FormattedPatternPart {
     }
 
     public Caller(final Formatting format, final int depthOfStackTrace, final List<String> evaluators) {
-        super(format, ContentType.LOGGER_PROVIDED);
+        super(format, ContentType.LOGGER_PROVIDED_MULTILINE);
         this.stackTraceDepth = depthOfStackTrace;
         this.evaluators = Collections.unmodifiableList(new LinkedList<String>(evaluators));
     }
