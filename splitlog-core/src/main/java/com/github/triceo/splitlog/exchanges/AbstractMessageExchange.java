@@ -18,6 +18,12 @@ abstract class AbstractMessageExchange<C, S extends MessageProducer<S>> implemen
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractMessageExchange.class);
 
     private final C blockingCondition;
+    /**
+     * Will prevent blocking in
+     * {@link #messageReceived(Message, MessageDeliveryStatus, MessageProducer)}
+     * until {@link #call()} has been called.
+     */
+    private boolean isBlocking = false;
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
@@ -36,6 +42,7 @@ abstract class AbstractMessageExchange<C, S extends MessageProducer<S>> implemen
         try {
             AbstractMessageExchange.LOGGER.info("Thread blocked waiting for message to pass condition {}.",
                     this.getBlockingCondition());
+            this.isBlocking = true;
             return this.messageExchanger.exchange(null);
         } catch (final InterruptedException e) {
             return null;
@@ -59,6 +66,8 @@ abstract class AbstractMessageExchange<C, S extends MessageProducer<S>> implemen
     public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
         if (this.isStopped()) {
             throw new IllegalStateException("Message exchange already stopped.");
+        } else if (!this.isBlocking) {
+            return;
         }
         AbstractMessageExchange.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         // check if the user code accepts the message
@@ -68,6 +77,7 @@ abstract class AbstractMessageExchange<C, S extends MessageProducer<S>> implemen
         AbstractMessageExchange.LOGGER.debug("Condition passed by message '{}' in state {} from {}.", msg, status,
                 source);
         try {
+            this.isBlocking = false;
             this.messageExchanger.exchange(msg);
         } catch (final InterruptedException e) {
             AbstractMessageExchange.LOGGER.warn("Failed to notify of message '{}' in state {} from {}.", msg, status,

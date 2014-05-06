@@ -4,6 +4,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -125,29 +126,23 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
 
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition) {
-        if (this.exchange != null) {
-            throw new IllegalStateException("Already waiting.");
-        }
-        this.exchange = new MeasuringMessageExchange<T, S>(this, condition);
-        try {
-            return DefaultMessageMetric.EXECUTOR.submit(this.exchange).get();
-        } catch (final Exception e) {
-            return null;
-        } finally {
-            this.exchange = null;
-        }
+        return this.waitFor(condition, -1, TimeUnit.SECONDS);
     }
 
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition, final long timeout, final TimeUnit unit) {
-        if (timeout < 1) {
-            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
-        } else if (this.exchange != null) {
+        if (this.exchange != null) {
             throw new IllegalStateException("Already waiting.");
         }
-        this.exchange = new MeasuringMessageExchange<T, S>(this, condition);
         try {
-            return DefaultMessageMetric.EXECUTOR.submit(this.exchange).get(timeout, unit);
+            final MeasuringMessageExchange<T, S> exchange = new MeasuringMessageExchange<T, S>(this, condition);
+            final Future<Message> future = DefaultMessageMetric.EXECUTOR.submit(exchange);
+            this.exchange = exchange;
+            if (timeout < 1) {
+                return future.get();
+            } else {
+                return future.get(timeout, unit);
+            }
         } catch (final Exception e) {
             return null;
         } finally {

@@ -161,15 +161,16 @@ public class RealWorldTest {
         Assertions.assertThat(lastError).isNotNull();
         Assertions.assertThat(lastError.getUniqueId()).isEqualTo(2599);
         // wait for the last message
+        final int lastMessageId = 2672;
         final Message lastMessageInSecondBatch = onlyLastBatch.waitFor(new MidDeliveryMessageCondition<LogWatch>() {
 
             @Override
             public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                return ((status == MessageDeliveryStatus.INCOMING) && (evaluate.getUniqueId() == 2672));
+                return ((status == MessageDeliveryStatus.INCOMING) && (evaluate.getUniqueId() == lastMessageId));
             }
 
-        }, RealWorldTest.BASE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        final int lastMessageId = 2672;
+        });
+        Assertions.assertThat(lastMessageInSecondBatch).isNotNull();
         Assertions.assertThat(lastMessageInSecondBatch.getUniqueId()).isEqualTo(lastMessageId);
         Assertions.assertThat(bothBatches.getMessages()).hasSize(lastMessageId - 2);
         /*

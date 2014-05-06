@@ -2,6 +2,9 @@ package com.github.triceo.splitlog;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,6 +21,7 @@ import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
+import com.github.triceo.splitlog.exchanges.MidDeliveryMessageExchange;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
 /**
@@ -36,9 +40,11 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 
-    private final MessageExchange<C> exchange = new MessageExchange<C>();
+    private MidDeliveryMessageExchange<C> exchange;
 
     private final long uniqueId = AbstractCommonFollower.ID_GENERATOR.getAndIncrement();
 
@@ -61,7 +67,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
      */
     protected abstract MessageFormatter getDefaultFormatter();
 
-    protected MessageExchange<C> getExchange() {
+    protected MidDeliveryMessageExchange<C> getExchange() {
         return this.exchange;
     }
 
@@ -147,25 +153,30 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
         return this.getConsumerManager().stopMeasuring(id);
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MidDeliveryMessageCondition<C> condition) {
-        return this.exchange.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
+        return this.waitFor(condition, -1, TimeUnit.SECONDS);
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MidDeliveryMessageCondition<C> condition, final long timeout, final TimeUnit unit) {
-        if (timeout < 1) {
-            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
+        if (this.exchange != null) {
+            throw new IllegalStateException("Already waiting.");
         }
-        return this.exchange.waitForMessage(condition, timeout, unit);
+        try {
+            final MidDeliveryMessageExchange<C> exchange = new MidDeliveryMessageExchange<C>(condition);
+            final Future<Message> future = AbstractCommonFollower.EXECUTOR.submit(exchange);
+            this.exchange = exchange;
+            if (timeout < 1) {
+                return future.get();
+            } else {
+                return future.get(timeout, unit);
+            }
+        } catch (final Exception e) {
+            return null;
+        } finally {
+            this.exchange = null;
+        }
     }
 
     @Override
