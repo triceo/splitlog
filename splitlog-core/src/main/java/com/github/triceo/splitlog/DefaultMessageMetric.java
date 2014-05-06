@@ -2,6 +2,8 @@ package com.github.triceo.splitlog;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -13,12 +15,15 @@ import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.exchanges.MeasuringMessageExchange;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S> {
 
-    private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private MeasuringMessageExchange<T, S> exchange;
     private final MessageMeasure<T, S> measure;
     private final S source;
+
     private final SortedMap<Long, Pair<Long, T>> stats = new TreeMap<Long, Pair<Long, T>>();
 
     public DefaultMessageMetric(final S source, final MessageMeasure<T, S> measure) {
@@ -93,7 +98,9 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         }
         final T newValue = this.measure.update(this, msg, status, source);
         this.stats.put(msg.getUniqueId(), ImmutablePair.of(this.getMessageCount() + 1, newValue));
-        this.exchange.messageReceived(msg, status, source);
+        if (this.exchange != null) {
+            this.exchange.messageReceived(msg, status, source);
+        }
     }
 
     @Override
@@ -116,25 +123,36 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         return builder.toString();
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition) {
-        return this.exchange.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
+        if (this.exchange != null) {
+            throw new IllegalStateException("Already waiting.");
+        }
+        this.exchange = new MeasuringMessageExchange<T, S>(this, condition);
+        try {
+            return DefaultMessageMetric.EXECUTOR.submit(this.exchange).get();
+        } catch (final Exception e) {
+            return null;
+        } finally {
+            this.exchange = null;
+        }
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition, final long timeout, final TimeUnit unit) {
         if (timeout < 1) {
             throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
+        } else if (this.exchange != null) {
+            throw new IllegalStateException("Already waiting.");
         }
-        return this.exchange.waitForMessage(condition, timeout, unit);
+        this.exchange = new MeasuringMessageExchange<T, S>(this, condition);
+        try {
+            return DefaultMessageMetric.EXECUTOR.submit(this.exchange).get(timeout, unit);
+        } catch (final Exception e) {
+            return null;
+        } finally {
+            this.exchange = null;
+        }
     }
 
 }
