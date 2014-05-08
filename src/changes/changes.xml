@@ -1,0 +1,28 @@
+<document xmlns="http://maven.apache.org/changes/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/xsd/changes-1.0.0.xsd">
+  <properties>
+    <title>Splitlog Changelog</title>
+    <author email="lukas@petrovicky.net">Lukáš Petrovický</author>
+  </properties>
+  <body> <!-- Features first, then bugfixes, then updates. -->
+    <release version="1.6.0" date="2014-05-19" description="Documentation! Also, non-blocking wait, metrics on merges, fixes for app servers.">
+      <action issue="46" dev="triceo" type="add">
+        Splitlog now boasts shiny new user documentation! 
+      </action>
+      <action issue="50" dev="triceo" type="add">
+        Follower and Metric now support multiple non-blocking waiting. 
+      </action>
+      <action issue="43" dev="triceo" type="add">
+        MergingFollower now supports metrics and is back on par with Follower, feature-wise. 
+      </action>
+      <action issue="42" dev="triceo" type="fix">
+        Splitlog logging is now disabled by default. This will prevent endless feedback loops when Splitlog is deployed 
+        within a web app.
+      </action>
+      <action issue="49" dev="triceo" type="update">
+        LogWatchBuilder becomes part of the public API. 
+      </action>
+    </release>
+  </body>
+</document>
