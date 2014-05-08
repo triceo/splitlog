@@ -23,12 +23,14 @@ Callable<Message> {
      * until {@link #call()} has been called.
      */
     private boolean isBlocking = false;
+    private final AbstractMessageExchangeManager<S, C> manager;
     private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
 
-    protected AbstractMessageExchange(final C condition) {
+    protected AbstractMessageExchange(final AbstractMessageExchangeManager<S, C> exchange, final C condition) {
         if (condition == null) {
             throw new IllegalArgumentException("Must provide condition.");
         }
+        this.manager = exchange;
         this.blockingCondition = condition;
     }
 
@@ -42,6 +44,7 @@ Callable<Message> {
         } catch (final InterruptedException e) {
             return null;
         } finally { // just in case
+            this.manager.unsetExpectation(this);
             AbstractMessageExchange.LOGGER.info("Thread unblocked.");
         }
     }

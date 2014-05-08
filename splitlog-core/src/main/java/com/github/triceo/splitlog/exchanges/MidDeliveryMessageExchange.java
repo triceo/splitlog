@@ -8,8 +8,9 @@ import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 final class MidDeliveryMessageExchange<S extends MessageProducer<S>> extends
         AbstractMessageExchange<MidDeliveryMessageCondition<S>, S> {
 
-    public MidDeliveryMessageExchange(final MidDeliveryMessageCondition<S> condition) {
-        super(condition);
+    public MidDeliveryMessageExchange(final MidDeliveryMessageExchangeManager<S> manager,
+        final MidDeliveryMessageCondition<S> condition) {
+        super(manager, condition);
     }
 
     @Override

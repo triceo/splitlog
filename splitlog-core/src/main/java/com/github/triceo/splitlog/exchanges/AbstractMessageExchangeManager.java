@@ -54,4 +54,8 @@ abstract class AbstractMessageExchangeManager<P extends MessageProducer<P>, C> i
         return true;
     }
 
+    protected synchronized boolean unsetExpectation(final AbstractMessageExchange<C, P> exchange) {
+        return this.exchanges.remove(exchange);
+    }
+
 }

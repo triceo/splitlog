@@ -11,8 +11,9 @@ final class MeasuringMessageExchange<T extends Number, S extends MessageProducer
 
     private final MessageMetric<T, S> metric;
 
-    public MeasuringMessageExchange(final MessageMetric<T, S> metric, final MessageMetricCondition<T, S> condition) {
-        super(condition);
+    public MeasuringMessageExchange(final MeasuringMessageExchangeManager<T, S> manager,
+            final MessageMetric<T, S> metric, final MessageMetricCondition<T, S> condition) {
+        super(manager, condition);
         this.metric = metric;
     }
 
