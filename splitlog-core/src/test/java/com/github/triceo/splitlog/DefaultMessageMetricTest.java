@@ -1,9 +1,6 @@
 package com.github.triceo.splitlog;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.api.Assertions;
@@ -35,8 +32,6 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
     };
 
     private static final MessageBuilder MESSAGE = new MessageBuilder("test");
-
-    private final ScheduledExecutorService e = Executors.newScheduledThreadPool(1);
 
     @Test
     public void testGetMeasure() {
@@ -83,34 +78,24 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(metric.getValue()).isEqualTo(1);
         metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getValue()).isEqualTo(3);
-        final Future<Message> expected = this.e.schedule(new Callable<Message>() {
-
-            @Override
-            public Message call() throws Exception {
-                // this message will only increase the metric
-                metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
-                        watch);
-                // this message will put metric over threshold
-                final Message m = DefaultMessageMetricTest.MESSAGE.buildFinal();
-                metric.messageReceived(m, MessageDeliveryStatus.ACCEPTED, watch);
-                // and this message will, once again, do nothing; nothing else
-                // is waiting
-                metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED,
-                        watch);
-                return m;
-            }
-
-        }, 1, TimeUnit.SECONDS);
-        final Message result = metric.waitFor(new MessageMetricCondition<Integer, LogWatch>() {
+        // prepare the waiting
+        final Future<Message> result = metric.expect(new MessageMetricCondition<Integer, LogWatch>() {
 
             @Override
             public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
                 return evaluate.getValue() == 7;
             }
 
-        }, 10, TimeUnit.SECONDS);
+        });
+        // this message will only increase the metric
+        metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
+        // this message will put metric over threshold
+        final Message expected = DefaultMessageMetricTest.MESSAGE.buildFinal();
+        metric.messageReceived(expected, MessageDeliveryStatus.ACCEPTED, watch);
+        // and this message will, once again, do nothing; no one is waiting
+        metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
         try {
-            Assertions.assertThat(result).isEqualTo(expected.get());
+            Assertions.assertThat(result.get(10, TimeUnit.SECONDS)).isEqualTo(expected);
         } catch (final Exception e1) {
             Assertions.fail("Metric condition not triggered.", e1);
         }

@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.api.Assertions;
 import org.junit.After;
@@ -55,12 +57,12 @@ public abstract class DefaultFollowerBaseTest {
         return Arrays.asList(new Object[][] {
                 { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()) },
                 { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
-                        .closingAfterReading()
+                    .closingAfterReading()
                     .ignoringPreexistingContent() },
-                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                    { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
                         .closingAfterReading() },
-                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
-                        .ignoringPreexistingContent() } });
+                        { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                            .ignoringPreexistingContent() } });
     }
 
     protected static File getTempFile() {
@@ -68,6 +70,18 @@ public abstract class DefaultFollowerBaseTest {
             return File.createTempFile("splitlog-", ".log");
         } catch (final IOException e) {
             throw new IllegalStateException("Cannot create temp files.", e);
+        }
+    }
+
+    public static Message wrapWaiting(final Future<Message> message) {
+        return DefaultFollowerBaseTest.wrapWaiting(message, 1, TimeUnit.MINUTES);
+    }
+
+    public static Message wrapWaiting(final Future<Message> message, final long timeout, final TimeUnit unit) {
+        try {
+            return message.get(timeout, unit);
+        } catch (final Exception e) {
+            return null;
         }
     }
 

@@ -2,7 +2,6 @@ package com.github.triceo.splitlog;
 
 import java.util.HashMap;
 import java.util.Random;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -52,20 +51,15 @@ public class WaitingTest extends DefaultFollowerBaseTest {
             final String expectedValue = "<"
                     + ((i == 0) ? String.valueOf(WaitingTest.TOTAL_MESSAGES - 1) : String.valueOf(random
                             .nextInt(WaitingTest.TOTAL_MESSAGES))) + ">";
-            final Future<Message> task = this.es.submit(new Callable<Message>() {
+            final Follower f = this.getLogWatch().startFollowing();
+            final Future<Message> task = f.expect(new MidDeliveryMessageCondition<LogWatch>() {
+
                 @Override
-                public Message call() {
-                    final Follower follower = WaitingTest.this.getLogWatch().startFollowing();
-                    return follower.waitFor(new MidDeliveryMessageCondition<LogWatch>() {
-
-                        @Override
-                        public boolean accept(final Message evaluate, final MessageDeliveryStatus status,
-                            final LogWatch source) {
-                            return evaluate.getLines().get(0).endsWith(expectedValue);
-                        }
-
-                    }, WaitingTest.TIMEOUT_MILLIS / 2, TimeUnit.MILLISECONDS);
+                public boolean accept(final Message evaluate, final MessageDeliveryStatus status,
+                    final LogWatch source) {
+                    return evaluate.getLines().get(0).endsWith(expectedValue);
                 }
+
             });
             tasks.put(task, expectedValue);
         }

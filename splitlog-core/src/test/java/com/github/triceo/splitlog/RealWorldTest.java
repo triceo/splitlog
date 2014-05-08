@@ -122,14 +122,15 @@ public class RealWorldTest {
             Assertions.fail("Failed copying file.", e);
         }
         // we expect 65 INFO messages...
-        final Message lastInfoInFirstBatch = nonWarning.waitFor(new MessageMetricCondition<Integer, LogWatch>() {
+        final Message lastInfoInFirstBatch = DefaultFollowerBaseTest.wrapWaiting(
+                nonWarning.expect(new MessageMetricCondition<Integer, LogWatch>() {
 
-            @Override
-            public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                return evaluate.getValue() == 65;
-            }
+                    @Override
+                    public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
+                        return evaluate.getValue() == 65;
+                    }
 
-        }, RealWorldTest.BASE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                }), RealWorldTest.BASE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Assertions.assertThat(lastInfoInFirstBatch).isNotNull();
         // ... no ERRORs
         Assertions.assertThat(errors.getValue()).isEqualTo(0);
@@ -150,26 +151,28 @@ public class RealWorldTest {
             Assertions.fail("Couldn't append into the test file.", ex);
         }
         // expect 20 errors...
-        final Message lastError = errors.waitFor(new MessageMetricCondition<Integer, LogWatch>() {
+        final Message lastError = DefaultFollowerBaseTest.wrapWaiting(
+                nonWarning.expect(new MessageMetricCondition<Integer, LogWatch>() {
 
-            @Override
-            public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                return evaluate.getValue() == 20;
-            }
+                    @Override
+                    public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
+                        return evaluate.getValue() == 20;
+                    }
 
-        }, RealWorldTest.BASE_TIMEOUT_SECONDS * 5, TimeUnit.SECONDS);
+                }), RealWorldTest.BASE_TIMEOUT_SECONDS * 5, TimeUnit.SECONDS);
         Assertions.assertThat(lastError).isNotNull();
         Assertions.assertThat(lastError.getUniqueId()).isEqualTo(2599);
         // wait for the last message
         final int lastMessageId = 2672;
-        final Message lastMessageInSecondBatch = onlyLastBatch.waitFor(new MidDeliveryMessageCondition<LogWatch>() {
+        final Message lastMessageInSecondBatch = DefaultFollowerBaseTest.wrapWaiting(
+                onlyLastBatch.expect(new MidDeliveryMessageCondition<LogWatch>() {
 
-            @Override
-            public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                return ((status == MessageDeliveryStatus.INCOMING) && (evaluate.getUniqueId() == lastMessageId));
-            }
+                    @Override
+                    public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
+                        return ((status == MessageDeliveryStatus.INCOMING) && (evaluate.getUniqueId() == lastMessageId));
+                    }
 
-        });
+                }));
         Assertions.assertThat(lastMessageInSecondBatch).isNotNull();
         Assertions.assertThat(lastMessageInSecondBatch.getUniqueId()).isEqualTo(lastMessageId);
         Assertions.assertThat(bothBatches.getMessages()).hasSize(lastMessageId - 2);
