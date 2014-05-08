@@ -1,9 +1,8 @@
 package com.github.triceo.splitlog;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.input.Tailer;
@@ -23,19 +22,16 @@ final class LogWatchTailingManager {
 
     private final int bufferSize;
     private final long delayBetweenReads;
-    private final long delayedTailerStartInMilliseconds;
-    private final ScheduledExecutorService e = Executors.newScheduledThreadPool(1);
+    private final ExecutorService e = Executors.newFixedThreadPool(1);
     private final AtomicInteger numberOfTimesThatTailerWasStarted = new AtomicInteger(0);
     private final boolean reopenBetweenReads, ignoreExistingContent;
-    private ScheduledFuture<?> tailer;
+    private Future<?> tailer;
     private final DefaultLogWatch watch;
 
-    public LogWatchTailingManager(final DefaultLogWatch watch, final long delayBetweenReads,
-        final long delayForTailerStart, final boolean readFromEnd, final boolean reopenBetweenReads,
-        final int bufferSize) {
+    public LogWatchTailingManager(final DefaultLogWatch watch, final long delayBetweenReads, final boolean readFromEnd,
+        final boolean reopenBetweenReads, final int bufferSize) {
         this.watch = watch;
         this.delayBetweenReads = delayBetweenReads;
-        this.delayedTailerStartInMilliseconds = delayForTailerStart;
         this.bufferSize = bufferSize;
         this.reopenBetweenReads = reopenBetweenReads;
         this.ignoreExistingContent = readFromEnd;
@@ -49,29 +45,16 @@ final class LogWatchTailingManager {
      * Start the tailer on a separate thread. Only when a tailer is running can
      * {@link Follower}s be notified of new {@link Message}s from the log.
      *
-     * @param needsToWait
-     *            Whether the start of the tailer needs to be delayed by
-     *            {@link #delayedTailerStartInMilliseconds} milliseconds, as
-     *            explained in
-     *            {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
      * @return True if the start was scheduled, false if scheduled already.
      */
-    public boolean start(final boolean needsToWait) {
+    public boolean start() {
         if (this.isRunning()) {
-            LogWatchTailingManager.LOGGER.debug("Tailer already running, therefore not starting.");
             return false;
         }
         final Tailer t = new Tailer(this.watch.getWatchedFile(), new LogWatchTailerListener(this.watch),
                 this.delayBetweenReads, this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
-        final long delay = needsToWait ? this.delayedTailerStartInMilliseconds : 0;
-        this.tailer = this.e.schedule(t, delay, TimeUnit.MILLISECONDS);
-        if (this.numberOfTimesThatTailerWasStarted.getAndIncrement() == 0) {
-            LogWatchTailingManager.LOGGER.info("Scheduling log tailer for {} with delay of {} milliseconds.",
-                    this.watch, delay);
-        } else {
-            LogWatchTailingManager.LOGGER.info("Re-scheduling log tailer for {} with delay of {} milliseconds.",
-                    this.watch, delay);
-        }
+        this.tailer = this.e.submit(t);
+        LogWatchTailingManager.LOGGER.info("Started tailer for {}.", this.watch);
         return true;
     }
 
@@ -92,28 +75,6 @@ final class LogWatchTailingManager {
         LogWatchTailingManager.LOGGER.info(
                 "Terminated log tailer for {} as the last known Follower has just been terminated.", this.watch);
         return true;
-    }
-
-    /**
-     * Block the current thread until the tailer has finished starting. Delayed
-     * starts are a possibility with {@link #start(boolean)}.
-     */
-    public void waitUntilStarted() {
-        long remainingDelay = Long.MAX_VALUE;
-        // the tailer may have a delayed start; wait until it actually started
-        while (remainingDelay > 0) {
-            remainingDelay = this.tailer.getDelay(TimeUnit.MILLISECONDS) + 1;
-            if (remainingDelay < 0) {
-                continue;
-            }
-            try {
-                LogWatchTailingManager.LOGGER.debug("Will wait further {} milliseconds for tailer to be started.",
-                        remainingDelay);
-                Thread.sleep(remainingDelay);
-            } catch (final InterruptedException e) {
-                // do nothing
-            }
-        }
     }
 
     private boolean willReadFromEnd() {

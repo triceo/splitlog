@@ -2,6 +2,7 @@ package com.github.triceo.splitlog.api;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -14,7 +15,19 @@ import java.util.concurrent.TimeUnit;
  * the follower and not notify anyone.
  */
 public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends
-        MessageProducer<P>, MessageConsumer<C> {
+MessageProducer<P>, MessageConsumer<C> {
+
+    /**
+     * Will return a future that will only return when a message arrives that
+     * makes the given condition return true.
+     *
+     * @param condition
+     *            Condition that needs to be true for the future to unblock.
+     * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
+     */
+    Future<Message> expect(MidDeliveryMessageCondition<C> condition);
 
     /**
      * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this
@@ -105,6 +118,7 @@ public interface CommonFollower<P extends MessageProducer<P>, C extends MessageP
      * @throws IllegalStateException
      *             When already {@link #isStopped()}.
      */
+    @Deprecated
     Message waitFor(MidDeliveryMessageCondition<C> condition);
 
     /**
@@ -121,6 +135,7 @@ public interface CommonFollower<P extends MessageProducer<P>, C extends MessageP
      * @throws IllegalStateException
      *             When already {@link #isStopped()}.
      */
+    @Deprecated
     Message waitFor(MidDeliveryMessageCondition<C> condition, long timeout, TimeUnit unit);
 
     /**

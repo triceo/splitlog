@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog.api;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -14,6 +15,18 @@ import java.util.concurrent.TimeUnit;
  *            Where this is getting its {@link Message}s from.
  */
 public interface MessageMetric<T extends Number, S extends MessageProducer<S>> extends MessageConsumer<S> {
+
+    /**
+     * Will return a future that will only return when a message arrives that
+     * makes the given condition return true.
+     *
+     * @param condition
+     *            Condition that needs to be true for the future to unblock.
+     * @return Null if the method unblocked due to some other reason.
+     * @throws IllegalStateException
+     *             When already {@link #isStopped()}.
+     */
+    Future<Message> expect(MessageMetricCondition<T, S> condition);
 
     /**
      * Retrieves the measure that is used to produce the value of this metric.
@@ -83,6 +96,7 @@ public interface MessageMetric<T extends Number, S extends MessageProducer<S>> e
      * @return The message that made the metric pass the condition. Null if the
      *         method unblocked due to some other reason.
      */
+    @Deprecated
     Message waitFor(MessageMetricCondition<T, S> condition);
 
     /**
@@ -98,6 +112,7 @@ public interface MessageMetric<T extends Number, S extends MessageProducer<S>> e
      * @return The message that made the metric pass the condition. Null if the
      *         method unblocked due to some other reason.
      */
+    @Deprecated
     Message waitFor(MessageMetricCondition<T, S> condition, long timeout, TimeUnit unit);
 
 }

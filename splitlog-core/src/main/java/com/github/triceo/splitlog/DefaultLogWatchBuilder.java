@@ -62,8 +62,7 @@ final public class DefaultLogWatchBuilder extends LogWatchBuilder {
         }
         return new DefaultLogWatch(this.getFileToWatch(), splitter, this.getCapacityLimit(), this.getGateCondition(),
                 this.getStorageCondition(), this.getDelayBetweenReads(), this.getDelayBetweenSweeps(),
-                !this.isReadingFromBeginning(), this.isClosingBetweenReads(), this.getReadingBufferSize(),
-                this.getDelayBeforeTailingStarts());
+                !this.isReadingFromBeginning(), this.isClosingBetweenReads(), this.getReadingBufferSize());
     }
 
 }

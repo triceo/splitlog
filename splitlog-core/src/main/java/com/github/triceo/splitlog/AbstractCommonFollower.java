@@ -2,6 +2,7 @@ package com.github.triceo.splitlog;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,6 +19,7 @@ import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
+import com.github.triceo.splitlog.expectations.MidDeliveryExpectationManager;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
 /**
@@ -32,13 +34,14 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * messages.
  */
 abstract class AbstractCommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> implements
-CommonFollower<P, C>, ConsumerRegistrar<P> {
+        CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
+
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 
-    private final MessageExchange<C> exchange = new MessageExchange<C>();
+    private final MidDeliveryExpectationManager<C> expectations = new MidDeliveryExpectationManager<C>();
 
     private final long uniqueId = AbstractCommonFollower.ID_GENERATOR.getAndIncrement();
 
@@ -52,6 +55,11 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
         return this.getConsumerManager().countMetrics();
     }
 
+    @Override
+    public Future<Message> expect(final MidDeliveryMessageCondition<C> condition) {
+        return this.expectations.setExpectation(condition);
+    }
+
     protected abstract ConsumerManager<P> getConsumerManager();
 
     /**
@@ -61,8 +69,8 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
      */
     protected abstract MessageFormatter getDefaultFormatter();
 
-    protected MessageExchange<C> getExchange() {
-        return this.exchange;
+    protected MidDeliveryExpectationManager<C> getExchange() {
+        return this.expectations;
     }
 
     @Override
@@ -125,7 +133,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
     }
 
     protected synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
-            final String id, final boolean checkIfFollowing) {
+        final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }
@@ -147,25 +155,22 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
         return this.getConsumerManager().stopMeasuring(id);
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MidDeliveryMessageCondition<C> condition) {
-        return this.exchange.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
+        try {
+            return this.expect(condition).get();
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MidDeliveryMessageCondition<C> condition, final long timeout, final TimeUnit unit) {
-        if (timeout < 1) {
-            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
+        try {
+            return this.expect(condition).get(timeout, unit);
+        } catch (final Exception e) {
+            return null;
         }
-        return this.exchange.waitForMessage(condition, timeout, unit);
     }
 
     @Override

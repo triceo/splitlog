@@ -211,7 +211,8 @@ public class AbstractCommonFollowerTest extends DefaultFollowerBaseTest {
     public void testWaitForAfterPreviousFailed() {
         final Follower follower = this.getLogWatch().startFollowing();
         // this call will fail, since we're not writing anything
-        final Message noMessage = follower.waitFor(AllFollowerMessagesAcceptingCondition.INSTANCE, 1, TimeUnit.SECONDS);
+        final Message noMessage = DefaultFollowerBaseTest.wrapWaiting(
+                follower.expect(AllFollowerMessagesAcceptingCondition.INSTANCE), 1, TimeUnit.SECONDS);
         Assertions.assertThat(noMessage).isNull();
         // these calls should succeed
         final String message = "test";

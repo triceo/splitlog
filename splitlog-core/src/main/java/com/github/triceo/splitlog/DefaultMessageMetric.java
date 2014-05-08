@@ -2,6 +2,7 @@ package com.github.triceo.splitlog;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -13,12 +14,14 @@ import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.expectations.MetricExpectationManager;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S> {
 
-    private final MessageMetricExchange<T, S> exchange = new MessageMetricExchange<T, S>(this);
+    private final MetricExpectationManager<T, S> expectations = new MetricExpectationManager<T, S>(this);
     private final MessageMeasure<T, S> measure;
     private final S source;
+
     private final SortedMap<Long, Pair<Long, T>> stats = new TreeMap<Long, Pair<Long, T>>();
 
     public DefaultMessageMetric(final S source, final MessageMeasure<T, S> measure) {
@@ -29,6 +32,11 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         }
         this.source = source;
         this.measure = measure;
+    }
+
+    @Override
+    public Future<Message> expect(final MessageMetricCondition<T, S> condition) {
+        return this.expectations.setExpectation(condition);
     }
 
     @Override
@@ -93,11 +101,17 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         }
         final T newValue = this.measure.update(this, msg, status, source);
         this.stats.put(msg.getUniqueId(), ImmutablePair.of(this.getMessageCount() + 1, newValue));
-        this.exchange.messageReceived(msg, status, source);
+        if (this.expectations != null) {
+            this.expectations.messageReceived(msg, status, source);
+        }
     }
 
     @Override
     public boolean stop() {
+        if (this.isStopped()) {
+            return false;
+        }
+        this.expectations.stop();
         return this.getSource().stopMeasuring(this);
     }
 
@@ -116,25 +130,22 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         return builder.toString();
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition) {
-        return this.exchange.waitForMessage(condition, -1, TimeUnit.NANOSECONDS);
+        try {
+            return this.expect(condition).get();
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
-    /**
-     * Will throw an exception if any other thread tries to specify a wait on
-     * the instance while another thread is already waiting.
-     */
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition, final long timeout, final TimeUnit unit) {
-        if (timeout < 1) {
-            throw new IllegalArgumentException("Waiting time must be great than 0, but was: " + timeout + " " + unit);
+        try {
+            return this.expect(condition).get(timeout, unit);
+        } catch (final Exception e) {
+            return null;
         }
-        return this.exchange.waitForMessage(condition, timeout, unit);
     }
 
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
@@ -70,14 +72,14 @@ final class DefaultLogWatch implements LogWatch {
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
-            final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
-            final boolean reopenBetweenReads, final int bufferSize, final long delayForTailerStart) {
+        final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
+        final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
+        final boolean reopenBetweenReads, final int bufferSize) {
         this.splitter = splitter;
         this.gateCondition = gateCondition;
         this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
-        this.tailing = new LogWatchTailingManager(this, delayBetweenReads, delayForTailerStart, ignoreExistingContent,
-                reopenBetweenReads, bufferSize);
+        this.tailing = new LogWatchTailingManager(this, delayBetweenReads, ignoreExistingContent, reopenBetweenReads,
+                bufferSize);
         this.sweeping = new LogWatchSweepingManager(this.storage, delayBetweenSweeps);
         this.watchedFile = watchedFile;
     }
@@ -278,28 +280,36 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> consumer) {
         final MessageConsumer<LogWatch> result = this.consumers.startConsuming(consumer);
-        this.startTailingIfNecessary(false);
+        this.tailing.start();
         return result;
     }
 
     @Override
-    public synchronized Follower startFollowing() {
-        final Follower f = this.startFollowingActually(false);
-        this.tailing.waitUntilStarted();
-        return f;
+    public Follower startFollowing() {
+        return this.startFollowingActually(null).getKey();
     }
 
     @Override
-    public synchronized Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor) {
-        final Follower f = this.startFollowingActually(true);
-        return ImmutablePair.of(f, f.waitFor(waitFor));
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor) {
+        final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
+        final Follower f = pair.getKey();
+        try {
+            return ImmutablePair.of(f, pair.getValue().get());
+        } catch (final Exception e) {
+            return ImmutablePair.of(f, null);
+        }
     }
 
     @Override
-    public synchronized Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
-        final long howLong, final TimeUnit unit) {
-        final Follower f = this.startFollowingActually(true);
-        return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
+    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
+            final long howLong, final TimeUnit unit) {
+        final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
+        final Follower f = pair.getKey();
+        try {
+            return ImmutablePair.of(f, pair.getValue().get(howLong, unit));
+        } catch (final Exception e) {
+            return ImmutablePair.of(f, null);
+        }
     }
 
     /**
@@ -308,7 +318,8 @@ final class DefaultLogWatch implements LogWatch {
      *        in {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
      * @return The follower that follows this log watch from now on.
      */
-    private synchronized Follower startFollowingActually(final boolean needsToWait) {
+    private synchronized Pair<Follower, Future<Message>> startFollowingActually(
+            final MidDeliveryMessageCondition<LogWatch> condition) {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
@@ -322,11 +333,19 @@ final class DefaultLogWatch implements LogWatch {
         }
         // register the follower
         final Follower follower = new DefaultFollower(this, pairs);
+        final Future<Message> expectation = condition == null ? null : follower.expect(condition);
         this.consumers.registerConsumer(follower);
         this.storage.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
-        this.startTailingIfNecessary(needsToWait);
-        return follower;
+        this.tailing.start();
+        return ImmutablePair.of(follower, expectation);
+    }
+
+    @Override
+    public Pair<Follower, Future<Message>> startFollowingWithExpectation(
+            final MidDeliveryMessageCondition<LogWatch> waitFor) {
+        final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
+        return ImmutablePair.of(pair.getKey(), pair.getValue());
     }
 
     @Override
@@ -347,18 +366,8 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
-        final String id) {
+            final String id) {
         return this.consumers.startMeasuring(measure, id);
-    }
-
-    private synchronized void startTailingIfNecessary(final boolean needsToWait) {
-        if (this.tailing.isRunning()) {
-            return;
-        }
-        if (this.consumers.countConsumers() > 0) {
-            // we have listeners, let's start tailing
-            this.tailing.start(needsToWait);
-        }
     }
 
     @Override

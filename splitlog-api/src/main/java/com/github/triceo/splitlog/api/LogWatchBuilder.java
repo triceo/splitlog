@@ -22,17 +22,12 @@ import java.util.concurrent.TimeUnit;
  * <dt>Interval between two sweeps for unreachable messages.</dt>
  * <dd>See {@link #DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS}.</dd>
  * <dt>Interval between requesting tailing and the actual start of tailing.</dt>
- * <dd>See {@link #DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS}. Please see
- * {@link #withDelayBeforeTailingStarts(int, TimeUnit)} for an explanation of
- * why this is necessary.</dd>
  * </dl>
  *
  * By default, the instance will store (and notify of) every message that has
  * passed the {@link #getGateCondition()} and not do so for all others.
  */
 public abstract class LogWatchBuilder {
-
-    public static final long DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS = 5;
 
     public static final long DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS = 1000;
     public static final long DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS = 60 * 1000;
@@ -75,7 +70,6 @@ public abstract class LogWatchBuilder {
 
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
     private boolean closingBetweenReads;
-    private long delayBeforeTailingStarts = LogWatchBuilder.DEFAULT_DELAY_BEFORE_TAILING_IN_MILLISECONDS;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
     private long delayBetweenSweeps = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_SWEEPS_IN_MILLISECONDS;
     private File fileToWatch;
@@ -155,18 +149,6 @@ public abstract class LogWatchBuilder {
      */
     public int getCapacityLimit() {
         return this.limitCapacityTo;
-    }
-
-    /**
-     * Get the delay between the request for starting tailing and the actual
-     * start of tailing. Please see
-     * {@link #withDelayBeforeTailingStarts(int, TimeUnit)} for an explanation
-     * of why this is necessary.
-     *
-     * @return In milliseconds.
-     */
-    public long getDelayBeforeTailingStarts() {
-        return this.delayBeforeTailingStarts;
     }
 
     /**
@@ -271,9 +253,9 @@ public abstract class LogWatchBuilder {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [bufferSize=").append(this.bufferSize).append(", closingBetweenReads=")
-        .append(this.closingBetweenReads).append(", delayBeforeTailingStarts=")
-        .append(this.delayBeforeTailingStarts).append(", delayBetweenReads=").append(this.delayBetweenReads)
-        .append(", delayBetweenSweeps=").append(this.delayBetweenSweeps).append(", ");
+        .append(this.closingBetweenReads).append(", delayBeforeTailingStarts=").append(", delayBetweenReads=")
+        .append(this.delayBetweenReads).append(", delayBetweenSweeps=").append(this.delayBetweenSweeps)
+        .append(", ");
         if (this.fileToWatch != null) {
             builder.append("fileToWatch=").append(this.fileToWatch).append(", ");
         }
@@ -281,7 +263,7 @@ public abstract class LogWatchBuilder {
             builder.append("gateCondition=").append(this.gateCondition).append(", ");
         }
         builder.append("limitCapacityTo=").append(this.limitCapacityTo).append(", readingFromBeginning=")
-        .append(this.readingFromBeginning).append(", ");
+                .append(this.readingFromBeginning).append(", ");
         if (this.storageCondition != null) {
             builder.append("storageCondition=").append(this.storageCondition);
         }
@@ -301,28 +283,6 @@ public abstract class LogWatchBuilder {
             throw new IllegalArgumentException("File can not be null.");
         }
         this.fileToWatch = f;
-        return this;
-    }
-
-    /**
-     * Specify the delay between when the log tailing is requested and when it
-     * is actually started.
-     *
-     * In order for {@link LogWatch#startFollowing(MidDeliveryMessageCondition)}
-     * to actually work, we need the tailer to start after we are already
-     * waiting. But the waiting will block the thread, making it impossible to
-     * start the tailer. Therefore, we schedule the tailer on a different thread
-     * before we start waiting and we delay the actual execution by this amount,
-     * so that the waiting has time to start.
-     *
-     * @param length
-     *            Length of time.
-     * @param unit
-     *            Unit of that length.
-     * @return This.
-     */
-    public LogWatchBuilder withDelayBeforeTailingStarts(final int length, final TimeUnit unit) {
-        this.delayBeforeTailingStarts = LogWatchBuilder.getDelay(length, unit);
         return this;
     }
 
