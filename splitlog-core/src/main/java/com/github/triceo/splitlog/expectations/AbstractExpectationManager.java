@@ -1,4 +1,4 @@
-package com.github.triceo.splitlog.exchanges;
+package com.github.triceo.splitlog.expectations;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,13 +11,13 @@ import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
 
-abstract class AbstractMessageExchangeManager<P extends MessageProducer<P>, C> implements MessageConsumer<P> {
+abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> implements MessageConsumer<P> {
 
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-    private final Set<AbstractMessageExchange<C, P>> exchanges = new HashSet<AbstractMessageExchange<C, P>>();
+    private final Set<AbstractExpectation<C, P>> exchanges = new HashSet<AbstractExpectation<C, P>>();
     private boolean isStopped = false;
 
-    protected abstract AbstractMessageExchange<C, P> createExpectation(final C condition);
+    protected abstract AbstractExpectation<C, P> createExpectation(final C condition);
 
     @Override
     public boolean isStopped() {
@@ -30,7 +30,7 @@ abstract class AbstractMessageExchangeManager<P extends MessageProducer<P>, C> i
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
-        for (final AbstractMessageExchange<C, P> exchange : this.exchanges) {
+        for (final AbstractExpectation<C, P> exchange : this.exchanges) {
             exchange.messageReceived(message, status, producer);
         }
     }
@@ -39,9 +39,9 @@ abstract class AbstractMessageExchangeManager<P extends MessageProducer<P>, C> i
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
-        final AbstractMessageExchange<C, P> exchange = this.createExpectation(condition);
+        final AbstractExpectation<C, P> exchange = this.createExpectation(condition);
         this.exchanges.add(exchange);
-        return AbstractMessageExchangeManager.EXECUTOR.submit(exchange);
+        return AbstractExpectationManager.EXECUTOR.submit(exchange);
     }
 
     @Override
@@ -54,7 +54,7 @@ abstract class AbstractMessageExchangeManager<P extends MessageProducer<P>, C> i
         return true;
     }
 
-    protected synchronized boolean unsetExpectation(final AbstractMessageExchange<C, P> exchange) {
+    protected synchronized boolean unsetExpectation(final AbstractExpectation<C, P> exchange) {
         return this.exchanges.remove(exchange);
     }
 

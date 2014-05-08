@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
@@ -70,9 +71,9 @@ final class DefaultLogWatch implements LogWatch {
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
-            final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
-            final boolean reopenBetweenReads, final int bufferSize, final long delayForTailerStart) {
+        final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
+        final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
+        final boolean reopenBetweenReads, final int bufferSize, final long delayForTailerStart) {
         this.splitter = splitter;
         this.gateCondition = gateCondition;
         this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
@@ -297,7 +298,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
-        final long howLong, final TimeUnit unit) {
+            final long howLong, final TimeUnit unit) {
         final Follower f = this.startFollowingActually(true);
         return ImmutablePair.of(f, f.waitFor(waitFor, howLong, unit));
     }
@@ -347,7 +348,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
-        final String id) {
+            final String id) {
         return this.consumers.startMeasuring(measure, id);
     }
 

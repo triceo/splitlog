@@ -74,6 +74,7 @@ public interface LogWatch extends MessageProducer<LogWatch> {
      *            Condition to pass to the follower.
      * @return The new follower and the result of the wait call.
      */
+    @Deprecated
     Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition<LogWatch> waitFor);
 
     /**
@@ -91,6 +92,7 @@ public interface LogWatch extends MessageProducer<LogWatch> {
      *            The time unit for the above.
      * @return The new follower and the result of the wait call.
      */
+    @Deprecated
     Pair<Follower, Message> startFollowing(MidDeliveryMessageCondition<LogWatch> waitFor, long howLong, TimeUnit unit);
 
     /**

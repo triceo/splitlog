@@ -14,11 +14,11 @@ import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
-import com.github.triceo.splitlog.exchanges.MeasuringMessageExchangeManager;
+import com.github.triceo.splitlog.expectations.MetricExpectationManager;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S> {
 
-    private final MeasuringMessageExchangeManager<T, S> exchange = new MeasuringMessageExchangeManager<T, S>(this);
+    private final MetricExpectationManager<T, S> expectations = new MetricExpectationManager<T, S>(this);
     private final MessageMeasure<T, S> measure;
     private final S source;
 
@@ -36,7 +36,7 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
 
     @Override
     public Future<Message> expect(final MessageMetricCondition<T, S> condition) {
-        return this.exchange.setExpectation(condition);
+        return this.expectations.setExpectation(condition);
     }
 
     @Override
@@ -101,8 +101,8 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         }
         final T newValue = this.measure.update(this, msg, status, source);
         this.stats.put(msg.getUniqueId(), ImmutablePair.of(this.getMessageCount() + 1, newValue));
-        if (this.exchange != null) {
-            this.exchange.messageReceived(msg, status, source);
+        if (this.expectations != null) {
+            this.expectations.messageReceived(msg, status, source);
         }
     }
 
@@ -111,7 +111,7 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         if (this.isStopped()) {
             return false;
         }
-        this.exchange.stop();
+        this.expectations.stop();
         return this.getSource().stopMeasuring(this);
     }
 

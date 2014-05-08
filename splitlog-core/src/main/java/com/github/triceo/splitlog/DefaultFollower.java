@@ -139,9 +139,11 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
         if (this.isStopped()) {
             return false;
         }
+        DefaultFollower.LOGGER.info("Stopping {}.", this);
         this.getFollowed().stopFollowing(this);
         this.getConsumerManager().stop();
         this.getExchange().stop();
+        DefaultFollower.LOGGER.info("Stopped {}.", this);
         return true;
     }
 

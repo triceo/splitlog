@@ -1,14 +1,14 @@
-package com.github.triceo.splitlog.exchanges;
+package com.github.triceo.splitlog.expectations;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 
-final class MidDeliveryMessageExchange<S extends MessageProducer<S>> extends
-        AbstractMessageExchange<MidDeliveryMessageCondition<S>, S> {
+final class MidDeliveryExpectation<S extends MessageProducer<S>> extends
+        AbstractExpectation<MidDeliveryMessageCondition<S>, S> {
 
-    public MidDeliveryMessageExchange(final MidDeliveryMessageExchangeManager<S> manager,
+    public MidDeliveryExpectation(final MidDeliveryExpectationManager<S> manager,
         final MidDeliveryMessageCondition<S> condition) {
         super(manager, condition);
     }

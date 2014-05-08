@@ -19,7 +19,7 @@ import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
-import com.github.triceo.splitlog.exchanges.MidDeliveryMessageExchangeManager;
+import com.github.triceo.splitlog.expectations.MidDeliveryExpectationManager;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
 /**
@@ -41,7 +41,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 
-    private final MidDeliveryMessageExchangeManager<C> exchange = new MidDeliveryMessageExchangeManager<C>();
+    private final MidDeliveryExpectationManager<C> expectations = new MidDeliveryExpectationManager<C>();
 
     private final long uniqueId = AbstractCommonFollower.ID_GENERATOR.getAndIncrement();
 
@@ -57,7 +57,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     @Override
     public Future<Message> expect(final MidDeliveryMessageCondition<C> condition) {
-        return this.exchange.setExpectation(condition);
+        return this.expectations.setExpectation(condition);
     }
 
     protected abstract ConsumerManager<P> getConsumerManager();
@@ -69,8 +69,8 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
      */
     protected abstract MessageFormatter getDefaultFormatter();
 
-    protected MidDeliveryMessageExchangeManager<C> getExchange() {
-        return this.exchange;
+    protected MidDeliveryExpectationManager<C> getExchange() {
+        return this.expectations;
     }
 
     @Override
