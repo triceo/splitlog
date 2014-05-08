@@ -72,9 +72,9 @@ final class DefaultLogWatch implements LogWatch {
     private final File watchedFile;
 
     protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-            final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
-            final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
-            final boolean reopenBetweenReads, final int bufferSize) {
+        final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
+        final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
+        final boolean reopenBetweenReads, final int bufferSize) {
         this.splitter = splitter;
         this.gateCondition = gateCondition;
         this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
@@ -302,7 +302,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
-        final long howLong, final TimeUnit unit) {
+            final long howLong, final TimeUnit unit) {
         final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
         final Follower f = pair.getKey();
         try {
@@ -319,7 +319,7 @@ final class DefaultLogWatch implements LogWatch {
      * @return The follower that follows this log watch from now on.
      */
     private synchronized Pair<Follower, Future<Message>> startFollowingActually(
-        final MidDeliveryMessageCondition<LogWatch> condition) {
+            final MidDeliveryMessageCondition<LogWatch> condition) {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
@@ -343,7 +343,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public Pair<Follower, Future<Message>> startFollowingWithExpectation(
-        final MidDeliveryMessageCondition<LogWatch> waitFor) {
+            final MidDeliveryMessageCondition<LogWatch> waitFor) {
         final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
         return ImmutablePair.of(pair.getKey(), pair.getValue());
     }
@@ -366,7 +366,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
-        final String id) {
+            final String id) {
         return this.consumers.startMeasuring(measure, id);
     }
 

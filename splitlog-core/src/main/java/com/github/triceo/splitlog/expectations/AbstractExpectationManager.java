@@ -11,6 +11,14 @@ import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
 
+/**
+ * Tracks expectations that are currently active for a given message consumer.
+ *
+ * @param <P>
+ *            The source for the messages.
+ * @param <C>
+ *            The type of condition that the expectations accept.
+ */
 abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> implements MessageConsumer<P> {
 
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
@@ -26,7 +34,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
 
     @Override
     public synchronized void
-        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
@@ -35,6 +43,14 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
         }
     }
 
+    /**
+     * The resulting future will only return after such a message is received
+     * that makes the condition true.
+     *
+     * @param condition
+     *            Condition to be true.
+     * @return The future.
+     */
     public synchronized Future<Message> setExpectation(final C condition) {
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
@@ -54,8 +70,15 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
         return true;
     }
 
-    protected synchronized boolean unsetExpectation(final AbstractExpectation<C, P> exchange) {
-        return this.exchanges.remove(exchange);
+    /**
+     * Stop tracking this expectation. Calls from the internal code only.
+     *
+     * @param expectation
+     *            The expectation to stop.
+     * @return If stopped, false if stopped already.
+     */
+    protected synchronized boolean unsetExpectation(final AbstractExpectation<C, P> expectation) {
+        return this.exchanges.remove(expectation);
     }
 
 }

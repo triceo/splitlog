@@ -34,7 +34,7 @@ import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
  * messages.
  */
 abstract class AbstractCommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> implements
-CommonFollower<P, C>, ConsumerRegistrar<P> {
+        CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
@@ -133,7 +133,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
     }
 
     protected synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
-            final String id, final boolean checkIfFollowing) {
+        final String id, final boolean checkIfFollowing) {
         if (checkIfFollowing && this.isStopped()) {
             throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
         }

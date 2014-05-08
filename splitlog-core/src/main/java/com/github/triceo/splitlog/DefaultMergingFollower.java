@@ -65,7 +65,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     @Override
     public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
-            final MessageComparator order) {
+        final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {

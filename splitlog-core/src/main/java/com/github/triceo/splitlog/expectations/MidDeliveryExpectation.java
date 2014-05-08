@@ -6,10 +6,10 @@ import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 
 final class MidDeliveryExpectation<S extends MessageProducer<S>> extends
-        AbstractExpectation<MidDeliveryMessageCondition<S>, S> {
+AbstractExpectation<MidDeliveryMessageCondition<S>, S> {
 
     public MidDeliveryExpectation(final MidDeliveryExpectationManager<S> manager,
-        final MidDeliveryMessageCondition<S> condition) {
+            final MidDeliveryMessageCondition<S> condition) {
         super(manager, condition);
     }
 

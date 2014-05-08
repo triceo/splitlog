@@ -5,7 +5,7 @@ import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
 
 public final class MetricExpectationManager<T extends Number, P extends MessageProducer<P>> extends
-        AbstractExpectationManager<P, MessageMetricCondition<T, P>> {
+AbstractExpectationManager<P, MessageMetricCondition<T, P>> {
 
     private final MessageMetric<T, P> metric;
 
@@ -15,7 +15,7 @@ public final class MetricExpectationManager<T extends Number, P extends MessageP
 
     @Override
     protected AbstractExpectation<MessageMetricCondition<T, P>, P> createExpectation(
-            final MessageMetricCondition<T, P> condition) {
+        final MessageMetricCondition<T, P> condition) {
         return new MetricExpectation<T, P>(this, this.metric, condition);
     }
 

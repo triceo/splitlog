@@ -11,6 +11,14 @@ import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
+/**
+ * Waits until a {@link Message} arrives that makes a particular condition true.
+ *
+ * @param <C>
+ *            Type of the condition to make true.
+ * @param <S>
+ *            The source to receive the messages from.
+ */
 abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements MessageListener<S>, Callable<Message> {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectation.class);
@@ -32,6 +40,9 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
         this.blockingCondition = condition;
     }
 
+    /**
+     * Will start the wait for the condition to become true.
+     */
     @Override
     public Message call() {
         if (this.latch.getCount() == 0) {
@@ -61,6 +72,18 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
     protected C getBlockingCondition() {
         return this.blockingCondition;
     }
+
+    /**
+     * Whether or not the given condition is true.
+     *
+     * @param msg
+     *            Message that's just arrived.
+     * @param status
+     *            Status of the message.
+     * @param source
+     *            Where the message comes from.
+     * @return True if the thread can unblock.
+     */
     protected abstract boolean isAccepted(final Message msg, final MessageDeliveryStatus status, final S source);
 
     @Override
@@ -70,8 +93,7 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
         if (!this.isAccepted(msg, status, source)) {
             return;
         }
-        AbstractExpectation.LOGGER.debug("Condition passed by message '{}' in state {} from {}.", msg, status,
-                source);
+        AbstractExpectation.LOGGER.debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
         if (this.stash == null) {
             /*
              * if call() hasn't been called yet, and the condition has already
