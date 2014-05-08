@@ -1,7 +1,7 @@
 package com.github.triceo.splitlog.expectations;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.Exchanger;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 
@@ -16,14 +16,13 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectation.class);
 
     private final C blockingCondition;
+    private final CountDownLatch latch = new CountDownLatch(1);
     /**
-     * Will prevent blocking in
-     * {@link #messageReceived(Message, MessageDeliveryStatus, MessageProducer)}
-     * until {@link #call()} has been called.
+     * Whether or not {@link #call()} is in progress.
      */
-    private boolean isBlocking = false;
     private final AbstractExpectationManager<S, C> manager;
-    private final Exchanger<Message> messageExchanger = new Exchanger<Message>();
+
+    private Message stash = null;
 
     protected AbstractExpectation(final AbstractExpectationManager<S, C> manager, final C condition) {
         if (condition == null) {
@@ -35,14 +34,25 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
 
     @Override
     public Message call() {
+        if (this.latch.getCount() == 0) {
+            throw new IllegalStateException("Expectation already triggered.");
+        } else if (this.stash != null) {
+            /*
+             * in case the condition has been triggered before this has been
+             * called, we retrieve the message from the stash.
+             */
+            final Message msg = this.stash;
+            this.stash = null;
+            return msg;
+        }
         try {
             AbstractExpectation.LOGGER.info("Thread blocked waiting for message to pass condition {}.",
                     this.getBlockingCondition());
-            this.isBlocking = true;
-            return this.messageExchanger.exchange(null);
+            this.latch.await();
+            return this.stash;
         } catch (final InterruptedException e) {
             return null;
-        } finally { // just in case
+        } finally {
             this.manager.unsetExpectation(this);
             AbstractExpectation.LOGGER.info("Thread unblocked.");
         }
@@ -51,14 +61,10 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
     protected C getBlockingCondition() {
         return this.blockingCondition;
     }
-
     protected abstract boolean isAccepted(final Message msg, final MessageDeliveryStatus status, final S source);
 
     @Override
-    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
-        if (!this.isBlocking) {
-            return;
-        }
+    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
         AbstractExpectation.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
         // check if the user code accepts the message
         if (!this.isAccepted(msg, status, source)) {
@@ -66,12 +72,18 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
         }
         AbstractExpectation.LOGGER.debug("Condition passed by message '{}' in state {} from {}.", msg, status,
                 source);
-        try {
-            this.isBlocking = false;
-            this.messageExchanger.exchange(msg);
-        } catch (final InterruptedException e) {
-            AbstractExpectation.LOGGER.warn("Failed to notify of message '{}' in state {} from {}.", msg, status,
-                    source, e);
+        if (this.stash == null) {
+            /*
+             * if call() hasn't been called yet, and the condition has already
+             * triggered, stash the message for retrieval when call() is
+             * actually called.
+             */
+            AbstractExpectation.LOGGER.debug("Stashing the message.");
+            this.stash = msg;
+            this.latch.countDown();
+            return;
+        } else {
+            AbstractExpectation.LOGGER.debug("Message already stashed.");
         }
     }
 

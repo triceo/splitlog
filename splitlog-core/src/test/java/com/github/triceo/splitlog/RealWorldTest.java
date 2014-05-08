@@ -152,7 +152,7 @@ public class RealWorldTest {
         }
         // expect 20 errors...
         final Message lastError = DefaultFollowerBaseTest.wrapWaiting(
-                nonWarning.expect(new MessageMetricCondition<Integer, LogWatch>() {
+                errors.expect(new MessageMetricCondition<Integer, LogWatch>() {
 
                     @Override
                     public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
