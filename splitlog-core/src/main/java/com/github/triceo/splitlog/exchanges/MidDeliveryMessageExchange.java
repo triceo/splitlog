@@ -5,7 +5,7 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 
-public final class MidDeliveryMessageExchange<S extends MessageProducer<S>> extends
+final class MidDeliveryMessageExchange<S extends MessageProducer<S>> extends
         AbstractMessageExchange<MidDeliveryMessageCondition<S>, S> {
 
     public MidDeliveryMessageExchange(final MidDeliveryMessageCondition<S> condition) {

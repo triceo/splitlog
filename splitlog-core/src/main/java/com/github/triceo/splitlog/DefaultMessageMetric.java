@@ -2,8 +2,6 @@ package com.github.triceo.splitlog;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -16,12 +14,11 @@ import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
-import com.github.triceo.splitlog.exchanges.MeasuringMessageExchange;
+import com.github.triceo.splitlog.exchanges.MeasuringMessageExchangeManager;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S> {
 
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-    private MeasuringMessageExchange<T, S> exchange;
+    private final MeasuringMessageExchangeManager<T, S> exchange = new MeasuringMessageExchangeManager<T, S>(this);
     private final MessageMeasure<T, S> measure;
     private final S source;
 
@@ -35,6 +32,11 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         }
         this.source = source;
         this.measure = measure;
+    }
+
+    @Override
+    public Future<Message> expect(final MessageMetricCondition<T, S> condition) {
+        return this.exchange.setExpectation(condition);
     }
 
     @Override
@@ -106,6 +108,10 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
 
     @Override
     public boolean stop() {
+        if (this.isStopped()) {
+            return false;
+        }
+        this.exchange.stop();
         return this.getSource().stopMeasuring(this);
     }
 
@@ -126,27 +132,19 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
 
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition) {
-        return this.waitFor(condition, -1, TimeUnit.SECONDS);
+        try {
+            return this.expect(condition).get();
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
     @Override
     public Message waitFor(final MessageMetricCondition<T, S> condition, final long timeout, final TimeUnit unit) {
-        if (this.exchange != null) {
-            throw new IllegalStateException("Already waiting.");
-        }
         try {
-            final MeasuringMessageExchange<T, S> exchange = new MeasuringMessageExchange<T, S>(this, condition);
-            final Future<Message> future = DefaultMessageMetric.EXECUTOR.submit(exchange);
-            this.exchange = exchange;
-            if (timeout < 1) {
-                return future.get();
-            } else {
-                return future.get(timeout, unit);
-            }
+            return this.expect(condition).get(timeout, unit);
         } catch (final Exception e) {
             return null;
-        } finally {
-            this.exchange = null;
         }
     }
 

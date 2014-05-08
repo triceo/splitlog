@@ -2,8 +2,6 @@ package com.github.triceo.splitlog;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,7 +19,7 @@ import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
-import com.github.triceo.splitlog.exchanges.MidDeliveryMessageExchange;
+import com.github.triceo.splitlog.exchanges.MidDeliveryMessageExchangeManager;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
 /**
@@ -40,11 +38,10 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
     private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 
-    private MidDeliveryMessageExchange<C> exchange;
+    private final MidDeliveryMessageExchangeManager<C> exchange = new MidDeliveryMessageExchangeManager<C>();
 
     private final long uniqueId = AbstractCommonFollower.ID_GENERATOR.getAndIncrement();
 
@@ -58,6 +55,11 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
         return this.getConsumerManager().countMetrics();
     }
 
+    @Override
+    public Future<Message> expect(final MidDeliveryMessageCondition<C> condition) {
+        return this.exchange.setExpectation(condition);
+    }
+
     protected abstract ConsumerManager<P> getConsumerManager();
 
     /**
@@ -67,7 +69,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
      */
     protected abstract MessageFormatter getDefaultFormatter();
 
-    protected MidDeliveryMessageExchange<C> getExchange() {
+    protected MidDeliveryMessageExchangeManager<C> getExchange() {
         return this.exchange;
     }
 
@@ -155,27 +157,19 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     @Override
     public Message waitFor(final MidDeliveryMessageCondition<C> condition) {
-        return this.waitFor(condition, -1, TimeUnit.SECONDS);
+        try {
+            return this.expect(condition).get();
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
     @Override
     public Message waitFor(final MidDeliveryMessageCondition<C> condition, final long timeout, final TimeUnit unit) {
-        if (this.exchange != null) {
-            throw new IllegalStateException("Already waiting.");
-        }
         try {
-            final MidDeliveryMessageExchange<C> exchange = new MidDeliveryMessageExchange<C>(condition);
-            final Future<Message> future = AbstractCommonFollower.EXECUTOR.submit(exchange);
-            this.exchange = exchange;
-            if (timeout < 1) {
-                return future.get();
-            } else {
-                return future.get(timeout, unit);
-            }
+            return this.expect(condition).get(timeout, unit);
         } catch (final Exception e) {
             return null;
-        } finally {
-            this.exchange = null;
         }
     }
 

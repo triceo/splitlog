@@ -65,7 +65,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     @Override
     public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
-        final MessageComparator order) {
+            final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {
@@ -119,9 +119,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         DefaultMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
-        if (this.getExchange() != null) {
-            this.getExchange().messageReceived(msg, status, source);
-        }
+        this.getExchange().messageReceived(msg, status, source);
         this.getConsumerManager().messageReceived(msg, status, this);
     }
 
@@ -145,6 +143,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
             f.stop();
         }
         this.getConsumerManager().stop();
+        this.getExchange().stop();
         DefaultMergingFollower.LOGGER.info("Stopped {}.", this);
         return true;
     }
