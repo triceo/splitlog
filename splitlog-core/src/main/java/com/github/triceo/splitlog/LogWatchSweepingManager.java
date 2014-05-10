@@ -38,7 +38,7 @@ final class LogWatchSweepingManager {
         this.delayBetweenSweeps = delayBetweenSweeps;
     }
 
-    public boolean isRunning() {
+    public synchronized boolean isRunning() {
         return this.currentlyRunningSweeper != null;
     }
 
@@ -47,7 +47,7 @@ final class LogWatchSweepingManager {
      *
      * @return True is started, false if already running.
      */
-    public boolean start() {
+    public synchronized boolean start() {
         if (this.isRunning()) {
             return false;
         }
@@ -65,7 +65,7 @@ final class LogWatchSweepingManager {
      *
      * @return True if stopped, false if stopped already.
      */
-    public boolean stop() {
+    public synchronized boolean stop() {
         if (!this.isRunning()) {
             return false;
         }
