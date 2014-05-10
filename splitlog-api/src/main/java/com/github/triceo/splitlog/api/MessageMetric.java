@@ -1,32 +1,17 @@
 package com.github.triceo.splitlog.api;
 
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Allows users to track various statistics on classes implementing
- * {@link MessageProducer}. These classes are intended for measuring only,
- * and will therefore not store the {@link Message}s that have passed through
- * them.
+ * {@link MessageProducer}. These classes are intended for measuring only, and
+ * will therefore not store the {@link Message}s that have passed through them.
  *
  * @param <T>
  *            Type of the value that the metric is measuring.
  * @param <S>
  *            Where this is getting its {@link Message}s from.
  */
-public interface MessageMetric<T extends Number, S extends MessageProducer<S>> extends MessageConsumer<S> {
-
-    /**
-     * Will return a future that will only return when a message arrives that
-     * makes the given condition return true.
-     *
-     * @param condition
-     *            Condition that needs to be true for the future to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    Future<Message> expect(MessageMetricCondition<T, S> condition);
+public interface MessageMetric<T extends Number, S extends MessageProducer<S>> extends MessageConsumer<S>,
+SupportsExpectations<S, MessageMetricCondition<T, S>> {
 
     /**
      * Retrieves the measure that is used to produce the value of this metric.
@@ -86,33 +71,5 @@ public interface MessageMetric<T extends Number, S extends MessageProducer<S>> e
      *         metric.
      */
     T getValue(Message timestamp);
-
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return The message that made the metric pass the condition. Null if the
-     *         method unblocked due to some other reason.
-     */
-    @Deprecated
-    Message waitFor(MessageMetricCondition<T, S> condition);
-
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @param timeout
-     *            Time before forcibly aborting.
-     * @param unit
-     *            Unit of time.
-     * @return The message that made the metric pass the condition. Null if the
-     *         method unblocked due to some other reason.
-     */
-    @Deprecated
-    Message waitFor(MessageMetricCondition<T, S> condition, long timeout, TimeUnit unit);
 
 }

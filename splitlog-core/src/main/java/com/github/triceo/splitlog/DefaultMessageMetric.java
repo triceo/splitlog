@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
@@ -36,6 +37,11 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
 
     @Override
     public Future<Message> expect(final MessageMetricCondition<T, S> condition) {
+        return this.expectations.setExpectation(condition);
+    }
+
+    @Override
+    public Future<Message> expect(final MessageMetricCondition<T, S> condition, final MessageAction<S> action) {
         return this.expectations.setExpectation(condition);
     }
 

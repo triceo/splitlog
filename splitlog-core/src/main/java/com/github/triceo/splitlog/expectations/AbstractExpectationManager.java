@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
@@ -25,7 +26,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
     private final Set<AbstractExpectation<C, P>> exchanges = new HashSet<AbstractExpectation<C, P>>();
     private boolean isStopped = false;
 
-    protected abstract AbstractExpectation<C, P> createExpectation(final C condition);
+    protected abstract AbstractExpectation<C, P> createExpectation(final C condition, final MessageAction<P> action);
 
     @Override
     public boolean isStopped() {
@@ -52,10 +53,22 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
      * @return The future.
      */
     public synchronized Future<Message> setExpectation(final C condition) {
+        return this.setExpectation(condition, null);
+    }
+
+    /**
+     * The resulting future will only return after such a message is received
+     * that makes the condition true.
+     *
+     * @param condition
+     *            Condition to be true.
+     * @return The future.
+     */
+    public synchronized Future<Message> setExpectation(final C condition, final MessageAction<P> action) {
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
-        final AbstractExpectation<C, P> exchange = this.createExpectation(condition);
+        final AbstractExpectation<C, P> exchange = this.createExpectation(condition, action);
         this.exchanges.add(exchange);
         return AbstractExpectationManager.EXECUTOR.submit(exchange);
     }

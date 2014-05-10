@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageComparator;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageFormatter;
@@ -58,6 +59,11 @@ abstract class AbstractCommonFollower<P extends MessageProducer<P>, C extends Me
     @Override
     public Future<Message> expect(final MidDeliveryMessageCondition<C> condition) {
         return this.expectations.setExpectation(condition);
+    }
+
+    @Override
+    public Future<Message> expect(final MidDeliveryMessageCondition<C> condition, final MessageAction<C> action) {
+        return this.expectations.setExpectation(condition, action);
     }
 
     protected abstract ConsumerManager<P> getConsumerManager();

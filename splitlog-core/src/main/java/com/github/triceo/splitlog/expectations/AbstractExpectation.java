@@ -6,6 +6,7 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
@@ -23,19 +24,23 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectation.class);
 
+    private final MessageAction<S> action;
     private final C blockingCondition;
     private final CountDownLatch latch = new CountDownLatch(1);
     /**
      * Whether or not {@link #call()} is in progress.
      */
     private final AbstractExpectationManager<S, C> manager;
-
     private Message stash = null;
 
-    protected AbstractExpectation(final AbstractExpectationManager<S, C> manager, final C condition) {
-        if (condition == null) {
+    protected AbstractExpectation(final AbstractExpectationManager<S, C> manager, final C condition,
+            final MessageAction<S> action) {
+        if (manager == null) {
+            throw new IllegalArgumentException("Must provide manager.");
+        } else if (condition == null) {
             throw new IllegalArgumentException("Must provide condition.");
         }
+        this.action = action;
         this.manager = manager;
         this.blockingCondition = condition;
     }
@@ -103,7 +108,14 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
             AbstractExpectation.LOGGER.debug("Stashing the message.");
             this.stash = msg;
             this.latch.countDown();
-            return;
+            if (this.action == null) {
+                return;
+            }
+            try {
+                this.action.execute(msg, source);
+            } catch (final Throwable t) {
+                AbstractExpectation.LOGGER.info("Caught Throwable while executing user action {}.", this.action, t);
+            }
         } else {
             AbstractExpectation.LOGGER.debug("Message already stashed.");
         }

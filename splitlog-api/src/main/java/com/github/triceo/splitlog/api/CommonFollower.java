@@ -2,8 +2,6 @@ package com.github.triceo.splitlog.api;
 
 import java.io.OutputStream;
 import java.util.SortedSet;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Follower's primary function is to allow users to work with their portion of
@@ -14,20 +12,8 @@ import java.util.concurrent.TimeUnit;
  * Alternatively, each {@link Follower#tag(String)} will create a Message within
  * the follower and not notify anyone.
  */
-public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends
-MessageProducer<P>, MessageConsumer<C> {
-
-    /**
-     * Will return a future that will only return when a message arrives that
-     * makes the given condition return true.
-     *
-     * @param condition
-     *            Condition that needs to be true for the future to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    Future<Message> expect(MidDeliveryMessageCondition<C> condition);
+public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends MessageProducer<P>,
+        MessageConsumer<C>, SupportsExpectations<C, MidDeliveryMessageCondition<C>> {
 
     /**
      * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this
@@ -108,35 +94,6 @@ MessageProducer<P>, MessageConsumer<C> {
      *         compose {@link MergingFollower}s.
      */
     MergingFollower mergeWith(MergingFollower f);
-
-    /**
-     * Will block until a message arrives, for which the condition is true.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    @Deprecated
-    Message waitFor(MidDeliveryMessageCondition<C> condition);
-
-    /**
-     * Will block until a message arrives, for which the condition is true. If
-     * none arrives before the timeout, it unblocks anyway.
-     *
-     * @param condition
-     *            Condition that needs to be true for the method to unblock.
-     * @param timeout
-     *            Time before forcibly aborting.
-     * @param unit
-     *            Unit of time.
-     * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
-     */
-    @Deprecated
-    Message waitFor(MidDeliveryMessageCondition<C> condition, long timeout, TimeUnit unit);
 
     /**
      * Will write to a stream the result of {@link #getMessages()}, using a
