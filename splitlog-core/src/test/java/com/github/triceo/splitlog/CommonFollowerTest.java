@@ -13,7 +13,7 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
-import com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
 
 /**
  * This test has a weird name, due to the Abstract thing. But this is so that
@@ -97,7 +97,7 @@ public class CommonFollowerTest extends DefaultFollowerBaseTest {
         final Follower follower = this.getLogWatch().startFollowing();
         // this call will fail, since we're not writing anything
         final Message noMessage = DefaultFollowerBaseTest.wrapWaiting(
-                follower.expect(AllFollowerMessagesAcceptingCondition.INSTANCE), 1, TimeUnit.SECONDS);
+                follower.expect(AllLogWatchMessagesAcceptingCondition.INSTANCE), 1, TimeUnit.SECONDS);
         Assertions.assertThat(noMessage).isNull();
         // these calls should succeed
         final String message = "test";

@@ -19,7 +19,7 @@ import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
-import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingCondition;
 import com.github.triceo.splitlog.expectations.MidDeliveryExpectationManager;
 import com.github.triceo.splitlog.ordering.OriginalOrderingMessageComprator;
 
@@ -38,7 +38,7 @@ abstract class AbstractCommonFollower<P extends MessageProducer<P>, C extends Me
         CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final MessageComparator DEFAULT_COMPARATOR = OriginalOrderingMessageComprator.INSTANCE;
-    private static final SimpleMessageCondition DEFAULT_CONDITION = AllLogWatchMessagesAcceptingCondition.INSTANCE;
+    private static final SimpleMessageCondition DEFAULT_CONDITION = AllFollowerMessagesAcceptingCondition.INSTANCE;
 
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 
