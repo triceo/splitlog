@@ -253,9 +253,8 @@ public abstract class LogWatchBuilder {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("LogWatchBuilder [bufferSize=").append(this.bufferSize).append(", closingBetweenReads=")
-        .append(this.closingBetweenReads).append(", delayBeforeTailingStarts=").append(", delayBetweenReads=")
-        .append(this.delayBetweenReads).append(", delayBetweenSweeps=").append(this.delayBetweenSweeps)
-        .append(", ");
+        .append(this.closingBetweenReads).append(", delayBetweenReads=").append(this.delayBetweenReads)
+        .append(", delayBetweenSweeps=").append(this.delayBetweenSweeps).append(", ");
         if (this.fileToWatch != null) {
             builder.append("fileToWatch=").append(this.fileToWatch).append(", ");
         }
@@ -263,7 +262,7 @@ public abstract class LogWatchBuilder {
             builder.append("gateCondition=").append(this.gateCondition).append(", ");
         }
         builder.append("limitCapacityTo=").append(this.limitCapacityTo).append(", readingFromBeginning=")
-                .append(this.readingFromBeginning).append(", ");
+        .append(this.readingFromBeginning).append(", ");
         if (this.storageCondition != null) {
             builder.append("storageCondition=").append(this.storageCondition);
         }

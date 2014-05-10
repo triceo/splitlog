@@ -12,9 +12,10 @@ import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.AbstractSplitlogTest;
 import com.github.triceo.splitlog.splitters.exceptions.StackTraceLine.Source;
 
-public class ExceptionParserTest {
+public class ExceptionParserTest extends AbstractSplitlogTest {
 
     // FIXME share this in a better way
     public static final Collection<String> parseIntoLines(final InputStream s) {
@@ -120,9 +121,9 @@ public class ExceptionParserTest {
         final CauseLine firstLine = (CauseLine) lines.get(0);
         Assertions.assertThat(firstLine.getClassName()).isEqualTo("java.lang.IllegalStateException");
         Assertions
-                .assertThat(firstLine.getMessage())
-                .isEqualTo(
-                        "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
+        .assertThat(firstLine.getMessage())
+        .isEqualTo(
+                "There is no context available for qualifier org.jboss.arquillian.drone.api.annotation.Default. Available contexts are [].");
         // verify one random stack trace line
         final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(14);
         Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);

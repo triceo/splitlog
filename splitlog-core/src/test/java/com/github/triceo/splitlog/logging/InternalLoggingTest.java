@@ -3,7 +3,9 @@ package com.github.triceo.splitlog.logging;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-public class InternalLoggingTest {
+import com.github.triceo.splitlog.AbstractSplitlogTest;
+
+public class InternalLoggingTest extends AbstractSplitlogTest {
 
     /**
      * Purpose of this test is to make sure that, if the property is not set,

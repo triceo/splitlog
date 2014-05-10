@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingCondition;
 import com.github.triceo.splitlog.splitters.JBossServerLogTailSplitter;
 
 @RunWith(Parameterized.class)
@@ -30,7 +30,7 @@ public class GatingTest extends DefaultFollowerBaseTest {
                 { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()), false },
                 {
                         LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
-                                .withGateCondition(AllLogWatchMessagesAcceptingCondition.INSTANCE), true } });
+                                .withGateCondition(AllFollowerMessagesAcceptingCondition.INSTANCE), true } });
     }
 
     private final boolean isGatingDisabled;

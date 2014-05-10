@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog.expectations;
 
+import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageProducer;
@@ -15,8 +16,8 @@ AbstractExpectationManager<P, MessageMetricCondition<T, P>> {
 
     @Override
     protected AbstractExpectation<MessageMetricCondition<T, P>, P> createExpectation(
-        final MessageMetricCondition<T, P> condition) {
-        return new MetricExpectation<T, P>(this, this.metric, condition);
+            final MessageMetricCondition<T, P> condition, final MessageAction<P> action) {
+        return new MetricExpectation<T, P>(this, this.metric, condition, action);
     }
 
 }

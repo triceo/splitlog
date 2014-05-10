@@ -25,7 +25,7 @@ import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.splitters.JBossServerLogTailSplitter;
 
-public class RealWorldTest {
+public class RealWorldTest extends AbstractSplitlogTest {
 
     /**
      * Each ACCEPTED non-WARNING message will increase the count by 1

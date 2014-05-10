@@ -22,7 +22,7 @@ import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 
-public abstract class DefaultFollowerBaseTest {
+public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
 
     private static final String INITIAL_MESSAGE = "INITIAL";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultFollowerBaseTest.class);

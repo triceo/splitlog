@@ -373,7 +373,11 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
         final boolean result = this.consumers.stopConsuming(consumer);
-        this.stopTailingIfNecessary();
+        if (this.countConsumers() < 1) {
+            DefaultLogWatch.LOGGER.info("Requested stopping the tailer for {}.", this);
+            this.tailing.stop();
+            this.currentlyProcessedMessage = null;
+        }
         return result;
     }
 
@@ -385,10 +389,9 @@ final class DefaultLogWatch implements LogWatch {
         if (this.currentlyProcessedMessage != null) {
             this.handleUndeliveredMessage(follower, this.currentlyProcessedMessage.buildIntermediate(this.splitter));
         }
-        this.consumers.stopConsuming(follower);
+        this.stopConsuming(follower);
         this.storage.followerTerminated(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
-        this.stopTailingIfNecessary();
         return true;
     }
 
@@ -412,16 +415,6 @@ final class DefaultLogWatch implements LogWatch {
         return this.consumers.stopMeasuring(id);
     }
 
-    private synchronized void stopTailingIfNecessary() {
-        if (!this.tailing.isRunning()) {
-            return;
-        }
-        if (this.consumers.countConsumers() == 0) {
-            this.tailing.stop();
-            this.currentlyProcessedMessage = null;
-        }
-    }
-
     /**
      * Invoking this method will cause the running
      * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
@@ -436,6 +429,7 @@ final class DefaultLogWatch implements LogWatch {
         DefaultLogWatch.LOGGER.info("Terminating {}.", this);
         this.isTerminated = true;
         this.consumers.stop();
+        this.tailing.stop();
         this.handingDown.clear();
         this.sweeping.stop();
         this.previousAcceptedMessage = null;

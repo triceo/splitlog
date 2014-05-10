@@ -6,7 +6,7 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.TailSplitter;
-import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
+import com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingCondition;
 import com.github.triceo.splitlog.conditions.SplitlogMessagesRejectingCondition;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
@@ -19,7 +19,7 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  * <dt>Default gating condition</dt>
  * <dd>{@link SplitlogMessagesRejectingCondition}.</dd>
  * <dt>Default storage condition</dt>
- * <dd>{@link AllLogWatchMessagesAcceptingCondition}.</dd>
+ * <dd>{@link AllFollowerMessagesAcceptingCondition}.</dd>
  * </dl>
  *
  */
@@ -30,7 +30,7 @@ final public class DefaultLogWatchBuilder extends LogWatchBuilder {
     public DefaultLogWatchBuilder() {
         super();
         this.withGateCondition(SplitlogMessagesRejectingCondition.INSTANCE);
-        this.withStorageCondition(AllLogWatchMessagesAcceptingCondition.INSTANCE);
+        this.withStorageCondition(AllFollowerMessagesAcceptingCondition.INSTANCE);
     }
 
     @Override

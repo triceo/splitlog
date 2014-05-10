@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog.expectations;
 
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageMetricCondition;
@@ -12,8 +13,8 @@ AbstractExpectation<MessageMetricCondition<T, S>, S> {
     private final MessageMetric<T, S> metric;
 
     public MetricExpectation(final MetricExpectationManager<T, S> manager, final MessageMetric<T, S> metric,
-            final MessageMetricCondition<T, S> condition) {
-        super(manager, condition);
+        final MessageMetricCondition<T, S> condition, final MessageAction<S> action) {
+        super(manager, condition, action);
         this.metric = metric;
     }
 

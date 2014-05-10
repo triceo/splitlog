@@ -12,7 +12,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageSeverity;
 import com.github.triceo.splitlog.api.MessageType;
 
-public class MessageTest {
+public class MessageTest extends AbstractSplitlogTest {
 
     private Message buildMessage(final Collection<String> raw) {
         final List<String> lines = new LinkedList<String>(raw);
