@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageAction;
@@ -22,7 +24,16 @@ import com.github.triceo.splitlog.api.MessageProducer;
  */
 abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> implements MessageConsumer<P> {
 
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
+
+        private final AtomicLong ID_GENERATOR = new AtomicLong(0);
+
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(r, "expectations-" + this.ID_GENERATOR.incrementAndGet());
+        }
+
+    });
     private final Set<AbstractExpectation<C, P>> exchanges = new HashSet<AbstractExpectation<C, P>>();
     private boolean isStopped = false;
 
@@ -35,7 +46,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
 
     @Override
     public synchronized void
-    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }

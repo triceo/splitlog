@@ -3,7 +3,9 @@ package com.github.triceo.splitlog;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
@@ -17,7 +19,16 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 final class LogWatchSweepingManager {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchSweepingManager.class);
-    private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1);
+    private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+
+        private final AtomicLong ID_GENERATOR = new AtomicLong(0);
+
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(r, "sweeping-" + this.ID_GENERATOR.incrementAndGet());
+        }
+
+    });
     private ScheduledFuture<?> currentlyRunningSweeper = null;
     private final long delayBetweenSweeps;
     private final LogWatchStorageManager messaging;

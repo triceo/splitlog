@@ -3,7 +3,9 @@ package com.github.triceo.splitlog;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.input.Tailer;
 import org.slf4j.Logger;
@@ -22,14 +24,23 @@ final class LogWatchTailingManager {
 
     private final int bufferSize;
     private final long delayBetweenReads;
-    private final ExecutorService e = Executors.newFixedThreadPool(1);
+    private final ExecutorService e = Executors.newFixedThreadPool(1, new ThreadFactory() {
+
+        private final AtomicLong ID_GENERATOR = new AtomicLong(0);
+
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(r, "tailing-" + this.ID_GENERATOR.incrementAndGet());
+        }
+
+    });
     private final AtomicInteger numberOfTimesThatTailerWasStarted = new AtomicInteger(0);
     private final boolean reopenBetweenReads, ignoreExistingContent;
     private Future<?> tailer;
     private final DefaultLogWatch watch;
 
     public LogWatchTailingManager(final DefaultLogWatch watch, final long delayBetweenReads, final boolean readFromEnd,
-        final boolean reopenBetweenReads, final int bufferSize) {
+            final boolean reopenBetweenReads, final int bufferSize) {
         this.watch = watch;
         this.delayBetweenReads = delayBetweenReads;
         this.bufferSize = bufferSize;
