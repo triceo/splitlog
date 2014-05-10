@@ -20,7 +20,8 @@ interface SupportsExpectations<S extends MessageProducer<S>, C> {
     /**
      * Will return a future that will only return when a message arrives that
      * makes the given condition return true, at which point it asynchronously
-     * executes a particular action.
+     * executes a particular action. It will not return until that action has
+     * finished executing.
      *
      * @param condition
      *            Condition that needs to be true for the future to unblock.

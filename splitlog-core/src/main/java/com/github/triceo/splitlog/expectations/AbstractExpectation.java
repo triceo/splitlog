@@ -2,6 +2,11 @@ package com.github.triceo.splitlog.expectations;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
@@ -15,6 +20,8 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 /**
  * Waits until a {@link Message} arrives that makes a particular condition true.
  *
+ * FIXME this is some very ugly code
+ *
  * @param <C>
  *            Type of the condition to make true.
  * @param <S>
@@ -22,9 +29,22 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
  */
 abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements MessageListener<S>, Callable<Message> {
 
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
+
+        private final ThreadGroup group = new ThreadGroup("actions");
+        private final AtomicLong nextId = new AtomicLong(0);
+
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(this.group, r, this.group.getName() + "-" + this.nextId.incrementAndGet());
+        }
+
+    });
+
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectation.class);
 
     private final MessageAction<S> action;
+    private Future<Void> actionFuture;
     private final C blockingCondition;
     private final CountDownLatch latch = new CountDownLatch(1);
     /**
@@ -34,7 +54,7 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
     private Message stash = null;
 
     protected AbstractExpectation(final AbstractExpectationManager<S, C> manager, final C condition,
-            final MessageAction<S> action) {
+        final MessageAction<S> action) {
         if (manager == null) {
             throw new IllegalArgumentException("Must provide manager.");
         } else if (condition == null) {
@@ -65,12 +85,23 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
             AbstractExpectation.LOGGER.info("Thread blocked waiting for message to pass condition {}.",
                     this.getBlockingCondition());
             this.latch.await();
+            this.manager.unsetExpectation(this); // don't notify again
+            AbstractExpectation.LOGGER.info("Thread unblocked.");
+            if (this.actionFuture != null) {
+                AbstractExpectation.LOGGER.info("Executing user action.");
+                try {
+                    // wait for the future action to finish
+                    this.actionFuture.get();
+                } catch (final Exception e) {
+                    AbstractExpectation.LOGGER.warn("User action ended abruptly.", e);
+                }
+            }
             return this.stash;
         } catch (final InterruptedException e) {
             return null;
         } finally {
-            this.manager.unsetExpectation(this);
-            AbstractExpectation.LOGGER.info("Thread unblocked.");
+            this.manager.unsetExpectation(this); // in case await() throws
+            AbstractExpectation.LOGGER.info("Expectation processing finished.");
         }
     }
 
@@ -112,7 +143,15 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
                 return;
             }
             try {
-                this.action.execute(msg, source);
+                this.actionFuture = AbstractExpectation.EXECUTOR.submit(new Callable<Void>() {
+
+                    @Override
+                    public Void call() throws Exception {
+                        AbstractExpectation.this.action.execute(msg, source);
+                        return null;
+                    }
+
+                });
             } catch (final Throwable t) {
                 AbstractExpectation.LOGGER.info("Caught Throwable while executing user action {}.", this.action, t);
             }
