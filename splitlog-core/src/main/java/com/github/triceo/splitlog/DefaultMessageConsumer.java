@@ -11,9 +11,51 @@ final class DefaultMessageConsumer<P extends MessageProducer<P>> implements Mess
     private final MessageListener<P> listener;
     private final P producer;
 
-    public DefaultMessageConsumer(final P producer, final MessageListener<P> listener) {
+    public DefaultMessageConsumer(final MessageListener<P> listener, final P producer) {
+        if ((producer == null) || (listener == null)) {
+            throw new IllegalArgumentException("Neither producer nor listener may be null.");
+        }
         this.producer = producer;
         this.listener = listener;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+        final DefaultMessageConsumer<P> other = (DefaultMessageConsumer<P>) obj;
+        if (this.listener == null) {
+            if (other.listener != null) {
+                return false;
+            }
+        } else if (!this.listener.equals(other.listener)) {
+            return false;
+        }
+        if (this.producer == null) {
+            if (other.producer != null) {
+                return false;
+            }
+        } else if (!this.producer.equals(other.producer)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((this.listener == null) ? 0 : this.listener.hashCode());
+        result = (prime * result) + ((this.producer == null) ? 0 : this.producer.hashCode());
+        return result;
     }
 
     @Override

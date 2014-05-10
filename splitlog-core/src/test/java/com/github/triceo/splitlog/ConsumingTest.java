@@ -73,6 +73,20 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
     }
 
     @Test
+    public void testConsumerEquality() {
+        final DefaultLogWatch w = (DefaultLogWatch) this.getLogWatch();
+        final CountingMessageListener<LogWatch> l1 = new CountingMessageListener<LogWatch>();
+        final MessageConsumer<LogWatch> c1 = w.startConsuming(l1);
+        final MessageConsumer<LogWatch> c2 = w.startConsuming(l1);
+        Assertions.assertThat(c2).isSameAs(c1);
+        final CountingMessageListener<LogWatch> l2 = new CountingMessageListener<LogWatch>();
+        final MessageConsumer<LogWatch> c3 = w.startConsuming(l2);
+        final MessageConsumer<LogWatch> c4 = w.startConsuming(l1);
+        Assertions.assertThat(c3).isNotSameAs(c1);
+        Assertions.assertThat(c4).isSameAs(c1);
+    }
+
+    @Test
     public void testStopPropagation1() {
         final LogWatch w = this.getLogWatch();
         final MessageConsumer<LogWatch> c = w.startConsuming(new FailingMessageListener<LogWatch>());

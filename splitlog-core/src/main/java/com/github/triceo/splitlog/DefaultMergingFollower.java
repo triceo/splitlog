@@ -18,6 +18,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.MergingFollower;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageComparator;
@@ -40,10 +41,15 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     protected DefaultMergingFollower(final Follower... followers) {
         DefaultMergingFollower.LOGGER.info("Merging followers into {}.", this);
+        final Set<LogWatch> watches = new HashSet<LogWatch>();
         for (final Follower f : followers) {
             final DefaultFollower af = (DefaultFollower) f;
             this.followers.add(af);
             af.registerConsumer(this);
+            watches.add(af.getFollowed());
+        }
+        if (watches.size() < this.followers.size()) {
+            DefaultMergingFollower.LOGGER.warn("Followers from the same LogWatch, possible message duplication.");
         }
         DefaultMergingFollower.LOGGER.info("Followers merged: {}.", this);
     }
@@ -65,7 +71,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     @Override
     public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
-        final MessageComparator order) {
+            final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {

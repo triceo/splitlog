@@ -20,7 +20,8 @@ interface ConsumerRegistrar<P extends MessageProducer<P>> extends MessageProduce
      *
      * @param consumer
      *            Consumer to register.
+     * @return True if newly registered, false if registered already.
      */
-    void registerConsumer(MessageConsumer<P> consumer);
+    boolean registerConsumer(MessageConsumer<P> consumer);
 
 }

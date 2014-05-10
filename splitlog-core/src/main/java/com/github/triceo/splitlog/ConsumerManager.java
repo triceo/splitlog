@@ -100,12 +100,15 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public synchronized void registerConsumer(final MessageConsumer<P> consumer) {
+    public synchronized boolean registerConsumer(final MessageConsumer<P> consumer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
+        } else if (this.consumers.add(consumer)) {
+            ConsumerManager.LOGGER.info("Registered consumer {} for {}.", consumer, this.producer);
+            return true;
+        } else {
+            return false;
         }
-        this.consumers.add(consumer);
-        ConsumerManager.LOGGER.info("Registered consumer {} for {}.", consumer, this.producer);
     }
 
     @Override
@@ -113,10 +116,22 @@ ConsumerRegistrar<P> {
         if (listener instanceof MessageConsumer<?>) {
             throw new IllegalArgumentException("Cannot consume consumers.");
         }
-        ConsumerManager.LOGGER.info("Starting consuming {} for {}.", listener, this.producer);
-        final MessageConsumer<P> consumer = new DefaultMessageConsumer<P>(this.producer, listener);
-        this.registerConsumer(consumer);
-        return consumer;
+        final MessageConsumer<P> consumer = new DefaultMessageConsumer<P>(listener, this.producer);
+        if (this.registerConsumer(consumer)) {
+            ConsumerManager.LOGGER.info("Registered new consumer {} for {}.", consumer, listener);
+            return consumer;
+        }
+        /*
+         * we know that there is a consumer with the same properties; disregard
+         * the new and return the old instead.
+         */
+        for (final MessageConsumer<P> existing : this.consumers) {
+            if (existing.equals(consumer)) {
+                ConsumerManager.LOGGER.info("Retrieve pre-existing consumer {} for {}.", consumer, listener);
+                return existing;
+            }
+        }
+        throw new IllegalStateException("Unreachable code.");
     }
 
     @Override

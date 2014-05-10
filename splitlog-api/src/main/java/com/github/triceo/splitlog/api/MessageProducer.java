@@ -87,7 +87,9 @@ public interface MessageProducer<P extends MessageProducer<P>> {
      *
      * @param listener
      *            Listener in question.
-     * @return A newly produced consumer.
+     * @return A newly produced consumer in case the listener is submitted for
+     *         the first time, the original consumer instance in case the
+     *         listener is submitted repeatedly.
      * @throws IllegalArgumentException
      *             When <code>listener instanceof {@link MessageConsumer}</code>
      *             .
