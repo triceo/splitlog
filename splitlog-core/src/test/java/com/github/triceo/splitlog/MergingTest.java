@@ -98,33 +98,33 @@ public class MergingTest extends DefaultFollowerBaseTest {
         // send the message; the merged should still contain only the one
         this.getWriter().write("test", f);
         this.getWriter().write("test2", f2);
-        Assertions.assertThat(mf.getMessages().size()).isEqualTo(1);
+        Assertions.assertThat(mf.getMessages()).hasSize(1);
         // add third follower, will only receive the second message
         final Follower f3 = this.getLogWatch().startFollowing();
         this.getWriter().write("test3", f3);
         final MergingFollower mf2 = mf.mergeWith(f3);
         Assertions.assertThat(mf2).isNotEqualTo(mf);
-        Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
-        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(mf.getMessages()).hasSize(2);
+        Assertions.assertThat(mf2.getMessages()).hasSize(2);
         // remove both followers from first merge, verify results
         mf.separate(f);
-        Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(mf.getMessages()).hasSize(2);
         Assertions.assertThat(mf.isStopped()).isFalse();
         Assertions.assertThat(this.getLogWatch().stopFollowing(f2)).isTrue();
         Assertions.assertThat(mf.isStopped()).isTrue(); // no followers are
         // following
-        Assertions.assertThat(mf.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(mf.getMessages()).hasSize(2);
         mf.separate(f2);
         Assertions.assertThat(mf.isStopped()).isTrue(); // no followers are
         // following
-        Assertions.assertThat(mf.getMessages().size()).isEqualTo(0);
+        Assertions.assertThat(mf.getMessages()).hasSize(0);
         // none of these changes should have affected the second merge
-        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(mf2.getMessages()).hasSize(2);
         mf2.separate(f2);
         this.getLogWatch().stopFollowing(f);
-        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(2);
+        Assertions.assertThat(mf2.getMessages()).hasSize(2);
         mf2.separate(f);
-        Assertions.assertThat(mf2.getMessages().size()).isEqualTo(1);
+        Assertions.assertThat(mf2.getMessages()).hasSize(1);
         this.getLogWatch().terminate();
         Assertions.assertThat(mf.isStopped()).isTrue();
     }

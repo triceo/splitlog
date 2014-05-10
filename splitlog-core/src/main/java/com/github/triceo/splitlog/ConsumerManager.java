@@ -101,20 +101,21 @@ ConsumerRegistrar<P> {
 
     @Override
     public synchronized void registerConsumer(final MessageConsumer<P> consumer) {
+        if (this.isStopped()) {
+            throw new IllegalStateException("Consumer manager already stopped.");
+        }
         this.consumers.add(consumer);
         ConsumerManager.LOGGER.info("Registered consumer {} for {}.", consumer, this.producer);
     }
 
     @Override
     public synchronized MessageConsumer<P> startConsuming(final MessageListener<P> listener) {
-        if (this.isStopped()) {
-            throw new IllegalStateException("Consumer manager already stopped.");
-        } else if (listener instanceof MessageConsumer<?>) {
+        if (listener instanceof MessageConsumer<?>) {
             throw new IllegalArgumentException("Cannot consume consumers.");
         }
+        ConsumerManager.LOGGER.info("Starting consuming {} for {}.", listener, this.producer);
         final MessageConsumer<P> consumer = new DefaultMessageConsumer<P>(this.producer, listener);
-        this.consumers.add(consumer);
-        ConsumerManager.LOGGER.info("Added consumer {} for {}.", consumer, this.producer);
+        this.registerConsumer(consumer);
         return consumer;
     }
 

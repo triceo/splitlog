@@ -21,11 +21,12 @@ final class LogWatchSweepingManager {
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchSweepingManager.class);
     private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1, new ThreadFactory() {
 
-        private final AtomicLong ID_GENERATOR = new AtomicLong(0);
+        private final ThreadGroup group = new ThreadGroup("sweeping");
+        private final AtomicLong nextId = new AtomicLong(0);
 
         @Override
         public Thread newThread(final Runnable r) {
-            return new Thread(r, "sweeping-" + this.ID_GENERATOR.incrementAndGet());
+            return new Thread(this.group, r, this.group.getName() + "-" + this.nextId.incrementAndGet());
         }
 
     });

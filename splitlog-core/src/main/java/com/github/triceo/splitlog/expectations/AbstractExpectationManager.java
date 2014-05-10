@@ -26,11 +26,12 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
 
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
 
-        private final AtomicLong ID_GENERATOR = new AtomicLong(0);
+        private final ThreadGroup group = new ThreadGroup("expectations");
+        private final AtomicLong nextId = new AtomicLong(0);
 
         @Override
         public Thread newThread(final Runnable r) {
-            return new Thread(r, "expectations-" + this.ID_GENERATOR.incrementAndGet());
+            return new Thread(this.group, r, this.group.getName() + "-" + this.nextId.incrementAndGet());
         }
 
     });
@@ -46,7 +47,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
 
     @Override
     public synchronized void
-        messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
