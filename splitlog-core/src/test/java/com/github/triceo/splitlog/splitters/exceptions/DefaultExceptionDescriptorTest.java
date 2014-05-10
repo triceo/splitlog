@@ -5,9 +5,10 @@ import java.net.ConnectException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.AbstractSplitlogTest;
 import com.github.triceo.splitlog.api.ExceptionDescriptor;
 
-public class DefaultExceptionDescriptorTest {
+public class DefaultExceptionDescriptorTest extends AbstractSplitlogTest {
 
     private void assertException(final ExceptionDescriptor ex, final String expectedClassName,
         final String expectedMessage) {

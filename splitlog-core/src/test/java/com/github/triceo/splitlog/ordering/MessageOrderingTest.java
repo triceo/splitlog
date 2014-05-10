@@ -11,6 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.triceo.splitlog.AbstractSplitlogTest;
 import com.github.triceo.splitlog.LogWriter;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -18,7 +19,7 @@ import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.splitters.JBossServerLogTailSplitter;
 
-public class MessageOrderingTest {
+public class MessageOrderingTest extends AbstractSplitlogTest {
 
     private static File createTempCopy(final File toCopy) {
         try {
