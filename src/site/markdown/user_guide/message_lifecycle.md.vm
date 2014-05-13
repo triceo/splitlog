@@ -1,0 +1,43 @@
+#parse("header.vm")
+
+$h1 Advanced *Splitlog* Concepts: Message Lifecycle
+
+$h2 Message Delivery Status
+
+Throughout their lifetime, messages will transition between different states. 
+
+```INCOMING```
+: When a line is first read from the watched file, it is converted into a ```Message```. And since each message can span multiple lines, we cannot decide whether a particular line is the last line of the message. Therefore, before we receive the first line of a new message, the current one will be in the ```INCOMING``` state. 
+
+```ACCEPTED```
+: When we have received first line of the new message, the previous one is now finally over and it can transition into ```ACCEPTED``` or ```REJECTED``` state. The message will only become ```REJECTED``` if the ```LogWatch``` is configured to reject it through ```LogWatchBuilder```. Otherwise, it will be ```ACCEPTED``` and stored for future retrieval.
+
+```UNDELIVERED```
+: This state is special. The transition from ```INCOMING``` to ```UNDELIVERED``` will only happen when a ```Follower``` is terminated that is currently processing an ```INCOMING``` message. Only this one ```Follower``` will receive this message with this state.
+
+This has some noteworthy consequences:
+
+* Messages that are ```REJECTED```, ```INCOMING``` or ```UNDELIVERED``` will not be stored. All message consumers will, however, be notified of them.
+* ```Follower```s, as well as their expectations and metrics, will be notified of every messages in any state. However, their ```write()``` and ```getMessages()``` methods will only ever work with messages that have been stored.
+* Unless a line appears in the log that starts a new ```Message```, the previous one will never reach ```ACCEPTED``` state. The latest ```Message``` in the log will therefore always be ```INCOMING```. This is an unfortunate consequence of *Splitlog* not being able to predict the future.
+* More on this can be found in the chapter about [splitting](splitting.html). 
+
+$h2 Consumers and producers
+
+**Message producer** has the capability of notifying a **message consumer** of ```Message```s. Producers and consumers form a tree, where a consumer of one producer may itself be a producer for other consumers. Users are allowed to register their own custom consumers.
+
+```LogWatch``` is the ultimate producer, the root of the tree. ```Follower``` serves as its consumer and as a producer for its metrics or merged followers. Merged follower consumes a ```Follower``` and may pass ```Message```s to its own metrics. However, metrics and expectations are the leaves of this tree.
+
+Consumers can be stopped, after which they will refuse any new message from their producers and they will not pass them on to consumers of their own. In practice, when you stop a ```Follower```, no more expectations will ever return and no metrics will ever trigger.
+
+Whether or not a producer notifies its consumers of the ```Message```s that it has been notified of, that is left to the discretion of the producer. By default, however, no producer provided by the *Splitlog* package will ever swallow a message.
+
+$h3 References
+
+1. [MessageDeliveryStatus Javadoc](../apidocs/com/github/triceo/splitlog/api/MessageDeliveryStatus.html).
+2. [MessageProducer Javadoc](../apidocs/com/github/triceo/splitlog/api/MessageProducer.html).
+3. [MessageConsumer Javadoc](../apidocs/com/github/triceo/splitlog/api/MessageConsumer.html).
+ 
+ #set($page = "message_lifecycle")
+#parse("footer.vm")
+ 
