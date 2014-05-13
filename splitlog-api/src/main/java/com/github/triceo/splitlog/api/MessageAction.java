@@ -17,7 +17,6 @@ public interface MessageAction<S extends MessageProducer<S>> {
      *            Message that triggers the action.
      * @param source
      *            The source of the message.
-     * @return Whatever the operation wants to return, null on failure.
      */
     void execute(final Message message, final S source);
 
