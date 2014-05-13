@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.UUID;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
@@ -115,6 +116,14 @@ public class RealWorldTest extends AbstractSplitlogTest {
         final MessageMetric<Integer, LogWatch> errors = watch.startMeasuring(RealWorldTest.ACCEPTED_ERROR,
                 RealWorldTest.METRIC_ID_2);
         final Follower bothBatches = watch.startFollowing();
+        final Future<Message> expectation = nonWarning.expect(new MessageMetricCondition<Integer, LogWatch>() {
+
+            @Override
+            public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
+                return evaluate.getValue() == 65;
+            }
+
+        });
         try {
             FileUtils.copyInputStreamToFile(RealWorldTest.class.getResourceAsStream("realworld.initial"),
                     watch.getWatchedFile());
@@ -122,15 +131,8 @@ public class RealWorldTest extends AbstractSplitlogTest {
             Assertions.fail("Failed copying file.", e);
         }
         // we expect 65 INFO messages...
-        final Message lastInfoInFirstBatch = DefaultFollowerBaseTest.wrapWaiting(
-                nonWarning.expect(new MessageMetricCondition<Integer, LogWatch>() {
-
-                    @Override
-                    public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                        return evaluate.getValue() == 65;
-                    }
-
-                }), RealWorldTest.BASE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        final Message lastInfoInFirstBatch = DefaultFollowerBaseTest.wrapWaiting(expectation,
+                RealWorldTest.BASE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Assertions.assertThat(lastInfoInFirstBatch).isNotNull();
         // ... no ERRORs
         Assertions.assertThat(errors.getValue()).isEqualTo(0);
