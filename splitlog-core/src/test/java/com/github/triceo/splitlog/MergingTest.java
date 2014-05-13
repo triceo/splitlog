@@ -68,20 +68,28 @@ public class MergingTest extends DefaultFollowerBaseTest {
             Assertions.fail("Couldn't write to file.");
         }
         // and now separate the second, making MESSAGE_2 disappear
-        Assertions.assertThat(merge2.separate(follower2)).isTrue();
-        Assertions.assertThat(merge2.getMessages()).hasSize(2);
+        final MergingFollower merge3 = merge2.remove(follower2);
+        Assertions.assertThat(merge2.getMerged()).contains(follower2);
+        Assertions.assertThat(merge3.getMerged()).doesNotContain(follower2);
+        Assertions.assertThat(merge3.getMessages()).hasSize(2);
         // now only MESSAGE_4 remains ACCEPTED
-        Assertions.assertThat(merge2.separate(follower1)).isTrue();
-        Assertions.assertThat(merge2.getMessages()).hasSize(1);
+        final MergingFollower merge4 = merge3.remove(follower1);
+        Assertions.assertThat(merge2.getMerged()).contains(follower1);
+        Assertions.assertThat(merge4.getMerged()).doesNotContain(follower1);
+        Assertions.assertThat(merge4.getMessages()).hasSize(1);
         // and now stop the followers to see what happens to the merges
         follower3.stop();
         Assertions.assertThat(follower3.isStopped()).isTrue();
-        Assertions.assertThat(merge2.isStopped()).isTrue();
+        Assertions.assertThat(merge4.isStopped()).isTrue();
+        Assertions.assertThat(merge3.isStopped()).isFalse();
+        Assertions.assertThat(merge2.isStopped()).isFalse();
         Assertions.assertThat(merge.isStopped()).isFalse();
         // first watch is terminated, second one remains alive
         watch1.terminate();
         Assertions.assertThat(follower1.isStopped()).isTrue();
-        Assertions.assertThat(merge2.isStopped()).isTrue();
+        Assertions.assertThat(merge4.isStopped()).isTrue();
+        Assertions.assertThat(merge3.isStopped()).isTrue();
+        Assertions.assertThat(merge2.isStopped()).isFalse();
         Assertions.assertThat(follower2.isStopped()).isFalse();
         Assertions.assertThat(merge.isStopped()).isFalse();
         merge.stop();
@@ -107,24 +115,21 @@ public class MergingTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(mf.getMessages()).hasSize(2);
         Assertions.assertThat(mf2.getMessages()).hasSize(2);
         // remove both followers from first merge, verify results
-        mf.separate(f);
-        Assertions.assertThat(mf.getMessages()).hasSize(2);
-        Assertions.assertThat(mf.isStopped()).isFalse();
+        final MergingFollower mf3 = mf.remove(f);
+        Assertions.assertThat(mf3.getMessages()).hasSize(2);
+        Assertions.assertThat(mf3.isStopped()).isFalse();
         Assertions.assertThat(this.getLogWatch().stopFollowing(f2)).isTrue();
-        Assertions.assertThat(mf.isStopped()).isTrue(); // no followers are
+        Assertions.assertThat(mf3.isStopped()).isTrue(); // no followers are
         // following
         Assertions.assertThat(mf.getMessages()).hasSize(2);
-        mf.separate(f2);
-        Assertions.assertThat(mf.isStopped()).isTrue(); // no followers are
-        // following
-        Assertions.assertThat(mf.getMessages()).hasSize(0);
+        Assertions.assertThat(mf3.remove(f2)).isEqualTo(null);
         // none of these changes should have affected the second merge
         Assertions.assertThat(mf2.getMessages()).hasSize(2);
-        mf2.separate(f2);
+        final MergingFollower mf5 = mf2.remove(f2);
         this.getLogWatch().stopFollowing(f);
-        Assertions.assertThat(mf2.getMessages()).hasSize(2);
-        mf2.separate(f);
-        Assertions.assertThat(mf2.getMessages()).hasSize(1);
+        Assertions.assertThat(mf5.getMessages()).hasSize(2);
+        final MergingFollower mf6 = mf5.remove(f);
+        Assertions.assertThat(mf6.getMessages()).hasSize(1);
         this.getLogWatch().terminate();
         Assertions.assertThat(mf.isStopped()).isTrue();
     }

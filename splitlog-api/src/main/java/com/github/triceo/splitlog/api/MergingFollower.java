@@ -23,6 +23,19 @@ public interface MergingFollower extends CommonFollower<MergingFollower, Followe
     Collection<Follower> getMerged();
 
     /**
+     * Will return an instance whose {@link #getMerged()} does not contain the
+     * given follower.
+     *
+     * @param f
+     *            The follower to remove from the merge.
+     * @return New instance of the follower containing the followers without
+     *         this one, if {@link #getMerged()} contained it. If it didn't, the
+     *         same instance is returned. Null is returned when the merge would
+     *         be empty after this call.
+     */
+    MergingFollower remove(Follower f);
+
+    /**
      * Will remove the follower from {@link #getMerged()}. As a result, this
      * merge will act as if it never knew of this follower.
      *
@@ -34,6 +47,7 @@ public interface MergingFollower extends CommonFollower<MergingFollower, Followe
      * @return True if the follower was part of the merge, false if it was
      *         already separate or never merged.
      */
+    @Deprecated
     boolean separate(Follower f);
 
 }

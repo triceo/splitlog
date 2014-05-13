@@ -4,11 +4,13 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -130,13 +132,29 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
     }
 
     @Override
-    public boolean separate(final Follower f) {
-        if (!this.followers.remove(f)) {
-            return false;
+    public MergingFollower remove(final Follower f) {
+        if (!this.getMerged().contains(f)) {
+            return this;
+        } else if (this.getMerged().size() == 1) {
+            return null;
+        } else {
+            DefaultMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
+            final List<Follower> followers = new ArrayList<Follower>(this.followers);
+            followers.remove(f);
+            return new DefaultMergingFollower(followers.toArray(new Follower[followers.size()]));
         }
-        // we know about this follower, so the cast is safe
-        DefaultMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
-        return f.stopConsuming(this);
+    }
+
+    @Override
+    public boolean separate(final Follower f) {
+        final MergingFollower mf = this.remove(f);
+        if (mf == null) {
+            return true;
+        } else if (mf == this) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Override
