@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>DefaultLogWatchBuilder xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../apidocs/com/github/triceo/splitlog/DefaultLogWatchBuilder.html">View Javadoc</a></div><pre>
+
+<a class="jxr_linenumber" name="1" href="#1">1</a>   <strong class="jxr_keyword">package</strong> com.github.triceo.splitlog;
+<a class="jxr_linenumber" name="2" href="#2">2</a>   
+<a class="jxr_linenumber" name="3" href="#3">3</a>   <strong class="jxr_keyword">import</strong> org.slf4j.Logger;
+<a class="jxr_linenumber" name="4" href="#4">4</a>   
+<a class="jxr_linenumber" name="5" href="#5">5</a>   <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.api.Follower;
+<a class="jxr_linenumber" name="6" href="#6">6</a>   <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.api.LogWatch;
+<a class="jxr_linenumber" name="7" href="#7">7</a>   <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.api.LogWatchBuilder;
+<a class="jxr_linenumber" name="8" href="#8">8</a>   <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.api.TailSplitter;
+<a class="jxr_linenumber" name="9" href="#9">9</a>   <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.conditions.AllFollowerMessagesAcceptingCondition;
+<a class="jxr_linenumber" name="10" href="#10">10</a>  <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.conditions.SplitlogMessagesRejectingCondition;
+<a class="jxr_linenumber" name="11" href="#11">11</a>  <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+<a class="jxr_linenumber" name="12" href="#12">12</a>  <strong class="jxr_keyword">import</strong> com.github.triceo.splitlog.splitters.SimpleTailSplitter;
+<a class="jxr_linenumber" name="13" href="#13">13</a>  
+<a class="jxr_linenumber" name="14" href="#14">14</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="15" href="#15">15</a>  <em class="jxr_javadoccomment"> * Prepares an instance of {@link LogWatch}. Unless overriden by the user, the</em>
+<a class="jxr_linenumber" name="16" href="#16">16</a>  <em class="jxr_javadoccomment"> * instance will have the following properties:</em>
+<a class="jxr_linenumber" name="17" href="#17">17</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="18" href="#18">18</a>  <em class="jxr_javadoccomment"> * &lt;dl&gt;</em>
+<a class="jxr_linenumber" name="19" href="#19">19</a>  <em class="jxr_javadoccomment"> * &lt;dt&gt;Default gating condition&lt;/dt&gt;</em>
+<a class="jxr_linenumber" name="20" href="#20">20</a>  <em class="jxr_javadoccomment"> * &lt;dd&gt;{@link SplitlogMessagesRejectingCondition}.&lt;/dd&gt;</em>
+<a class="jxr_linenumber" name="21" href="#21">21</a>  <em class="jxr_javadoccomment"> * &lt;dt&gt;Default storage condition&lt;/dt&gt;</em>
+<a class="jxr_linenumber" name="22" href="#22">22</a>  <em class="jxr_javadoccomment"> * &lt;dd&gt;{@link AllFollowerMessagesAcceptingCondition}.&lt;/dd&gt;</em>
+<a class="jxr_linenumber" name="23" href="#23">23</a>  <em class="jxr_javadoccomment"> * &lt;/dl&gt;</em>
+<a class="jxr_linenumber" name="24" href="#24">24</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="25" href="#25">25</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="26" href="#26">26</a>  <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/github/triceo/splitlog/DefaultLogWatchBuilder.html">DefaultLogWatchBuilder</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/github/triceo/splitlog/api/LogWatchBuilder.html">LogWatchBuilder</a> {
+<a class="jxr_linenumber" name="27" href="#27">27</a>  
+<a class="jxr_linenumber" name="28" href="#28">28</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultLogWatchBuilder.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="29" href="#29">29</a>  
+<a class="jxr_linenumber" name="30" href="#30">30</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../com/github/triceo/splitlog/DefaultLogWatchBuilder.html">DefaultLogWatchBuilder</a>() {
+<a class="jxr_linenumber" name="31" href="#31">31</a>          <strong class="jxr_keyword">super</strong>();
+<a class="jxr_linenumber" name="32" href="#32">32</a>          <strong class="jxr_keyword">this</strong>.withGateCondition(SplitlogMessagesRejectingCondition.INSTANCE);
+<a class="jxr_linenumber" name="33" href="#33">33</a>          <strong class="jxr_keyword">this</strong>.withStorageCondition(AllFollowerMessagesAcceptingCondition.INSTANCE);
+<a class="jxr_linenumber" name="34" href="#34">34</a>      }
+<a class="jxr_linenumber" name="35" href="#35">35</a>  
+<a class="jxr_linenumber" name="36" href="#36">36</a>      @Override
+<a class="jxr_linenumber" name="37" href="#37">37</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../com/github/triceo/splitlog/api/LogWatch.html">LogWatch</a> build() {
+<a class="jxr_linenumber" name="38" href="#38">38</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>.buildWith(<strong class="jxr_keyword">new</strong> <a href="../../../../com/github/triceo/splitlog/splitters/SimpleTailSplitter.html">SimpleTailSplitter</a>());
+<a class="jxr_linenumber" name="39" href="#39">39</a>      }
+<a class="jxr_linenumber" name="40" href="#40">40</a>  
+<a class="jxr_linenumber" name="41" href="#41">41</a>      @Override
+<a class="jxr_linenumber" name="42" href="#42">42</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../com/github/triceo/splitlog/api/Follower.html">Follower</a> buildFollowing() {
+<a class="jxr_linenumber" name="43" href="#43">43</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>.buildFollowingWith(<strong class="jxr_keyword">new</strong> <a href="../../../../com/github/triceo/splitlog/splitters/SimpleTailSplitter.html">SimpleTailSplitter</a>());
+<a class="jxr_linenumber" name="44" href="#44">44</a>      }
+<a class="jxr_linenumber" name="45" href="#45">45</a>  
+<a class="jxr_linenumber" name="46" href="#46">46</a>      @Override
+<a class="jxr_linenumber" name="47" href="#47">47</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../com/github/triceo/splitlog/api/Follower.html">Follower</a> buildFollowingWith(<strong class="jxr_keyword">final</strong> <a href="../../../../com/github/triceo/splitlog/api/TailSplitter.html">TailSplitter</a> splitter) {
+<a class="jxr_linenumber" name="48" href="#48">48</a>          <strong class="jxr_keyword">if</strong> (splitter == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="49" href="#49">49</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalArgumentException(<span class="jxr_string">"A splitter must be provided."</span>);
+<a class="jxr_linenumber" name="50" href="#50">50</a>          }
+<a class="jxr_linenumber" name="51" href="#51">51</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">this</strong>.buildWith(splitter).startFollowing();
+<a class="jxr_linenumber" name="52" href="#52">52</a>      }
+<a class="jxr_linenumber" name="53" href="#53">53</a>  
+<a class="jxr_linenumber" name="54" href="#54">54</a>      @Override
+<a class="jxr_linenumber" name="55" href="#55">55</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../com/github/triceo/splitlog/api/LogWatch.html">LogWatch</a> buildWith(<strong class="jxr_keyword">final</strong> <a href="../../../../com/github/triceo/splitlog/api/TailSplitter.html">TailSplitter</a> splitter) {
+<a class="jxr_linenumber" name="56" href="#56">56</a>          <strong class="jxr_keyword">if</strong> (splitter == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="57" href="#57">57</a>              <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalArgumentException(<span class="jxr_string">"A splitter must be provided."</span>);
+<a class="jxr_linenumber" name="58" href="#58">58</a>          } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ((splitter instanceof SimpleTailSplitter)
+<a class="jxr_linenumber" name="59" href="#59">59</a>                  &amp;&amp; (<strong class="jxr_keyword">this</strong>.getGateCondition() instanceof SplitlogMessagesRejectingCondition)) {
+<a class="jxr_linenumber" name="60" href="#60">60</a>              DefaultLogWatchBuilder.LOGGER
+<a class="jxr_linenumber" name="61" href="#61">61</a>              .warn(<span class="jxr_string">"Using default TailSplitter with default gating condition. All messages will pass through gate, as the TailSplitter will not provide all the necessary information."</span>);
+<a class="jxr_linenumber" name="62" href="#62">62</a>          }
+<a class="jxr_linenumber" name="63" href="#63">63</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../com/github/triceo/splitlog/DefaultLogWatch.html">DefaultLogWatch</a>(<strong class="jxr_keyword">this</strong>.getFileToWatch(), splitter, <strong class="jxr_keyword">this</strong>.getCapacityLimit(), <strong class="jxr_keyword">this</strong>.getGateCondition(),
+<a class="jxr_linenumber" name="64" href="#64">64</a>                  <strong class="jxr_keyword">this</strong>.getStorageCondition(), <strong class="jxr_keyword">this</strong>.getDelayBetweenReads(), <strong class="jxr_keyword">this</strong>.getDelayBetweenSweeps(),
+<a class="jxr_linenumber" name="65" href="#65">65</a>                  !<strong class="jxr_keyword">this</strong>.isReadingFromBeginning(), <strong class="jxr_keyword">this</strong>.isClosingBetweenReads(), <strong class="jxr_keyword">this</strong>.getReadingBufferSize());
+<a class="jxr_linenumber" name="66" href="#66">66</a>      }
+<a class="jxr_linenumber" name="67" href="#67">67</a>  
+<a class="jxr_linenumber" name="68" href="#68">68</a>  }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+
