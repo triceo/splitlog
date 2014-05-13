@@ -11,7 +11,10 @@
         Splitlog now boasts shiny new user documentation! 
       </action>
       <action issue="50" dev="triceo" type="add">
-        Follower and Metric now support multiple non-blocking waiting. 
+        Follower and Metric now support multiple non-blocking waiting... 
+      </action>
+      <action issue="51" dev="triceo" type="add">
+        ... and this non-blocking waiting can now execute an asynchronous action when it's done.  
       </action>
       <action issue="43" dev="triceo" type="add">
         MergingFollower now supports metrics and is back on par with Follower, feature-wise. 
@@ -19,6 +22,9 @@
       <action issue="42" dev="triceo" type="fix">
         Splitlog logging is now disabled by default. This will prevent endless feedback loops when Splitlog is deployed 
         within a web app.
+      </action>
+      <action issue="52" dev="triceo" type="update">
+        MergingFollower.separate() is deprecated in favor of MergingFollower.remove(). 
       </action>
       <action issue="49" dev="triceo" type="update">
         LogWatchBuilder becomes part of the public API. 
