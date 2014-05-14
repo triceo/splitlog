@@ -17,7 +17,7 @@
         <item name="Splitting" href="user_guide/splitting.html" />
         <item name="Memory Management" href="user_guide/memory.html" />
       </item>
-      <item name="Frequently Asked Questions" href="user_guide/faq.html" />
+      <item name="Frequently Asked Questions" href="faq.html" />
     </menu>
     <menu ref="parent" inherit="top" />
     <menu ref="modules" inherit="bottom" />
