@@ -19,8 +19,7 @@ final class LogWatchConsumerManager extends ConsumerManager<LogWatch> {
     public LogWatchConsumerManager(final LogWatchBuilder builder, final LogWatchStorageManager messageStore,
         final DefaultLogWatch watch) {
         super(watch);
-        this.tailing = new LogWatchTailingManager(watch, builder.getDelayBetweenReads(),
-                !builder.isReadingFromBeginning(), builder.isClosingBetweenReads(), builder.getReadingBufferSize());
+        this.tailing = new LogWatchTailingManager(watch, builder);
         this.sweeping = new LogWatchSweepingManager(messageStore, builder.getDelayBetweenSweeps());
     }
 
@@ -39,12 +38,8 @@ final class LogWatchConsumerManager extends ConsumerManager<LogWatch> {
     }
 
     private synchronized void startTailing() {
-        if (this.tailing.isRunning()) {
-            return;
-        } else if (this.countConsumers() > 0) {
-            this.tailing.start();
-            this.sweeping.start();
-        }
+        this.sweeping.start();
+        this.tailing.start();
     }
 
     @Override
@@ -57,7 +52,7 @@ final class LogWatchConsumerManager extends ConsumerManager<LogWatch> {
     @Override
     public synchronized boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
         final boolean result = super.stopConsuming(consumer);
-        if (this.countConsumers() == 0) {
+        if (this.countConsumers() < 1) {
             this.tailing.stop();
         }
         return result;

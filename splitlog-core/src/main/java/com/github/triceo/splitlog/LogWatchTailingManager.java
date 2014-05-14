@@ -1,6 +1,6 @@
 package com.github.triceo.splitlog;
 
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -9,6 +9,7 @@ import org.apache.commons.io.input.Tailer;
 import org.slf4j.Logger;
 
 import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
@@ -18,13 +19,14 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
  */
 final class LogWatchTailingManager {
 
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
+    private static final Executor EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
 
         private final ThreadGroup group = new ThreadGroup("tailing");
         private final AtomicLong nextId = new AtomicLong(0);
 
         @Override
         public Thread newThread(final Runnable r) {
+            System.out.println("Creating thread.");
             return new Thread(this.group, r, this.group.getName() + "-" + this.nextId.incrementAndGet());
         }
 
@@ -38,13 +40,12 @@ final class LogWatchTailingManager {
     private Tailer tailer;
     private final DefaultLogWatch watch;
 
-    public LogWatchTailingManager(final DefaultLogWatch watch, final long delayBetweenReads, final boolean readFromEnd,
-        final boolean reopenBetweenReads, final int bufferSize) {
+    public LogWatchTailingManager(final DefaultLogWatch watch, final LogWatchBuilder builder) {
         this.watch = watch;
-        this.delayBetweenReads = delayBetweenReads;
-        this.bufferSize = bufferSize;
-        this.reopenBetweenReads = reopenBetweenReads;
-        this.ignoreExistingContent = readFromEnd;
+        this.delayBetweenReads = builder.getDelayBetweenReads();
+        this.bufferSize = builder.getReadingBufferSize();
+        this.reopenBetweenReads = builder.isClosingBetweenReads();
+        this.ignoreExistingContent = !builder.isReadingFromBeginning();
     }
 
     public synchronized boolean isRunning() {
@@ -63,7 +64,7 @@ final class LogWatchTailingManager {
         }
         this.tailer = new Tailer(this.watch.getWatchedFile(), new LogWatchTailerListener(this.watch),
                 this.delayBetweenReads, this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
-        LogWatchTailingManager.EXECUTOR.submit(this.tailer);
+        LogWatchTailingManager.EXECUTOR.execute(this.tailer);
         final long iterationNum = this.numberOfTimesThatTailerWasStarted.incrementAndGet();
         LogWatchTailingManager.LOGGER.info("Tailing #{} started for {}.", iterationNum, this.watch);
         return true;
