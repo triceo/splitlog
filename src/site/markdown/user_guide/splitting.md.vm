@@ -6,7 +6,7 @@ This chapter will explain how *Splitlog* joins log file lines into ```Message```
 
 $h2 What is splitting
 
-*Splitlog* reads changes to the watched log files line by line, as they appear. However, in order to provide some useful information here, it may group multiple lines into a single ```Message``` and infer some additional metadata from them. This process is called "splitting the log" and is what originally gave *Splitlog* its name.
+*Splitlog* reads changes from the watched log files line by line, as they appear. However, in order to provide some useful information here, it may group multiple lines into a single ```Message``` and infer some additional metadata from them. This process is called "splitting the log" and is what originally gave *Splitlog* its name.
 
 In order to be able to separate the random set of lines into ```Message```s, *Splitlog* needs to understand the boundaries of each message, and therefore have a good understanding of the file format. This is where the biggest limitations of *Splitlog* come from:
 
