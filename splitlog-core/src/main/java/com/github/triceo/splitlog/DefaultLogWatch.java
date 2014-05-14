@@ -13,7 +13,6 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -41,22 +40,7 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 final class DefaultLogWatch implements LogWatch {
 
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
-
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultLogWatch.class);
-    static {
-        /*
-         * intentionally using the original logger so that this message can not
-         * be silenced
-         */
-        final Logger l = LoggerFactory.getLogger(DefaultLogWatch.class);
-        if (SplitlogLoggerFactory.isLoggingEnabled()) {
-            l.info("Splitlog's internal logging system can be disabled by setting '{}' system property to '{}'.",
-                    SplitlogLoggerFactory.LOGGING_PROPERTY_NAME, SplitlogLoggerFactory.OFF_STATE);
-        } else {
-            l.warn("This will be the last message from Splitlog, unless you enable Splitlog's internal logging system by setting '{}' system property to '{}'.",
-                    SplitlogLoggerFactory.LOGGING_PROPERTY_NAME, SplitlogLoggerFactory.ON_STATE);
-        }
-    }
 
     private final ConsumerManager<LogWatch> consumers;
     private MessageBuilder currentlyProcessedMessage;

@@ -26,10 +26,25 @@ import org.slf4j.LoggerFactory;
 public final class SplitlogLoggerFactory {
 
     public static final String LOGGING_PROPERTY_NAME = "splitlog.logging";
+
     private static final AtomicLong messageCounter = new AtomicLong(0);
     public static final String OFF_STATE = "off";
     public static final String ON_STATE = "on";
     private static SplitlogLoggingState state = SplitlogLoggingState.DEFAULT;
+    static {
+        /*
+         * intentionally using the original logger so that this message can not
+         * be silenced
+         */
+        final Logger l = LoggerFactory.getLogger(SplitlogLoggerFactory.class);
+        if (SplitlogLoggerFactory.isLoggingEnabled()) {
+            l.info("Splitlog's internal logging system can be disabled by setting '{}' system property to '{}'.",
+                    SplitlogLoggerFactory.LOGGING_PROPERTY_NAME, SplitlogLoggerFactory.OFF_STATE);
+        } else {
+            l.warn("This will be the last message from Splitlog, unless you enable Splitlog's internal logging system by setting '{}' system property to '{}'.",
+                    SplitlogLoggerFactory.LOGGING_PROPERTY_NAME, SplitlogLoggerFactory.ON_STATE);
+        }
+    }
 
     /**
      * Force Splitlog's internal logging to be enabled.
