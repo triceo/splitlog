@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -19,8 +20,6 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * Waits until a {@link Message} arrives that makes a particular condition true.
- *
- * FIXME this is some very ugly code
  *
  * @param <C>
  *            Type of the condition to make true.
@@ -46,6 +45,7 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
     private final MessageAction<S> action;
     private Future<Void> actionFuture;
     private final C blockingCondition;
+    private final AtomicBoolean conditionPassed = new AtomicBoolean(false);
     private final CountDownLatch latch = new CountDownLatch(1);
     /**
      * Whether or not {@link #call()} is in progress.
@@ -70,17 +70,6 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
      */
     @Override
     public Message call() {
-        if (this.latch.getCount() == 0) {
-            throw new IllegalStateException("Expectation already triggered.");
-        } else if (this.stash != null) {
-            /*
-             * in case the condition has been triggered before this has been
-             * called, we retrieve the message from the stash.
-             */
-            final Message msg = this.stash;
-            this.stash = null;
-            return msg;
-        }
         try {
             AbstractExpectation.LOGGER.info("Thread blocked waiting for message to pass condition {}.",
                     this.getBlockingCondition());
@@ -88,20 +77,14 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
             this.manager.unsetExpectation(this); // don't notify again
             AbstractExpectation.LOGGER.info("Thread unblocked.");
             if (this.actionFuture != null) {
-                AbstractExpectation.LOGGER.info("Executing user action.");
-                try {
-                    // wait for the future action to finish
-                    this.actionFuture.get();
-                } catch (final Exception e) {
-                    AbstractExpectation.LOGGER.warn("User action ended abruptly.", e);
-                }
+                this.waitUntilActionComplete();
             }
+            AbstractExpectation.LOGGER.info("Expectation processing passed.");
             return this.stash;
         } catch (final InterruptedException e) {
-            return null;
+            throw new IllegalStateException("Expectation failed.", e);
         } finally {
             this.manager.unsetExpectation(this); // in case await() throws
-            AbstractExpectation.LOGGER.info("Expectation processing finished.");
         }
     }
 
@@ -128,35 +111,33 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
         // check if the user code accepts the message
         if (!this.isAccepted(msg, status, source)) {
             return;
+        } else if (this.conditionPassed.getAndSet(true)) {
+            AbstractExpectation.LOGGER.debug("Not continuing with processing as condition already triggered once.");
+            return;
         }
         AbstractExpectation.LOGGER.debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
-        if (this.stash == null) {
-            /*
-             * if call() hasn't been called yet, and the condition has already
-             * triggered, stash the message for retrieval when call() is
-             * actually called.
-             */
-            AbstractExpectation.LOGGER.debug("Stashing the message.");
-            this.stash = msg;
-            this.latch.countDown();
-            if (this.action == null) {
-                return;
-            }
-            try {
-                this.actionFuture = AbstractExpectation.EXECUTOR.submit(new Callable<Void>() {
+        this.stash = msg;
+        if (this.action != null) {
+            this.actionFuture = AbstractExpectation.EXECUTOR.submit(new Callable<Void>() {
 
-                    @Override
-                    public Void call() throws Exception {
-                        AbstractExpectation.this.action.execute(msg, source);
-                        return null;
-                    }
+                @Override
+                public Void call() throws Exception {
+                    AbstractExpectation.this.action.execute(msg, source);
+                    return null;
+                }
 
-                });
-            } catch (final Throwable t) {
-                AbstractExpectation.LOGGER.info("Caught Throwable while executing user action {}.", this.action, t);
-            }
-        } else {
-            AbstractExpectation.LOGGER.debug("Message already stashed.");
+            });
+        }
+        this.latch.countDown(); // unblock the other thread
+    }
+
+    private void waitUntilActionComplete() {
+        try {
+            AbstractExpectation.LOGGER.debug("Waiting for the user action to finish.");
+            this.actionFuture.get();
+            AbstractExpectation.LOGGER.debug("User action completed.");
+        } catch (final Exception e) {
+            AbstractExpectation.LOGGER.warn("User action ended abruptly.", e);
         }
     }
 
