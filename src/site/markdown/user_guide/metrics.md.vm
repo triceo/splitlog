@@ -6,7 +6,7 @@ This document will explain how you can use *Splitlog* to gather various statisti
 
 $h2 What are metrics?
 
-Metrics are a simple way to maintain various counts based on ```Message``` contents and metadata. You choose what to measure and *Splitlog* will make sure that the metric is updates every time that a new ```Message``` is received.
+Metrics are a simple way to maintain various counts based on ```Message``` contents and metadata. You choose what to measure and *Splitlog* will make sure that the metric is updates every time a new ```Message``` is received.
 
 A measure is a user-provided class that implements the MessageMeasure interface. The interface requires you to provide the following:
 
@@ -50,11 +50,11 @@ Fairly straight-forward, isn't it? You may want to check out what the ```Message
   Integer messageCount = m.getValue(); // should be zero, unless any messages arrived in the meantime
 ```
 
-Notice the "Some Metric ID"? You can use this later to retrieve your metric instance using ```Follower.getMetric(String)``` method, if you ever need it. Oh an you can also use [expectations on metrics](expectations.html).
+Notice the "Some Metric ID"? You can use this later to retrieve your metric instance using ```Follower.getMetric(String)``` method, if you ever need it. Oh and you can also use [expectations on metrics](expectations.html).
 
 $h2 Handing metrics down
 
-Metrics can be used on all kinds of followers and also on ```LogWatch```. However, there is something special about ```LogWatch```, and that is its supports for handing metrics down.
+Metrics can be used on all kinds of followers and also on ```LogWatch```. However, there is something special about ```LogWatch```, and that is its support for handing metrics down.
 
 Measures registered through the ```LogWatch.startHandingDown(MessageMeasure, String)``` method will be handed down to any follower that is subsequently started from the same ```LogWatch```. You can use this to have a different instance of your message counter from above for every follower that you create. This instance can be retrieved from the follower by using the textual ID that you provided to the ```LogWatch``` during registration.
 
