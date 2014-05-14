@@ -27,9 +27,9 @@ public class GatingTest extends DefaultFollowerBaseTest {
     @Parameters(name = "{index}: {0}, {1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()), false },
+                { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile()), false },
                 {
-                        LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                        LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
                                 .withGateCondition(AllFollowerMessagesAcceptingCondition.INSTANCE), true } });
     }
 

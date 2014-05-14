@@ -81,7 +81,7 @@ public abstract class LogWatchBuilder {
     /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden. Such log watch will not start actually reading
-     * {@link #getFileToWatch()} until after {@link LogWatch#startFollowing()}
+     * {@link #getWatchedFile()} until after {@link LogWatch#startFollowing()}
      * or
      * {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
      * .
@@ -116,7 +116,7 @@ public abstract class LogWatchBuilder {
     /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden. Such log watch will not start actually reading
-     * {@link #getFileToWatch()} until after {@link LogWatch#startFollowing()}
+     * {@link #getWatchedFile()} until after {@link LogWatch#startFollowing()}
      * or
      * {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
      * .
@@ -187,7 +187,6 @@ public abstract class LogWatchBuilder {
     public SimpleMessageCondition getGateCondition() {
         return this.gateCondition;
     }
-
     /**
      * Get the buffer size for the log watch.
      *
@@ -277,12 +276,23 @@ public abstract class LogWatchBuilder {
      *            File to watch.
      * @return This.
      */
-    public LogWatchBuilder watchingFile(final File f) {
+    public LogWatchBuilder watchedFile(final File f) {
         if (f == null) {
             throw new IllegalArgumentException("File can not be null.");
         }
         this.fileToWatch = f;
         return this;
+    }
+    /**
+     * Set the file that the future {@link LogWatch} will be tailing.
+     *
+     * @param f
+     *            File to watch.
+     * @return This.
+     */
+    @Deprecated
+    public LogWatchBuilder watchingFile(final File f) {
+        return this.watchedFile(f);
     }
 
     /**

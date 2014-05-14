@@ -101,7 +101,7 @@ public class RealWorldTest extends AbstractSplitlogTest {
             }
         }
         // log watch will accept anything not DEBUG
-        final LogWatch watch = LogWatchBuilder.getDefault().watchingFile(tmp).ignoringPreexistingContent()
+        final LogWatch watch = LogWatchBuilder.getDefault().watchedFile(tmp).ignoringPreexistingContent()
                 .withStorageCondition(new SimpleMessageCondition() {
 
                     @Override

@@ -26,13 +26,13 @@ public class MergingTest extends DefaultFollowerBaseTest {
     @Test
     public void testMergeWithDifferentWatches() {
         // write into first file
-        final LogWatch watch1 = LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+        final LogWatch watch1 = LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
                 .build();
         final Follower follower1 = watch1.startFollowing();
         final LogWriter writer1 = LogWriter.forFile(watch1.getWatchedFile());
         writer1.write(MergingTest.MESSAGE_1, follower1);
         // write into second file
-        final LogWatch watch2 = LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+        final LogWatch watch2 = LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
                 .build();
         final Follower follower2 = watch2.startFollowing();
         final LogWriter writer2 = LogWriter.forFile(watch2.getWatchedFile());

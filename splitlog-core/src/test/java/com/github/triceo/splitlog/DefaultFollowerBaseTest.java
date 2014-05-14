@@ -55,13 +55,13 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()) },
-                { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile()) },
+                { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
                     .closingAfterReading()
                     .ignoringPreexistingContent() },
-                    { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                    { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
                         .closingAfterReading() },
-                        { LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile())
+                        { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
                             .ignoringPreexistingContent() } });
     }
 
@@ -90,7 +90,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     private LogWriter writer;
 
     public DefaultFollowerBaseTest() {
-        this(LogWatchBuilder.getDefault().watchingFile(DefaultFollowerBaseTest.getTempFile()));
+        this(LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile()));
     }
 
     public DefaultFollowerBaseTest(final LogWatchBuilder builder) {

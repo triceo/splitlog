@@ -38,7 +38,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
 
     @Before
     public void buildWatch() {
-        this.watch = LogWatchBuilder.getDefault().watchingFile(this.target).buildWith(new JBossServerLogTailSplitter());
+        this.watch = LogWatchBuilder.getDefault().watchedFile(this.target).buildWith(new JBossServerLogTailSplitter());
     }
 
     @After
