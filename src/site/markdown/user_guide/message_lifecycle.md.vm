@@ -32,12 +32,18 @@ Consumers can be stopped, after which they will refuse any new message from thei
 
 Whether or not a producer notifies its consumers of the ```Message```s that it has been notified of, that is left to the discretion of the producer. By default, however, no producer provided by the *Splitlog* package will ever swallow a message.
 
+$h2 Gating
+
+Before a ```Message``` enters *Splitlog*, it needs to "pass through the gate." Messages that don't pass will not be stored, will never be assigned any of the states, and no consumer will ever be notified of their arrival. It would be as if they never existed.
+
+Gating can be configured on the ```LogWatchBuilder``` and is the very first thing that happens when a line is read from the watched log.
+
 $h3 References
 
 1. [MessageDeliveryStatus Javadoc](../apidocs/com/github/triceo/splitlog/api/MessageDeliveryStatus.html).
 2. [MessageProducer Javadoc](../apidocs/com/github/triceo/splitlog/api/MessageProducer.html).
 3. [MessageConsumer Javadoc](../apidocs/com/github/triceo/splitlog/api/MessageConsumer.html).
+4. [LogWatchBuilder Javadoc](../apidocs/com/github/triceo/splitlog/api/LogWatchBuilder.html).
  
- #set($page = "message_lifecycle")
+#set($page = "message_lifecycle")
 #parse("footer.vm")
- 

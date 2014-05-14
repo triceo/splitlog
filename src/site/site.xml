@@ -15,6 +15,7 @@
       <item name="Deep Down" href="user_guide/advanced.html" >
         <item name="Message Lifecycle" href="user_guide/message_lifecycle.html" />
         <item name="Splitting" href="user_guide/splitting.html" />
+        <item name="Memory Management" href="user_guide/memory.html" />
       </item>
       <item name="Frequently Asked Questions" href="user_guide/faq.html" />
     </menu>
