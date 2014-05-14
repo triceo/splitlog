@@ -5,14 +5,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
 /**
  * Tracks expectations that are currently active for a given message consumer.
@@ -24,17 +23,8 @@ import com.github.triceo.splitlog.api.MessageProducer;
  */
 abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> implements MessageConsumer<P> {
 
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
-
-        private final ThreadGroup group = new ThreadGroup("expectations");
-        private final AtomicLong nextId = new AtomicLong(0);
-
-        @Override
-        public Thread newThread(final Runnable r) {
-            return new Thread(this.group, r, this.group.getName() + "-" + this.nextId.incrementAndGet());
-        }
-
-    });
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new SplitlogThreadFactory(
+            "expectations"));
     private final Set<AbstractExpectation<C, P>> exchanges = new HashSet<AbstractExpectation<C, P>>();
     private boolean isStopped = false;
 

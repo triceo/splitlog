@@ -5,9 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
@@ -17,6 +15,7 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
 /**
  * Waits until a {@link Message} arrives that makes a particular condition true.
@@ -28,17 +27,7 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
  */
 abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements MessageListener<S>, Callable<Message> {
 
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
-
-        private final ThreadGroup group = new ThreadGroup("actions");
-        private final AtomicLong nextId = new AtomicLong(0);
-
-        @Override
-        public Thread newThread(final Runnable r) {
-            return new Thread(this.group, r, this.group.getName() + "-" + this.nextId.incrementAndGet());
-        }
-
-    });
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new SplitlogThreadFactory("actions"));
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectation.class);
 

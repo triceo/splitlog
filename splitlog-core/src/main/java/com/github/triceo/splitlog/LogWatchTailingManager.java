@@ -2,7 +2,6 @@ package com.github.triceo.splitlog;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.input.Tailer;
@@ -12,6 +11,7 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
 /**
  * Has a sole responsibility of starting and stopping {@link Tailer} thread when
@@ -19,18 +19,7 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
  */
 final class LogWatchTailingManager {
 
-    private static final Executor EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
-
-        private final ThreadGroup group = new ThreadGroup("tailing");
-        private final AtomicLong nextId = new AtomicLong(0);
-
-        @Override
-        public Thread newThread(final Runnable r) {
-            System.out.println("Creating thread.");
-            return new Thread(this.group, r, this.group.getName() + "-" + this.nextId.incrementAndGet());
-        }
-
-    });
+    private static final Executor EXECUTOR = Executors.newCachedThreadPool(new SplitlogThreadFactory("tails"));
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchTailingManager.class);
     private final int bufferSize;
