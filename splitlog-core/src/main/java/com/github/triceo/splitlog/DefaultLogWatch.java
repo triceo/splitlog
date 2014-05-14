@@ -58,7 +58,7 @@ final class DefaultLogWatch implements LogWatch {
         }
     }
 
-    private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
+    private final ConsumerManager<LogWatch> consumers;
     private MessageBuilder currentlyProcessedMessage;
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
@@ -66,22 +66,15 @@ final class DefaultLogWatch implements LogWatch {
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
     private final LogWatchStorageManager storage;
-    private final LogWatchSweepingManager sweeping;
-    private final LogWatchTailingManager tailing;
     private final long uniqueId = DefaultLogWatch.ID_GENERATOR.getAndIncrement();
     private final File watchedFile;
 
-    protected DefaultLogWatch(final File watchedFile, final TailSplitter splitter, final int capacity,
-        final SimpleMessageCondition gateCondition, final SimpleMessageCondition acceptanceCondition,
-        final long delayBetweenReads, final long delayBetweenSweeps, final boolean ignoreExistingContent,
-        final boolean reopenBetweenReads, final int bufferSize) {
+    protected DefaultLogWatch(final LogWatchBuilder builder, final TailSplitter splitter) {
         this.splitter = splitter;
-        this.gateCondition = gateCondition;
-        this.storage = new LogWatchStorageManager(this, capacity, acceptanceCondition);
-        this.tailing = new LogWatchTailingManager(this, delayBetweenReads, ignoreExistingContent, reopenBetweenReads,
-                bufferSize);
-        this.sweeping = new LogWatchSweepingManager(this.storage, delayBetweenSweeps);
-        this.watchedFile = watchedFile;
+        this.gateCondition = builder.getGateCondition();
+        this.storage = new LogWatchStorageManager(this, builder.getCapacityLimit(), builder.getStorageCondition());
+        this.consumers = new LogWatchConsumerManager(builder, this.storage, this);
+        this.watchedFile = builder.getFileToWatch();
     }
 
     synchronized void addLine(final String line) {
@@ -279,9 +272,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public synchronized MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> consumer) {
-        final MessageConsumer<LogWatch> result = this.consumers.startConsuming(consumer);
-        this.tailing.start();
-        return result;
+        return this.consumers.startConsuming(consumer);
     }
 
     @Override
@@ -302,7 +293,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
-            final long howLong, final TimeUnit unit) {
+        final long howLong, final TimeUnit unit) {
         final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
         final Follower f = pair.getKey();
         try {
@@ -319,11 +310,10 @@ final class DefaultLogWatch implements LogWatch {
      * @return The follower that follows this log watch from now on.
      */
     private synchronized Pair<Follower, Future<Message>> startFollowingActually(
-            final MidDeliveryMessageCondition<LogWatch> condition) {
+        final MidDeliveryMessageCondition<LogWatch> condition) {
         if (this.isTerminated()) {
             throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
         }
-        this.sweeping.start();
         // assemble list of consumers to be handing down and then the follower
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number, Follower>>>();
         for (final BidiMap.Entry<String, MessageMeasure<? extends Number, Follower>> entry : this.handingDown
@@ -337,13 +327,12 @@ final class DefaultLogWatch implements LogWatch {
         this.consumers.registerConsumer(follower);
         this.storage.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
-        this.tailing.start();
         return ImmutablePair.of(follower, expectation);
     }
 
     @Override
     public Pair<Follower, Future<Message>> startFollowingWithExpectation(
-            final MidDeliveryMessageCondition<LogWatch> waitFor) {
+        final MidDeliveryMessageCondition<LogWatch> waitFor) {
         final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
         return ImmutablePair.of(pair.getKey(), pair.getValue());
     }
@@ -366,7 +355,7 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
-            final String id) {
+        final String id) {
         return this.consumers.startMeasuring(measure, id);
     }
 
@@ -374,8 +363,6 @@ final class DefaultLogWatch implements LogWatch {
     public synchronized boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
         final boolean result = this.consumers.stopConsuming(consumer);
         if (this.countConsumers() < 1) {
-            DefaultLogWatch.LOGGER.info("Requested stopping the tailer for {}.", this);
-            this.tailing.stop();
             this.currentlyProcessedMessage = null;
         }
         return result;
@@ -429,9 +416,7 @@ final class DefaultLogWatch implements LogWatch {
         DefaultLogWatch.LOGGER.info("Terminating {}.", this);
         this.isTerminated = true;
         this.consumers.stop();
-        this.tailing.stop();
         this.handingDown.clear();
-        this.sweeping.stop();
         this.previousAcceptedMessage = null;
         DefaultLogWatch.LOGGER.info("Terminated {}.", this);
         return true;
