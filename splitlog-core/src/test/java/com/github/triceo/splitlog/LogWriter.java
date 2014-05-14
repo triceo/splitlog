@@ -5,17 +5,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
@@ -31,11 +28,6 @@ import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
  */
 public class LogWriter {
 
-    /**
-     * The longer this delay, the less likely that a message will be missed by
-     * the subsequent waitFor() calls.
-     */
-    private static final long DELAY_BEFORE_WRITE_MILLIS = 100;
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWriter.class);
     /**
      * This provides exclusive access to each file through
@@ -48,7 +40,7 @@ public class LogWriter {
         }
         return LogWriter.WRITERS.get(f);
     }
-    private final ScheduledExecutorService e = Executors.newScheduledThreadPool(1);
+
     private boolean isDisposed = false;
 
     private final File target;
@@ -59,7 +51,6 @@ public class LogWriter {
 
     public synchronized void dispose() {
         LogWriter.WRITERS.remove(this.target);
-        this.e.shutdownNow();
         this.isDisposed = true;
     }
 
@@ -72,51 +63,29 @@ public class LogWriter {
      *            Follower to wait for the message.
      * @return The line that was written, or null otherwise.
      */
-    public String write(final String line, final Follower follower) {
-        this.writeDelayed(line);
-        // wait until the last part of the string is finally present
-        Message result;
+    public synchronized String write(final String line, final Follower follower) {
+        final Future<Message> future = follower.expect(new MidDeliveryMessageCondition<LogWatch>() {
+
+            @Override
+            public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
+                final List<String> lines = evaluate.getLines();
+                final String lastLine = lines.get(lines.size() - 1);
+                final String textStr[] = line.split("\\r?\\n");
+                return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
+            }
+
+        });
+        if (!this.writeNow(line)) {
+            throw new IllegalStateException("Failed writing message.");
+        }
         try {
-            result = follower.expect(new MidDeliveryMessageCondition<LogWatch>() {
-
-                @Override
-                public boolean
-                    accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                    final String lastLine = evaluate.getLines().get(evaluate.getLines().size() - 1);
-                    final String textStr[] = line.split("\\r?\\n");
-                    return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
-                }
-
-            }).get();
-            return result.getLines().get(result.getLines().size() - 1);
+            // wait until the last part of the string is finally present
+            final Message result = future.get();
+            final List<String> lines = result.getLines();
+            return lines.get(lines.size() - 1);
         } catch (final Exception e) {
             throw new IllegalStateException("No message received in time.", e);
         }
-    }
-
-    /**
-     * Write message to a file on background.
-     *
-     * This method will schedule the write operation, but it will not actually
-     * be ececuted until {@link #DELAY_BEFORE_WRITE_MILLIS} milliseconds later.
-     * This is so that the subsequent
-     * {@link CommonFollower#waitFor(MidDeliveryMessageCondition)}s have a chance
-     * to be registered.
-     *
-     * @param line
-     *            Message to write.
-     */
-    private synchronized void writeDelayed(final String line) {
-        LogWriter.LOGGER.info("Delayed write of '{}' to {} scheduled.", line, LogWriter.this.target);
-        this.e.schedule(new Callable<Boolean>() {
-
-            @Override
-            public Boolean call() throws Exception {
-                LogWriter.LOGGER.info("Delayed write of '{}' to {} executing now.", line, LogWriter.this.target);
-                return LogWriter.this.writeNow(line);
-            }
-
-        }, LogWriter.DELAY_BEFORE_WRITE_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public synchronized boolean writeNow(final String line) {
@@ -129,13 +98,13 @@ public class LogWriter {
             w = new BufferedWriter(new FileWriter(this.target, true));
             w.write(line);
             w.newLine();
-            w.flush();
             LogWriter.LOGGER.info("Written '{}' into {}.", line, this.target);
         } catch (final IOException ex) {
             LogWriter.LOGGER.warn("Failed writing '{}' into {}.", line, this.target, ex);
             return false;
         } finally {
             IOUtils.closeQuietly(w);
+            LogWriter.LOGGER.debug("File closed: {}.", this.target);
         }
         return true;
     }
