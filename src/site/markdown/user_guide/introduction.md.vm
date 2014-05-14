@@ -34,7 +34,7 @@ And that's it, folks! You can now start using *Splitlog*. Let's see how.
 
 $h2 Simple example
 
-Before we start, let's make sure you have *Splitlog* on your Java classpath. Either include the [uber jar](http://search.maven.org/remotecontent?filepath=com/github/triceo/splitlog/splitlog-core/${project.version}/splitlog-core-${project.version}-jar-with-dependencies.jar "Splitlog Uber Jar") or, preferrably, use Maven:
+Before we start, let's make sure you have *Splitlog* on your Java classpath. Either include the [uber jar](http://search.maven.org/remotecontent?filepath=com/github/triceo/splitlog/splitlog-core/${project.version}/splitlog-core-${project.version}-jar-with-dependencies.jar "Splitlog Uber Jar") or, preferably, use Maven:
 
     <dependency>
       <groupId>com.github.triceo.splitlog</groupId>
