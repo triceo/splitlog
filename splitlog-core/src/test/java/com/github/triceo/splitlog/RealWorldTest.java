@@ -116,11 +116,12 @@ public class RealWorldTest extends AbstractSplitlogTest {
         final MessageMetric<Integer, LogWatch> errors = watch.startMeasuring(RealWorldTest.ACCEPTED_ERROR,
                 RealWorldTest.METRIC_ID_2);
         final Follower bothBatches = watch.startFollowing();
+        final int messagesInFirst = 66;
         final Future<Message> expectation = nonWarning.expect(new MessageMetricCondition<Integer, LogWatch>() {
 
             @Override
             public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                return evaluate.getValue() == 65;
+                return evaluate.getValue() == (messagesInFirst - 1);
             }
 
         });
@@ -137,7 +138,6 @@ public class RealWorldTest extends AbstractSplitlogTest {
         // ... no ERRORs
         Assertions.assertThat(errors.getValue()).isEqualTo(0);
         // ... and 1 extra warning
-        final int messagesInFirst = 66;
         Assertions.assertThat(bothBatches.getMessages()).hasSize(messagesInFirst);
         /*
          * last INFO is number 67, as even the 2 rejected messages get numbers;

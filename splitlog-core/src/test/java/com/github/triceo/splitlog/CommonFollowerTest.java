@@ -2,7 +2,9 @@ package com.github.triceo.splitlog;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -96,9 +98,16 @@ public class CommonFollowerTest extends DefaultFollowerBaseTest {
     public void testWaitForAfterPreviousFailed() {
         final Follower follower = this.getLogWatch().startFollowing();
         // this call will fail, since we're not writing anything
-        final Message noMessage = DefaultFollowerBaseTest.wrapWaiting(
-                follower.expect(AllLogWatchMessagesAcceptingCondition.INSTANCE), 1, TimeUnit.SECONDS);
-        Assertions.assertThat(noMessage).isNull();
+        try {
+            follower.expect(AllLogWatchMessagesAcceptingCondition.INSTANCE).get(1, TimeUnit.SECONDS);
+            Assertions.fail("No message should've been received.");
+        } catch (final InterruptedException e) {
+            Assertions.fail("Message wait interrupted.", e);
+        } catch (final ExecutionException e) {
+            Assertions.fail("Message wait interrupted due to a problem.", e);
+        } catch (final TimeoutException e) {
+            // this is expected
+        }
         // these calls should succeed
         final String message = "test";
         String result = this.getWriter().write(message, follower);

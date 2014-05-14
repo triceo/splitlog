@@ -81,6 +81,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
         try {
             return message.get(timeout, unit);
         } catch (final Exception e) {
+            Assertions.fail("Waiting for message failed.", e);
             return null;
         }
     }
