@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.github.triceo.splitlog</groupId>
     <artifactId>splitlog-parent</artifactId>
-    <version>1.6.0-RC2-SNAPSHOT</version>
+    <version>1.6.0-RC2</version>
   </parent>
   <artifactId>splitlog-api</artifactId>
   <name>splitlog-api: the public APIs</name>
