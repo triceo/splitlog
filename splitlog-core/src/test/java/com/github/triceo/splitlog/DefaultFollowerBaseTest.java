@@ -38,31 +38,34 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
      *            want to compare against a tag.
      */
     protected static void assertProperOrder(final SortedSet<Message> messages, final Object... expectedMessages) {
-        Assertions.assertThat(messages.size()).isEqualTo(expectedMessages.length);
-        final List<Message> indexableMessages = new LinkedList<Message>(messages);
-        for (int i = 0; i < expectedMessages.length; i++) {
-            final Object expected = expectedMessages[i];
-            final Message actual = indexableMessages.get(i);
+        final List<String> actualLines = new LinkedList<String>();
+        for (final Message actual : messages) {
+            actualLines.add(actual.getLines().get(0));
+        }
+        final List<String> expectedLines = new LinkedList<String>();
+        for (final Object expected : expectedMessages) {
             if (expected instanceof Message) {
-                Assertions.assertThat(actual).isEqualTo(expected);
+                expectedLines.add(((Message) expected).getLines().get(0));
+            } else if (expected instanceof String) {
+                expectedLines.add((String) expected);
             } else {
-                Assertions.assertThat(actual.getLines().get(0)).isEqualTo(expected);
+                Assertions.fail("Unexpected message: " + expected);
             }
         }
+        Assertions.assertThat(actualLines).containsExactly(expectedLines.toArray(new String[expectedLines.size()]));
     }
 
     // will verify various configs of log watch
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
+        return Arrays
+                .asList(new Object[][] {
                         { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()) },
-                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
-                    .closingAfterReading()
-                    .ignoringPreexistingContent() },
-                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
-                        .closingAfterReading() },
-                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
-                            .ignoringPreexistingContent() } });
+                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()).closingAfterReading()
+                            .ignoringPreexistingContent() },
+                            { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()).closingAfterReading() },
+                            { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
+                                .ignoringPreexistingContent() } });
     }
 
     public static Message wrapWaiting(final Future<Message> message) {
