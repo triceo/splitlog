@@ -80,19 +80,10 @@ public class RealWorldTest extends AbstractSplitlogTest {
 
     private static final String METRIC_ID_2 = "Accepted ERROR";
 
-    private static File createTempFile() {
-        try {
-            return File.createTempFile("splitlog-", ".tmp");
-        } catch (final IOException e) {
-            Assertions.fail("Couldn't create file.", e);
-            return null;
-        }
-    }
-
     @Test
     public void testRegular() {
         // fill file with random garbage
-        final File tmp = RealWorldTest.createTempFile();
+        final File tmp = LogWriter.createTempFile();
         for (int i = 0; i < 1000; i++) {
             try {
                 FileUtils.write(tmp, UUID.randomUUID().toString(), "UTF-8", true);

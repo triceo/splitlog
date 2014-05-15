@@ -29,13 +29,28 @@ import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 public class LogWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWriter.class);
+
     /**
      * This provides exclusive access to each file through
      * {@link #forFile(File)}.
      */
     private static final Map<File, LogWriter> WRITERS = new HashMap<File, LogWriter>();
+
+    public synchronized static File createTempFile() {
+        try {
+            final File targetFolder = new File("target/tmp/");
+            if (!targetFolder.exists()) {
+                targetFolder.mkdirs();
+            }
+            return File.createTempFile("test-", null, targetFolder);
+        } catch (final IOException e) {
+            throw new IllegalStateException("Cannot create temp files.", e);
+        }
+    }
+
     public static synchronized LogWriter forFile(final File f) {
         if (!LogWriter.WRITERS.containsKey(f)) {
+            LogWriter.LOGGER.info("Creating new LogWriter for {}.", f);
             LogWriter.WRITERS.put(f, new LogWriter(f));
         }
         return LogWriter.WRITERS.get(f);

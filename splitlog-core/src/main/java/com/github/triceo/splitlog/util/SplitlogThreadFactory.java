@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class SplitlogThreadFactory implements ThreadFactory {
 
+    private static final AtomicLong UNIQUE_ID = new AtomicLong(0);
     private final AtomicLong nextId = new AtomicLong(0);
 
     private final ThreadGroup threadGroup;
@@ -23,7 +24,8 @@ public class SplitlogThreadFactory implements ThreadFactory {
     }
 
     private String newThreadName() {
-        return this.threadGroupName + "-" + this.nextId.incrementAndGet();
+        return this.threadGroupName + "-" + this.nextId.incrementAndGet() + "-"
+                + SplitlogThreadFactory.UNIQUE_ID.incrementAndGet();
     }
 
 }

@@ -26,13 +26,13 @@ public class MergingTest extends DefaultFollowerBaseTest {
     @Test
     public void testMergeWithDifferentWatches() {
         // write into first file
-        final LogWatch watch1 = LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
+        final LogWatch watch1 = LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
                 .build();
         final Follower follower1 = watch1.startFollowing();
         final LogWriter writer1 = LogWriter.forFile(watch1.getWatchedFile());
         writer1.write(MergingTest.MESSAGE_1, follower1);
         // write into second file
-        final LogWatch watch2 = LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
+        final LogWatch watch2 = LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
                 .build();
         final Follower follower2 = watch2.startFollowing();
         final LogWriter writer2 = LogWriter.forFile(watch2.getWatchedFile());
@@ -59,7 +59,7 @@ public class MergingTest extends DefaultFollowerBaseTest {
         messages.add(MergingTest.MESSAGE_2);
         messages.add(MergingTest.MESSAGE_4);
         try {
-            final File f = DefaultFollowerBaseTest.getTempFile();
+            final File f = LogWriter.createTempFile();
             merge2.write(new FileOutputStream(f), NoopMessageFormatter.INSTANCE);
             Assertions.assertThat(f).exists();
             final List<String> lines = FileUtils.readLines(f, "UTF-8");

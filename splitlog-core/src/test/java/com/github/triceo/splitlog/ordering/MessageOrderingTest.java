@@ -23,7 +23,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
 
     private static File createTempCopy(final File toCopy) {
         try {
-            final File newTempFile = File.createTempFile("splitlog", "-log");
+            final File newTempFile = LogWriter.createTempFile();
             FileUtils.copyFile(toCopy, newTempFile);
             return newTempFile;
         } catch (final IOException e) {

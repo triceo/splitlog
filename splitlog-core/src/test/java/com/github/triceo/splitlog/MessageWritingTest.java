@@ -56,7 +56,7 @@ public class MessageWritingTest extends DefaultFollowerBaseTest {
             this.getLogWatch().stopFollowing(follower);
         }
         try {
-            final File f = File.createTempFile("splitlog-", ".log");
+            final File f = LogWriter.createTempFile();
             MessageWritingTest.LOGGER.info("Will write into '{}'.", f);
             follower.write(new FileOutputStream(f));
             Assertions.assertThat(f).exists();

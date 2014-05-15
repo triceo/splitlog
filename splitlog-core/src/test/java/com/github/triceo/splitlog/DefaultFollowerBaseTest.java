@@ -55,22 +55,14 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     @Parameters(name = "{index}: {0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile()) },
-                { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
+                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()) },
+                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
                     .closingAfterReading()
                     .ignoringPreexistingContent() },
-                    { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
+                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
                         .closingAfterReading() },
-                        { LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile())
+                        { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
                             .ignoringPreexistingContent() } });
-    }
-
-    protected static File getTempFile() {
-        try {
-            return File.createTempFile("splitlog-", ".log");
-        } catch (final IOException e) {
-            throw new IllegalStateException("Cannot create temp files.", e);
-        }
     }
 
     public static Message wrapWaiting(final Future<Message> message) {
@@ -91,7 +83,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     private LogWriter writer;
 
     public DefaultFollowerBaseTest() {
-        this(LogWatchBuilder.getDefault().watchedFile(DefaultFollowerBaseTest.getTempFile()));
+        this(LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()));
     }
 
     public DefaultFollowerBaseTest(final LogWatchBuilder builder) {
