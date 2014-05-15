@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -95,7 +96,7 @@ public class LogWriter {
         }
         try {
             // wait until the last part of the string is finally present
-            final Message result = future.get();
+            final Message result = future.get(10, TimeUnit.SECONDS);
             final List<String> lines = result.getLines();
             return lines.get(lines.size() - 1);
         } catch (final Exception e) {
