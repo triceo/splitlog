@@ -12,13 +12,6 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 
-/**
- * This test has a weird name, due to the Abstract thing. But this is so that
- * it's always run first in the alphabetical order, and therefore (when parallel
- * surefire is enabled and more than 1 core is available) the run time of all
- * tests will be minimized.
- *
- */
 @RunWith(Parameterized.class)
 public class NestingTest extends DefaultFollowerBaseTest {
 

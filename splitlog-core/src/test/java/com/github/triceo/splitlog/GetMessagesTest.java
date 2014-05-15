@@ -2,9 +2,6 @@ package com.github.triceo.splitlog;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -15,17 +12,9 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
-import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
 
-/**
- * This test has a weird name, due to the Abstract thing. But this is so that
- * it's always run first in the alphabetical order, and therefore (when parallel
- * surefire is enabled and more than 1 core is available) the run time of all
- * tests will be minimized.
- *
- */
 @RunWith(Parameterized.class)
-public class CommonFollowerTest extends DefaultFollowerBaseTest {
+public class GetMessagesTest extends DefaultFollowerBaseTest {
 
     private static final class NumberEndingMessageCondition implements SimpleMessageCondition {
 
@@ -47,7 +36,7 @@ public class CommonFollowerTest extends DefaultFollowerBaseTest {
 
     }
 
-    public CommonFollowerTest(final LogWatchBuilder builder) {
+    public GetMessagesTest(final LogWatchBuilder builder) {
         super(builder);
     }
 
@@ -92,32 +81,6 @@ public class CommonFollowerTest extends DefaultFollowerBaseTest {
         // final part of the message, message3part2, will remain unflushed
         this.getLogWatch().stopFollowing(follower);
         Assertions.assertThat(follower.isStopped()).isTrue();
-    }
-
-    @Test
-    public void testWaitForAfterPreviousFailed() {
-        final Follower follower = this.getLogWatch().startFollowing();
-        // this call will fail, since we're not writing anything
-        try {
-            follower.expect(AllLogWatchMessagesAcceptingCondition.INSTANCE).get(1, TimeUnit.SECONDS);
-            Assertions.fail("No message should've been received.");
-        } catch (final InterruptedException e) {
-            Assertions.fail("Message wait interrupted.", e);
-        } catch (final ExecutionException e) {
-            Assertions.fail("Message wait interrupted due to a problem.", e);
-        } catch (final TimeoutException e) {
-            // this is expected
-        }
-        // these calls should succeed
-        final String message = "test";
-        String result = this.getWriter().write(message, follower);
-        Assertions.assertThat(result).isEqualTo(message);
-        result = this.getWriter().write(message, follower);
-        Assertions.assertThat(result).isEqualTo(message);
-        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assertions.assertThat(messages.size()).isEqualTo(1);
-        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message);
-        this.getLogWatch().stopFollowing(follower);
     }
 
 }
