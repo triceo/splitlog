@@ -12,10 +12,6 @@ final class LogWatchTailerListener implements TailerListener {
 
     private final DefaultLogWatch watcher;
 
-    /*
-     * TODO ideally this would accept AbstractLogWatch instead, to enable
-     * different impls.
-     */
     public LogWatchTailerListener(final DefaultLogWatch watcher) {
         this.watcher = watcher;
     }
@@ -44,7 +40,8 @@ final class LogWatchTailerListener implements TailerListener {
 
     @Override
     public void init(final Tailer tailer) {
-        LogWatchTailerListener.LOGGER.info("Tailer initialized for file: {}.", this.watcher.getWatchedFile());
+        LogWatchTailerListener.LOGGER
+                .info("Tailer {} initialized for file: {}.", tailer, this.watcher.getWatchedFile());
     }
 
 }

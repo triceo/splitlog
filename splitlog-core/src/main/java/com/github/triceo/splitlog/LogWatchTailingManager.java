@@ -2,6 +2,7 @@ package com.github.triceo.splitlog;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.input.Tailer;
@@ -11,6 +12,7 @@ import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.SplitlogTailer;
 import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
 /**
@@ -26,7 +28,7 @@ final class LogWatchTailingManager {
     private final long delayBetweenReads;
     private final AtomicLong numberOfTimesThatTailerWasStarted = new AtomicLong(0);
     private final boolean reopenBetweenReads, ignoreExistingContent;
-    private Tailer tailer;
+    private SplitlogTailer tailer;
     private final DefaultLogWatch watch;
 
     public LogWatchTailingManager(final DefaultLogWatch watch, final LogWatchBuilder builder) {
@@ -51,9 +53,14 @@ final class LogWatchTailingManager {
         if (this.isRunning()) {
             return false;
         }
-        this.tailer = new Tailer(this.watch.getWatchedFile(), new LogWatchTailerListener(this.watch),
+        this.tailer = new SplitlogTailer(this.watch.getWatchedFile(), new LogWatchTailerListener(this.watch),
                 this.delayBetweenReads, this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
         LogWatchTailingManager.EXECUTOR.execute(this.tailer);
+        final long start = System.nanoTime();
+        this.tailer.waitUntilStarted();
+        final long duration = System.nanoTime() - start;
+        LogWatchTailingManager.LOGGER.debug("It took {} ms for the tailing to actually start.",
+                TimeUnit.NANOSECONDS.toMillis(duration));
         final long iterationNum = this.numberOfTimesThatTailerWasStarted.incrementAndGet();
         LogWatchTailingManager.LOGGER.info("Tailing #{} started for {}.", iterationNum, this.watch);
         return true;
