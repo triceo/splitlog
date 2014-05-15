@@ -1,16 +1,19 @@
 package com.github.triceo.splitlog.expectations;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.slf4j.Logger;
 
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageAction;
 import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
 /**
@@ -25,7 +28,9 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
 
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new SplitlogThreadFactory(
             "expectations"));
-    private final Set<AbstractExpectation<C, P>> exchanges = new HashSet<AbstractExpectation<C, P>>();
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectationManager.class);
+    private final ConcurrentMap<AbstractExpectation<C, P>, Future<Message>> expectations = new ConcurrentHashMap<AbstractExpectation<C, P>, Future<Message>>();
+
     private boolean isStopped = false;
 
     protected abstract AbstractExpectation<C, P> createExpectation(final C condition, final MessageAction<P> action);
@@ -41,7 +46,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
-        for (final AbstractExpectation<C, P> exchange : this.exchanges) {
+        for (final AbstractExpectation<C, P> exchange : this.expectations.keySet()) {
             exchange.messageReceived(message, status, producer);
         }
     }
@@ -70,18 +75,23 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
-        final AbstractExpectation<C, P> exchange = this.createExpectation(condition, action);
-        this.exchanges.add(exchange);
-        return AbstractExpectationManager.EXECUTOR.submit(exchange);
+        final AbstractExpectation<C, P> expectation = this.createExpectation(condition, action);
+        final Future<Message> future = AbstractExpectationManager.EXECUTOR.submit(expectation);
+        this.expectations.put(expectation, future);
+        AbstractExpectationManager.LOGGER.info("Registered expectation {} with action {}.", expectation, action);
+        return future;
     }
 
     @Override
-    public boolean stop() {
+    public synchronized boolean stop() {
         if (this.isStopped()) {
             return false;
         }
-        this.exchanges.clear();
         this.isStopped = true;
+        for (final Future<Message> future : this.expectations.values()) {
+            future.cancel(true);
+        }
+        this.expectations.clear();
         return true;
     }
 
@@ -93,7 +103,12 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
      * @return If stopped, false if stopped already.
      */
     protected synchronized boolean unsetExpectation(final AbstractExpectation<C, P> expectation) {
-        return this.exchanges.remove(expectation);
+        if (this.expectations.containsKey(expectation)) {
+            this.expectations.remove(expectation);
+            AbstractExpectationManager.LOGGER.info("Unregistered expectation {}.", expectation);
+            return true;
+        }
+        return false;
     }
 
 }

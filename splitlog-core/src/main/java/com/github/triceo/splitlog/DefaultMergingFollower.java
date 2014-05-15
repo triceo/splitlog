@@ -127,7 +127,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         DefaultMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
-        this.getExchange().messageReceived(msg, status, source);
+        this.getExpectationManager().messageReceived(msg, status, source);
         this.getConsumerManager().messageReceived(msg, status, this);
     }
 
@@ -165,7 +165,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
             f.stop();
         }
         this.getConsumerManager().stop();
-        this.getExchange().stop();
+        this.getExpectationManager().stop();
         DefaultMergingFollower.LOGGER.info("Stopped {}.", this);
         return true;
     }

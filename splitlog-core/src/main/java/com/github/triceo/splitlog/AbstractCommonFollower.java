@@ -75,7 +75,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
      */
     protected abstract MessageFormatter getDefaultFormatter();
 
-    protected MidDeliveryExpectationManager<C> getExchange() {
+    protected MidDeliveryExpectationManager<C> getExpectationManager() {
         return this.expectations;
     }
 

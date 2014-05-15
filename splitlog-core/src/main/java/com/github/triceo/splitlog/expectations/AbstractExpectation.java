@@ -58,22 +58,21 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
      * Will start the wait for the condition to become true.
      */
     @Override
-    public Message call() {
+    public Message call() throws InterruptedException {
+        AbstractExpectation.LOGGER.info("Thread blocked waiting for message to pass condition {}.",
+                this.getBlockingCondition());
         try {
-            AbstractExpectation.LOGGER.info("Thread blocked waiting for message to pass condition {}.",
-                    this.getBlockingCondition());
             this.latch.await();
-            this.manager.unsetExpectation(this); // don't notify again
-            AbstractExpectation.LOGGER.info("Thread unblocked.");
+            this.manager.unsetExpectation(this);
+            AbstractExpectation.LOGGER.info("Condition passed.");
             if (this.actionFuture != null) {
                 this.waitUntilActionComplete();
             }
             AbstractExpectation.LOGGER.info("Expectation processing passed.");
             return this.stash;
-        } catch (final InterruptedException e) {
-            throw new IllegalStateException("Expectation failed.", e);
         } finally {
             this.manager.unsetExpectation(this); // in case await() throws
+            AbstractExpectation.LOGGER.info("Thread unblocked.");
         }
     }
 
@@ -104,6 +103,7 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
             AbstractExpectation.LOGGER.debug("Not continuing with processing as condition already triggered once.");
             return;
         }
+        this.manager.unsetExpectation(this); // don't notify again
         AbstractExpectation.LOGGER.debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
         this.stash = msg;
         if (this.action != null) {

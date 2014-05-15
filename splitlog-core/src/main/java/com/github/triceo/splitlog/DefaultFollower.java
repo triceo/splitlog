@@ -130,7 +130,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
         DefaultFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
-        this.getExchange().messageReceived(msg, status, source);
+        this.getExpectationManager().messageReceived(msg, status, source);
         this.getConsumerManager().messageReceived(msg, status, this);
     }
 
@@ -142,7 +142,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
         DefaultFollower.LOGGER.info("Stopping {}.", this);
         this.getFollowed().stopFollowing(this);
         this.getConsumerManager().stop();
-        this.getExchange().stop();
+        this.getExpectationManager().stop();
         DefaultFollower.LOGGER.info("Stopped {}.", this);
         return true;
     }
