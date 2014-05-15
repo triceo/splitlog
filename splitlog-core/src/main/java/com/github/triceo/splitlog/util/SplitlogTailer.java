@@ -2,15 +2,21 @@ package com.github.triceo.splitlog.util;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
+import org.slf4j.Logger;
+
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 /**
  * Extension of the Apache tailer to allow us to monitor when it's actually
  * started tailing.
  */
 public class SplitlogTailer extends Tailer {
+
+    private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(SplitlogTailer.class);
 
     private final CountDownLatch started = new CountDownLatch(1);
     private final CountDownLatch stopped = new CountDownLatch(1);
@@ -40,9 +46,9 @@ public class SplitlogTailer extends Tailer {
 
     public void waitUntilStopped() {
         try {
-            this.stopped.await();
+            this.stopped.await(this.getDelay(), TimeUnit.MILLISECONDS);
         } catch (final InterruptedException e) {
-            this.waitUntilStopped();
+            SplitlogTailer.LOGGER.warn("Waiting for Tailer to stop received an interrupt.");
         }
     }
 }

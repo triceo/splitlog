@@ -1,7 +1,8 @@
 package com.github.triceo.splitlog;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -21,7 +22,7 @@ import com.github.triceo.splitlog.util.SplitlogThreadFactory;
  */
 final class LogWatchTailingManager {
 
-    private static final Executor EXECUTOR = Executors.newCachedThreadPool(new SplitlogThreadFactory("tails"));
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new SplitlogThreadFactory("tails"));
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchTailingManager.class);
     private final int bufferSize;
@@ -29,6 +30,7 @@ final class LogWatchTailingManager {
     private final AtomicLong numberOfTimesThatTailerWasStarted = new AtomicLong(0);
     private final boolean reopenBetweenReads, ignoreExistingContent;
     private SplitlogTailer tailer;
+    private Future<?> tailerFuture;
     private final DefaultLogWatch watch;
 
     public LogWatchTailingManager(final DefaultLogWatch watch, final LogWatchBuilder builder) {
@@ -55,7 +57,7 @@ final class LogWatchTailingManager {
         }
         this.tailer = new SplitlogTailer(this.watch.getWatchedFile(), new LogWatchTailerListener(this.watch),
                 this.delayBetweenReads, this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
-        LogWatchTailingManager.EXECUTOR.execute(this.tailer);
+        this.tailerFuture = LogWatchTailingManager.EXECUTOR.submit(this.tailer);
         final long start = System.nanoTime();
         this.tailer.waitUntilStarted();
         final long duration = System.nanoTime() - start;
@@ -79,12 +81,16 @@ final class LogWatchTailingManager {
         }
         // forcibly terminate tailer
         this.tailer.stop();
+        this.tailerFuture.cancel(true);
+        // wait for completion
         final long start = System.nanoTime();
         this.tailer.waitUntilStopped();
         final long duration = System.nanoTime() - start;
         LogWatchTailingManager.LOGGER.debug("It took {} ms for the tailing to actually stop.",
                 TimeUnit.NANOSECONDS.toMillis(duration));
+        // cleanup
         this.tailer = null;
+        this.tailerFuture = null;
         LogWatchTailingManager.LOGGER.info("Terminated tailing #{} for {}.",
                 this.numberOfTimesThatTailerWasStarted.get(), this.watch);
         return true;
