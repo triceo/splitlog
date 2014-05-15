@@ -19,7 +19,7 @@ public abstract class AbstractSplitlogTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSplitlogTest.class);
 
     @Rule
-    public Timeout globalTimeout = new Timeout((int) TimeUnit.MINUTES.toMillis(2));
+    public Timeout globalTimeout = new Timeout((int) TimeUnit.MINUTES.toMillis(1));
 
     @Rule
     public TestRule watchman = new TestWatcher() {
