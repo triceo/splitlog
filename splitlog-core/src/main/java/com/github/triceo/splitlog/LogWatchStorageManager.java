@@ -29,7 +29,7 @@ final class LogWatchStorageManager {
             endingMessageIds = new WeakHashMap<Follower, Integer>();
 
     public LogWatchStorageManager(final LogWatch watch, final int capacity,
-            final SimpleMessageCondition acceptanceCondition) {
+        final SimpleMessageCondition acceptanceCondition) {
         this.logWatch = watch;
         this.messages = new MessageStore(capacity);
         this.acceptanceCondition = acceptanceCondition;
@@ -37,11 +37,13 @@ final class LogWatchStorageManager {
 
     public synchronized void followerStarted(final Follower follower) {
         final int startingMessageId = this.messages.getNextPosition();
+        LogWatchStorageManager.LOGGER.info("First message position is {} for {}.", startingMessageId, follower);
         this.startingMessageIds.put(follower, startingMessageId);
     }
 
     public synchronized void followerTerminated(final Follower follower) {
         final int endingMessageId = this.messages.getLatestPosition();
+        LogWatchStorageManager.LOGGER.info("Last message position is {} for {}.", endingMessageId, follower);
         this.endingMessageIds.put(follower, endingMessageId);
     }
 

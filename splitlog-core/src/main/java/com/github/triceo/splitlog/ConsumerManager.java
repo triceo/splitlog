@@ -172,7 +172,7 @@ ConsumerRegistrar<P> {
     @Override
     public synchronized boolean stopConsuming(final MessageConsumer<P> consumer) {
         if (this.consumers.remove(consumer)) {
-            ConsumerManager.LOGGER.info("Removed consumer {} for {}.", consumer, this.producer);
+            ConsumerManager.LOGGER.info("Unregistered consumer {} for {}.", consumer, this.producer);
             return true;
         } else {
             return false;

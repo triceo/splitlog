@@ -19,7 +19,7 @@ import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
  */
 final class MessageStore {
 
-    private static final int INITIAL_MESSAGE_POSITION = 0;
+    public static final int INITIAL_MESSAGE_POSITION = 0;
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(MessageStore.class);
 
     private final int messageLimit;
@@ -62,6 +62,7 @@ final class MessageStore {
     public synchronized int add(final Message msg) {
         final int nextKey = this.getNextPosition();
         this.store.put(nextKey, msg);
+        MessageStore.LOGGER.info("Message #{} stored on position #{}", msg.getUniqueId(), nextKey);
         this.nextMessagePosition++;
         if (this.store.size() > this.messageLimit) {
             // discard first message if we're over limit

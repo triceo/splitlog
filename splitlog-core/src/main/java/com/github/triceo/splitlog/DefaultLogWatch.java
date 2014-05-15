@@ -347,10 +347,16 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
         final boolean result = this.consumers.stopConsuming(consumer);
+        if (!result) {
+            return false;
+        }
+        if (consumer instanceof Follower) {
+            this.storage.followerTerminated((Follower) consumer);
+        }
         if (this.countConsumers() < 1) {
             this.currentlyProcessedMessage = null;
         }
-        return result;
+        return true;
     }
 
     @Override
@@ -362,7 +368,6 @@ final class DefaultLogWatch implements LogWatch {
             this.handleUndeliveredMessage(follower, this.currentlyProcessedMessage.buildIntermediate(this.splitter));
         }
         this.stopConsuming(follower);
-        this.storage.followerTerminated(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
         return true;
     }

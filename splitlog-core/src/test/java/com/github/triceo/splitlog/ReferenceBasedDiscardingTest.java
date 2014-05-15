@@ -3,6 +3,8 @@ package com.github.triceo.splitlog;
 import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.api.Assertions;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -10,12 +12,28 @@ import org.junit.runners.Parameterized;
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 
 @RunWith(Parameterized.class)
 public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
 
     public ReferenceBasedDiscardingTest(final LogWatchBuilder builder) {
         super(builder.withDelayBetweenSweeps(1, TimeUnit.SECONDS));
+    }
+
+    @Before
+    public void disableLogging() {
+        /*
+         * logging, when async, may store messages and their attributes for
+         * future writing. this will keep the followers from being GC'd and will
+         * break this test.
+         */
+        SplitlogLoggerFactory.silenceLogging();
+    }
+
+    @After
+    public void enableLogging() {
+        SplitlogLoggerFactory.resetLoggingToDefaultState();
     }
 
     @Test
@@ -52,10 +70,6 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
             Assertions.fail("Test will fail as there was not enough time to wait for message sweep.");
         }
         Assertions.assertThat(w.countMessagesInStorage()).isEqualTo(1);
-        /*
-         * make sure the second follower has what it's supposed to; the second
-         * message
-         */
         DefaultFollowerBaseTest.assertProperOrder(follower2.getMessages(), secondMessage);
         // terminate following, make sure all the messages are cleared
         w.stopFollowing(follower2);

@@ -72,6 +72,7 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
             return this.stash;
         } finally {
             this.manager.unsetExpectation(this); // in case await() throws
+            this.actionFuture = null;
             AbstractExpectation.LOGGER.info("Thread unblocked.");
         }
     }
