@@ -27,11 +27,7 @@ public class LogWriter {
 
     public synchronized static File createTempFile() {
         try {
-            final File targetFolder = new File("target/tmp/");
-            if (!targetFolder.exists()) {
-                targetFolder.mkdirs();
-            }
-            return File.createTempFile("test-", null, targetFolder);
+            return File.createTempFile("test-", null);
         } catch (final IOException e) {
             throw new IllegalStateException("Cannot create temp files.", e);
         }
