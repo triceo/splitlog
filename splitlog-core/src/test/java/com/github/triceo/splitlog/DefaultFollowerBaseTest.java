@@ -131,7 +131,6 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
         // and start the log watch
         this.logwatch = this.getBuilder().build();
         // this will write an initial message to the log
-        this.writer.writeNow(DefaultFollowerBaseTest.INITIAL_MESSAGE);
         if (this.getBuilder().isReadingFromBeginning()) {
             /*
              * if we are reading from beginning, we get rid of the first message;
@@ -140,12 +139,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
              */
             DefaultFollowerBaseTest.LOGGER.info("Initial message written.");
             final Follower f = this.getLogWatch().startFollowing();
-            try {
-                // give the follower some time to be notified of the message
-                Thread.sleep(100);
-            } catch (final InterruptedException e) {
-                DefaultFollowerBaseTest.LOGGER.warn("Test wait failed.");
-            }
+            this.writer.write(DefaultFollowerBaseTest.INITIAL_MESSAGE, f);
             this.getLogWatch().stopFollowing(f);
         }
         DefaultFollowerBaseTest.LOGGER.info("@Before finished.");
