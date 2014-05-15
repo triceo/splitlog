@@ -55,6 +55,9 @@ final class LogWatchTailingManager {
         if (this.isRunning()) {
             return false;
         }
+        final boolean willReadFromEnd = this.willReadFromEnd();
+        LogWatchTailingManager.LOGGER.debug("Tailer {} ignore existing file contents.", willReadFromEnd ? "will"
+                : "won't");
         this.tailer = new SplitlogTailer(this.watch.getWatchedFile(), new LogWatchTailerListener(this.watch),
                 this.delayBetweenReads, this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
         this.tailerFuture = LogWatchTailingManager.EXECUTOR.submit(this.tailer);
