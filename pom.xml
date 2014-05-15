@@ -101,6 +101,7 @@
           <version>${surefire.version}</version>
           <configuration>
             <forkCount>2C</forkCount>
+            <forkedProcessTimeoutInSeconds>60</forkedProcessTimeoutInSeconds>
             <runOrder>alphabetical</runOrder>
             <reuseForks>false</reuseForks>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
