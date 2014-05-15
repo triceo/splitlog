@@ -9,38 +9,28 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 
-@RunWith(Parameterized.class)
-public class MessageWritingTest extends DefaultFollowerBaseTest {
+public abstract class AbstractMessageWritingTest extends DefaultFollowerBaseTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageWritingTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageWritingTest.class);
     private static final int MESSAGES_TO_WRITE = 10;
 
-    public MessageWritingTest(final LogWatchBuilder builder) {
+    public AbstractMessageWritingTest(final LogWatchBuilder builder) {
         super(builder);
     }
 
     @Test
-    public void testWriteMessages() {
-        this.writeAndTest(false);
-    }
+    public abstract void testWriteMessages();
 
-    @Test
-    public void testWriteMessagesAfterTerminated() {
-        this.writeAndTest(true);
-    }
-
-    private void writeAndTest(final boolean closeBeforeWriting) {
+    protected void writeAndTest(final boolean closeBeforeWriting) {
         final Follower follower = this.getLogWatch().startFollowing();
         final List<String> messages = new LinkedList<String>();
-        for (int i = 0; i < MessageWritingTest.MESSAGES_TO_WRITE; i++) {
+        for (int i = 0; i < AbstractMessageWritingTest.MESSAGES_TO_WRITE; i++) {
             messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
         }
         messages.remove(messages.size() - 1); // last message will not be
@@ -50,7 +40,7 @@ public class MessageWritingTest extends DefaultFollowerBaseTest {
         }
         try {
             final File f = LogWriter.createTempFile();
-            MessageWritingTest.LOGGER.info("Will write into '{}'.", f);
+            AbstractMessageWritingTest.LOGGER.info("Will write into '{}'.", f);
             follower.write(new FileOutputStream(f));
             Assertions.assertThat(f).exists();
             final List<String> lines = FileUtils.readLines(f, "UTF-8");
