@@ -1,7 +1,7 @@
 package com.github.triceo.splitlog;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -42,17 +42,11 @@ public class NestingTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(nestedFollower.isStopped()).isTrue();
         result = this.getWriter().write(message5, follower);
         // and make sure that the original follower has all messages
-        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assertions.assertThat(messages.size()).isEqualTo(4);
-        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message1);
-        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message2);
-        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message3);
-        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message4);
+        final SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
+        DefaultFollowerBaseTest.assertProperOrder(messages, message1, message2, message3, message4);
         // and the nested follower has only the two while it was running
-        final List<Message> nestedMessages = new LinkedList<Message>(nestedFollower.getMessages());
-        Assertions.assertThat(nestedFollower.getMessages().size()).isEqualTo(2);
-        Assertions.assertThat(nestedMessages.get(0).getLines().get(0)).isEqualTo(message2);
-        Assertions.assertThat(nestedMessages.get(1).getLines().get(0)).isEqualTo(message3);
+        final SortedSet<Message> nestedMessages = new TreeSet<Message>(nestedFollower.getMessages());
+        DefaultFollowerBaseTest.assertProperOrder(nestedMessages, message2, message3);
     }
 
 }

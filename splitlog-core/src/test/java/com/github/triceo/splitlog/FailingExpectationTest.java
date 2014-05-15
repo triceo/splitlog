@@ -1,7 +1,7 @@
 package com.github.triceo.splitlog;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -43,9 +43,8 @@ public class FailingExpectationTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(result).isEqualTo(message);
         result = this.getWriter().write(message, follower);
         Assertions.assertThat(result).isEqualTo(message);
-        final List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assertions.assertThat(messages.size()).isEqualTo(1);
-        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message);
+        final SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
+        DefaultFollowerBaseTest.assertProperOrder(messages, message);
         this.getLogWatch().stopFollowing(follower);
     }
 

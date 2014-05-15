@@ -1,7 +1,7 @@
 package com.github.triceo.splitlog;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -53,19 +53,11 @@ public class TaggingTest extends DefaultFollowerBaseTest {
         result = this.getWriter().write(message3, follower);
         Assertions.assertThat(result).isEqualTo(message3);
         // make sure all messages are present with the default condition
-        List<Message> messages = new LinkedList<Message>(follower.getMessages());
-        Assertions.assertThat(messages.size()).isEqualTo(5);
-        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(tag0);
-        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
-        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(tag1);
-        Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message2);
-        Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(tag2);
+        SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
+        DefaultFollowerBaseTest.assertProperOrder(messages, tag0, message1, tag1, message2, tag2);
         // make sure just the tags are present witn nothing-accepting condition
-        messages = new LinkedList<Message>(follower.getMessages(new NothingAcceptingMessageCondition()));
-        Assertions.assertThat(messages.size()).isEqualTo(3);
-        Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(tag0);
-        Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(tag1);
-        Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(tag2);
+        messages = new TreeSet<Message>(follower.getMessages(new NothingAcceptingMessageCondition()));
+        DefaultFollowerBaseTest.assertProperOrder(messages, tag0, tag1, tag2);
     }
 
 }

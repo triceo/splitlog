@@ -31,15 +31,15 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
      * Will fail unless the messages provided equal to those in the collection,
      * and are present in the exact same order.
      *
-     * @param messages
+     * @param actualMessages
      *            Messages from some {@link Follower}.
      * @param expectedMessages
      *            Either {@link Message} to compare messages, or a string if we
      *            want to compare against a tag.
      */
-    protected static void assertProperOrder(final SortedSet<Message> messages, final Object... expectedMessages) {
+    protected static void assertProperOrder(final SortedSet<Message> actualMessages, final Object... expectedMessages) {
         final List<String> actualLines = new LinkedList<String>();
-        for (final Message actual : messages) {
+        for (final Message actual : actualMessages) {
             actualLines.add(actual.getLines().get(0));
         }
         final List<String> expectedLines = new LinkedList<String>();
