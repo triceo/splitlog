@@ -13,6 +13,7 @@ import org.apache.commons.io.input.TailerListener;
 public class SplitlogTailer extends Tailer {
 
     private final CountDownLatch started = new CountDownLatch(1);
+    private final CountDownLatch stopped = new CountDownLatch(1);
 
     public SplitlogTailer(final File file, final TailerListener listener, final long delayMillis, final boolean end,
         final boolean reOpen, final int bufSize) {
@@ -21,8 +22,12 @@ public class SplitlogTailer extends Tailer {
 
     @Override
     public void run() {
-        this.started.countDown();
-        super.run();
+        try {
+            this.started.countDown();
+            super.run();
+        } finally {
+            this.stopped.countDown();
+        }
     }
 
     public void waitUntilStarted() {
@@ -33,4 +38,11 @@ public class SplitlogTailer extends Tailer {
         }
     }
 
+    public void waitUntilStopped() {
+        try {
+            this.stopped.await();
+        } catch (final InterruptedException e) {
+            this.waitUntilStopped();
+        }
+    }
 }
