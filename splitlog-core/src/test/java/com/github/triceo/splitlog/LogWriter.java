@@ -78,7 +78,7 @@ public class LogWriter {
      *            Follower to wait for the message.
      * @return The line that was written, or null otherwise.
      */
-    public synchronized String write(final String line, final Follower follower) {
+    public String write(final String line, final Follower follower) {
         final Future<Message> future = follower.expect(new MidDeliveryMessageCondition<LogWatch>() {
 
             @Override

@@ -94,12 +94,9 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     }
 
     @After
-    public void destroyEverything() {
+    public synchronized void destroyEverything() {
         DefaultFollowerBaseTest.LOGGER.info("@After started.");
-        this.writer.dispose();
-        if (!this.logwatch.isTerminated()) {
-            this.logwatch.terminate();
-        }
+        this.logwatch.terminate();
     }
 
     protected LogWatchBuilder getBuilder() {
@@ -115,7 +112,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     }
 
     @Before
-    public void startEverything() {
+    public synchronized void startEverything() {
         // prepare file
         final File toWrite = this.getBuilder().getFileToWatch();
         if (toWrite.exists()) {

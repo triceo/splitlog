@@ -28,12 +28,14 @@ public class SplitlogTailer extends Tailer {
 
     @Override
     public void run() {
+        SplitlogTailer.LOGGER.info("Tailer thread started.");
         try {
             this.started.countDown();
             super.run();
         } finally {
             this.stopped.countDown();
         }
+        SplitlogTailer.LOGGER.info("Tailer thread stopped.");
     }
 
     public void waitUntilStarted() {
