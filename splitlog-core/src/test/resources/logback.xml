@@ -10,7 +10,7 @@
   </appender>
 
   <logger name="com.github.triceo.splitlog">
-    <level value="INFO" />
-    <appender-ref ref="consoleAppender" />
+    <level value="TRACE" />
+    <appender-ref ref="asyncConsoleAppender" />
   </logger>
 </configuration>
