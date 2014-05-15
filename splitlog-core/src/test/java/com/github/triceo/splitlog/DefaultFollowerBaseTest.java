@@ -95,6 +95,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
 
     @After
     public void destroyEverything() {
+        DefaultFollowerBaseTest.LOGGER.info("@After started.");
         this.writer.dispose();
         if (!this.logwatch.isTerminated()) {
             this.logwatch.terminate();
@@ -131,23 +132,22 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
         this.logwatch = this.getBuilder().build();
         // this will write an initial message to the log
         this.writer.writeNow(DefaultFollowerBaseTest.INITIAL_MESSAGE);
-        if (!this.getBuilder().isReadingFromBeginning()) {
-            return;
+        if (this.getBuilder().isReadingFromBeginning()) {
+            /*
+             * if we are reading from beginning, we get rid of the first message;
+             * this way, Github issue #25 is tested and all tests still work for
+             * both cases.
+             */
+            DefaultFollowerBaseTest.LOGGER.info("Initial message written.");
+            final Follower f = this.getLogWatch().startFollowing();
+            try {
+                // give the follower some time to be notified of the message
+                Thread.sleep(100);
+            } catch (final InterruptedException e) {
+                DefaultFollowerBaseTest.LOGGER.warn("Test wait failed.");
+            }
+            this.getLogWatch().stopFollowing(f);
         }
-        /*
-         * if we are reading from beginning, we get rid of the first message;
-         * this way, Github issue #25 is tested and all tests still work for
-         * both cases.
-         */
-        DefaultFollowerBaseTest.LOGGER.info("Initial message written.");
-        final Follower f = this.getLogWatch().startFollowing();
-        try {
-            // give the follower some time to be notified of the message
-            Thread.sleep(100);
-        } catch (final InterruptedException e) {
-            DefaultFollowerBaseTest.LOGGER.warn("Test wait failed.");
-        }
-        this.getLogWatch().stopFollowing(f);
         DefaultFollowerBaseTest.LOGGER.info("@Before finished.");
     }
 }
