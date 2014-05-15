@@ -34,7 +34,6 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
     private final File target = MessageOrderingTest.createTempCopy(new File(
             "src/test/resources/com/github/triceo/splitlog/ordering/", "ordering.log"));
     private LogWatch watch;
-    private final LogWriter writer = LogWriter.forFile(this.target);
 
     @Before
     public void buildWatch() {
@@ -51,7 +50,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
     public void testOriginalOrdering() {
         final Follower f = this.watch.startFollowing();
         // will make sure all messages from the existing log file are ACCEPTED
-        this.writer.write("test", f);
+        LogWriter.write(f, "test");
         // messages will be ordered exactly as they came in
         final List<Message> messages = new LinkedList<Message>(f.getMessages());
         Assertions.assertThat(messages.size()).isEqualTo(3); // 3 ACCEPTED, 1
@@ -66,7 +65,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
     public void testTimeBasedOrdering() {
         final Follower f = this.watch.startFollowing();
         // will make sure all messages from the existing log file are ACCEPTED
-        this.writer.write("test", f);
+        LogWriter.write(f, "test");
         // messages will be ordered by their timestamp
         final List<Message> messages = new LinkedList<Message>(
                 f.getMessages(TimestampOrderingMessageComparator.INSTANCE));

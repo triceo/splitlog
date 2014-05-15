@@ -28,19 +28,19 @@ public class NestingTest extends DefaultFollowerBaseTest {
         final String message5 = "test5";
         final Follower follower = this.getLogWatch().startFollowing();
         // make sure the messages are received by the first follower
-        this.getWriter().write(message1, follower);
-        String result = this.getWriter().write(message2, follower);
+        LogWriter.write(follower, message1);
+        String result = LogWriter.write(follower, message2);
         Assertions.assertThat(result).isEqualTo(message2);
         Assertions.assertThat(follower.getMessages().size()).isEqualTo(1);
         // start a second follower, send some messages
         final Follower nestedFollower = this.getLogWatch().startFollowing();
-        result = this.getWriter().write(message3, follower);
-        result = this.getWriter().write(message4, follower);
+        result = LogWriter.write(follower, message3);
+        result = LogWriter.write(follower, message4);
         Assertions.assertThat(result).isEqualTo(message4);
         this.getLogWatch().stopFollowing(nestedFollower);
         // send another message, so the original follower has something extra
         Assertions.assertThat(nestedFollower.isStopped()).isTrue();
-        result = this.getWriter().write(message5, follower);
+        result = LogWriter.write(follower, message5);
         // and make sure that the original follower has all messages
         final SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
         DefaultFollowerBaseTest.assertProperOrder(messages, message1, message2, message3, message4);

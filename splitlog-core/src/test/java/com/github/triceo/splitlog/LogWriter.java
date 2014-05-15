@@ -4,9 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -22,20 +20,10 @@ import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 
 /**
  * Write a message to a given log file.
- *
- * This class is designed in such a way that it would be literally impossible
- * for two threads to attempt to write the same file at the same time.
- *
  */
 public class LogWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogWriter.class);
-
-    /**
-     * This provides exclusive access to each file through
-     * {@link #forFile(File)}.
-     */
-    private static final Map<File, LogWriter> WRITERS = new HashMap<File, LogWriter>();
 
     public synchronized static File createTempFile() {
         try {
@@ -49,25 +37,21 @@ public class LogWriter {
         }
     }
 
-    public static synchronized LogWriter forFile(final File f) {
-        if (!LogWriter.WRITERS.containsKey(f)) {
-            LogWriter.LOGGER.info("Creating new LogWriter for {}.", f);
-            LogWriter.WRITERS.put(f, new LogWriter(f));
+    public static boolean write(final File target, final String line) {
+        BufferedWriter w = null;
+        try {
+            w = new BufferedWriter(new FileWriter(target, true));
+            w.write(line);
+            w.newLine();
+            LogWriter.LOGGER.info("Written '{}' into {}.", line, target);
+        } catch (final IOException ex) {
+            LogWriter.LOGGER.warn("Failed writing '{}' into {}.", line, target, ex);
+            return false;
+        } finally {
+            IOUtils.closeQuietly(w);
+            LogWriter.LOGGER.debug("File closed: {}.", target);
         }
-        return LogWriter.WRITERS.get(f);
-    }
-
-    private boolean isDisposed = false;
-
-    private final File target;
-
-    private LogWriter(final File target) {
-        this.target = target;
-    }
-
-    public synchronized void dispose() {
-        LogWriter.WRITERS.remove(this.target);
-        this.isDisposed = true;
+        return true;
     }
 
     /**
@@ -79,7 +63,8 @@ public class LogWriter {
      *            Follower to wait for the message.
      * @return The line that was written, or null otherwise.
      */
-    public String write(final String line, final Follower follower) {
+    public static String write(final Follower follower, final String line) {
+        final File target = follower.getFollowed().getWatchedFile();
         final Future<Message> future = follower.expect(new MidDeliveryMessageCondition<LogWatch>() {
 
             @Override
@@ -91,7 +76,7 @@ public class LogWriter {
             }
 
         });
-        if (!this.writeNow(line)) {
+        if (!LogWriter.write(target, line)) {
             throw new IllegalStateException("Failed writing message.");
         }
         try {
@@ -104,24 +89,4 @@ public class LogWriter {
         }
     }
 
-    public synchronized boolean writeNow(final String line) {
-        if (this.isDisposed) {
-            LogWriter.LOGGER.info("Not writing '{}' into {} as the writer is already disposed.", line, this.target);
-            return false;
-        }
-        BufferedWriter w = null;
-        try {
-            w = new BufferedWriter(new FileWriter(this.target, true));
-            w.write(line);
-            w.newLine();
-            LogWriter.LOGGER.info("Written '{}' into {}.", line, this.target);
-        } catch (final IOException ex) {
-            LogWriter.LOGGER.warn("Failed writing '{}' into {}.", line, this.target, ex);
-            return false;
-        } finally {
-            IOUtils.closeQuietly(w);
-            LogWriter.LOGGER.debug("File closed: {}.", this.target);
-        }
-        return true;
-    }
 }

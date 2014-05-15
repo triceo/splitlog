@@ -49,13 +49,13 @@ public class GetMessagesTest extends DefaultFollowerBaseTest {
         final String message3part2 = "test4";
         final Follower follower = this.getLogWatch().startFollowing();
         // test simple messages
-        String result = this.getWriter().write(message1, follower);
+        String result = LogWriter.write(follower, message1);
         Assertions.assertThat(result).isEqualTo(message1);
-        result = this.getWriter().write(message1, follower);
+        result = LogWriter.write(follower, message1);
         Assertions.assertThat(result).isEqualTo(message1);
-        result = this.getWriter().write(message2part1 + "\n" + message2part2, follower);
+        result = LogWriter.write(follower, message2part1 + "\n" + message2part2);
         Assertions.assertThat(result).isEqualTo(message2part2);
-        result = this.getWriter().write(message3part1 + "\r\n" + message3part2, follower);
+        result = LogWriter.write(follower, message3part1 + "\r\n" + message3part2);
         Assertions.assertThat(result).isEqualTo(message3part2);
         // now validate the results with the default condition
         List<Message> messages = new LinkedList<Message>(follower.getMessages());

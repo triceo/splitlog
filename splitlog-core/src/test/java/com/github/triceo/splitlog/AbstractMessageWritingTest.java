@@ -31,7 +31,7 @@ public abstract class AbstractMessageWritingTest extends DefaultFollowerBaseTest
         final Follower follower = this.getLogWatch().startFollowing();
         final List<String> messages = new LinkedList<String>();
         for (int i = 0; i < AbstractMessageWritingTest.MESSAGES_TO_WRITE; i++) {
-            messages.add(this.getWriter().write(UUID.randomUUID().toString(), follower));
+            messages.add(LogWriter.write(follower, UUID.randomUUID().toString()));
         }
         messages.remove(messages.size() - 1); // last message will not be
         // written

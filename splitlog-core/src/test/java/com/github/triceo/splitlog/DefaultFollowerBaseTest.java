@@ -1,7 +1,5 @@
 package com.github.triceo.splitlog;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -83,7 +81,6 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
 
     private final LogWatchBuilder builder;
     private LogWatch logwatch;
-    private LogWriter writer;
 
     public DefaultFollowerBaseTest() {
         this(LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()));
@@ -107,25 +104,8 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
         return this.logwatch;
     }
 
-    LogWriter getWriter() {
-        return this.writer;
-    }
-
     @Before
     public synchronized void startEverything() {
-        // prepare file
-        final File toWrite = this.getBuilder().getFileToWatch();
-        if (toWrite.exists()) {
-            toWrite.delete();
-        }
-        try {
-            toWrite.createNewFile();
-        } catch (final IOException e) {
-            throw new IllegalStateException("Cannot create temp files.", e);
-        }
-        // prepare writer
-        this.writer = LogWriter.forFile(toWrite);
-        // and start the log watch
         this.logwatch = this.getBuilder().build();
         // this will write an initial message to the log
         if (this.getBuilder().isReadingFromBeginning()) {
@@ -136,7 +116,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
              */
             DefaultFollowerBaseTest.LOGGER.info("Initial message written.");
             final Follower f = this.getLogWatch().startFollowing();
-            this.writer.write(DefaultFollowerBaseTest.INITIAL_MESSAGE, f);
+            LogWriter.write(f, DefaultFollowerBaseTest.INITIAL_MESSAGE);
             this.getLogWatch().stopFollowing(f);
         }
         DefaultFollowerBaseTest.LOGGER.info("@Before finished.");

@@ -64,7 +64,7 @@ public class ExpectationTest extends DefaultFollowerBaseTest {
             tasks.put(task, expectedValue);
         }
         for (int i = 0; i < ExpectationTest.TOTAL_MESSAGES; i++) {
-            this.getWriter().writeNow("<" + String.valueOf(i) + ">");
+            LogWriter.write(this.getLogWatch().getWatchedFile(), "<" + String.valueOf(i) + ">");
         }
         for (final Future<Message> task : tasks.keySet()) {
             try {
@@ -94,7 +94,7 @@ public class ExpectationTest extends DefaultFollowerBaseTest {
                 }
             }
         });
-        this.getWriter().writeNow("test");
+        LogWriter.write(f.getFollowed().getWatchedFile(), "test");
         try {
             future.get(); // should not return before the long-running
             final long runTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);

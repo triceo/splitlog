@@ -39,9 +39,9 @@ public class FailingExpectationTest extends DefaultFollowerBaseTest {
         }
         // these calls should succeed
         final String message = "test";
-        String result = this.getWriter().write(message, follower);
+        String result = LogWriter.write(follower, message);
         Assertions.assertThat(result).isEqualTo(message);
-        result = this.getWriter().write(message, follower);
+        result = LogWriter.write(follower, message);
         Assertions.assertThat(result).isEqualTo(message);
         final SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
         DefaultFollowerBaseTest.assertProperOrder(messages, message);

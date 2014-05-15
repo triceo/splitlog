@@ -29,28 +29,26 @@ public class MergingTest extends DefaultFollowerBaseTest {
         final LogWatch watch1 = LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
                 .build();
         final Follower follower1 = watch1.startFollowing();
-        final LogWriter writer1 = LogWriter.forFile(watch1.getWatchedFile());
-        writer1.write(MergingTest.MESSAGE_1, follower1);
+        LogWriter.write(follower1, MergingTest.MESSAGE_1);
         // write into second file
         final LogWatch watch2 = LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
                 .build();
         final Follower follower2 = watch2.startFollowing();
-        final LogWriter writer2 = LogWriter.forFile(watch2.getWatchedFile());
-        writer2.write(MergingTest.MESSAGE_2, follower2);
+        LogWriter.write(follower2, MergingTest.MESSAGE_2);
         // merge both
         final MergingFollower merge = follower2.mergeWith(follower1);
         Assertions.assertThat(merge.getMerged()).containsOnly(follower1, follower2);
         Assertions.assertThat(merge.getMessages()).hasSize(0); // zero ACCEPTED
-        writer2.write(MergingTest.MESSAGE_3, follower2);
+        LogWriter.write(follower2, MergingTest.MESSAGE_3);
         Assertions.assertThat(merge.getMessages()).hasSize(1); // one ACCEPTED
-        writer1.write(MergingTest.MESSAGE_4, follower1);
+        LogWriter.write(follower1, MergingTest.MESSAGE_4);
         // third follows the first file; merge should have the message just once
         final Follower follower3 = watch1.startFollowing();
         final MergingFollower merge2 = follower3.mergeWith(merge);
         Assertions.assertThat(merge.getMerged()).containsOnly(follower1, follower2);
         Assertions.assertThat(merge2).isNotSameAs(merge);
         Assertions.assertThat(merge2.getMerged()).containsOnly(follower1, follower2, follower3);
-        writer1.write(MergingTest.MESSAGE_5, follower3);
+        LogWriter.write(follower3, MergingTest.MESSAGE_5);
         Assertions.assertThat(merge.getMessages()).hasSize(3);
         Assertions.assertThat(merge2.getMessages()).hasSize(3);
         // test writing
@@ -104,12 +102,12 @@ public class MergingTest extends DefaultFollowerBaseTest {
         final Follower f2 = this.getLogWatch().startFollowing();
         final MergingFollower mf = f.mergeWith(f2);
         // send the message; the merged should still contain only the one
-        this.getWriter().write("test", f);
-        this.getWriter().write("test2", f2);
+        LogWriter.write(f, "test");
+        LogWriter.write(f2, "test2");
         Assertions.assertThat(mf.getMessages()).hasSize(1);
         // add third follower, will only receive the second message
         final Follower f3 = this.getLogWatch().startFollowing();
-        this.getWriter().write("test3", f3);
+        LogWriter.write(f3, "test3");
         final MergingFollower mf2 = mf.mergeWith(f3);
         Assertions.assertThat(mf2).isNotEqualTo(mf);
         Assertions.assertThat(mf.getMessages()).hasSize(2);

@@ -44,17 +44,17 @@ public class ReferenceBasedDiscardingTest extends DefaultFollowerBaseTest {
         final Message firstTag = follower.tag("test");
         DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag);
         final String firstMessage = "check";
-        this.getWriter().write(firstMessage, follower);
+        LogWriter.write(follower, firstMessage);
         // receive first message, check presence of tag
         final String secondMessage = "check2";
-        this.getWriter().write(secondMessage, follower);
+        LogWriter.write(follower, secondMessage);
         final Message secondTag = follower.tag("test2");
         DefaultFollowerBaseTest.assertProperOrder(follower.getMessages(), firstTag, firstMessage, secondTag);
         // start second follower; this one will only track second+ messages
         Follower follower2 = w.startFollowing();
         // send third message, receive second
         final String thirdMessage = "check3";
-        this.getWriter().write(thirdMessage, follower2);
+        LogWriter.write(follower2, thirdMessage);
         Assertions.assertThat(w.countMessagesInStorage()).isEqualTo(2);
         /*
          * remove all references to the first follower; the first message now

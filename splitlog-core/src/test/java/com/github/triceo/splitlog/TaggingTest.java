@@ -39,18 +39,18 @@ public class TaggingTest extends DefaultFollowerBaseTest {
         final String tag2 = "tag2";
         final Follower follower = this.getLogWatch().startFollowing();
         follower.tag(tag0);
-        String result = this.getWriter().write(message1, follower);
+        String result = LogWriter.write(follower, message1);
         Assertions.assertThat(result).isEqualTo(message1);
         /*
          * when this tag is being created, the first message is already
          * instantiated. therefore, it will come after this message.
          */
         follower.tag(tag1);
-        result = this.getWriter().write(message2, follower);
+        result = LogWriter.write(follower, message2);
         Assertions.assertThat(result).isEqualTo(message2);
         // ditto
         follower.tag(tag2);
-        result = this.getWriter().write(message3, follower);
+        result = LogWriter.write(follower, message3);
         Assertions.assertThat(result).isEqualTo(message3);
         // make sure all messages are present with the default condition
         SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
