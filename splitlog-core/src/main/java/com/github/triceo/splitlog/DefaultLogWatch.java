@@ -42,30 +42,39 @@ final class DefaultLogWatch implements LogWatch {
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultLogWatch.class);
 
-    private final ConsumerManager<LogWatch> consumers;
+    private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
     private MessageBuilder currentlyProcessedMessage;
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
-    private boolean isTerminated = false;
+    private boolean isStarted = false;
+    private boolean isStopped = false;
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
     private final LogWatchStorageManager storage;
+    private final LogWatchSweepingManager sweeping;
+    private final LogWatchTailingManager tailing;
     private final long uniqueId = DefaultLogWatch.ID_GENERATOR.getAndIncrement();
     private final File watchedFile;
 
     protected DefaultLogWatch(final LogWatchBuilder builder, final TailSplitter splitter) {
         this.splitter = splitter;
         this.gateCondition = builder.getGateCondition();
-        this.storage = new LogWatchStorageManager(this, builder.getCapacityLimit(), builder.getStorageCondition());
-        this.consumers = new LogWatchConsumerManager(builder, this.storage, this);
+        this.storage = new LogWatchStorageManager(this, builder);
         this.watchedFile = builder.getFileToWatch();
+        this.tailing = new LogWatchTailingManager(this, builder);
+        this.sweeping = new LogWatchSweepingManager(this.storage, builder.getDelayBetweenSweeps());
     }
 
-    synchronized void addLine(final String line) {
+    void addLine(final String line) {
+        if (this.isTerminated()) {
+            DefaultLogWatch.LOGGER.debug("Line '{}' ignored due to termination in {}.", line, this);
+            return;
+        }
         final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
         if (this.splitter.isStartingLine(line)) {
             // new message begins
             if (isMessageBeingProcessed) { // finish old message
+                DefaultLogWatch.LOGGER.debug("Existing message will be finished.");
                 final Message completeMessage = this.currentlyProcessedMessage.buildFinal(this.splitter);
                 final MessageDeliveryStatus accepted = this.handleCompleteMessage(completeMessage);
                 if (accepted == null) {
@@ -77,6 +86,7 @@ final class DefaultLogWatch implements LogWatch {
                 }
             }
             // prepare for new message
+            DefaultLogWatch.LOGGER.debug("New message is being prepared.");
             this.currentlyProcessedMessage = new MessageBuilder(line);
             if (this.previousAcceptedMessage != null) {
                 this.currentlyProcessedMessage.setPreviousMessage(this.previousAcceptedMessage.get());
@@ -84,12 +94,15 @@ final class DefaultLogWatch implements LogWatch {
         } else {
             // continue present message
             if (!isMessageBeingProcessed) {
+                DefaultLogWatch.LOGGER.debug("Disregarding line as trash.");
                 // most likely just a garbage immediately after start
                 return;
             }
+            DefaultLogWatch.LOGGER.debug("Existing message is being updated.");
             this.currentlyProcessedMessage.add(line);
         }
         this.handleIncomingMessage(this.currentlyProcessedMessage.buildIntermediate(this.splitter));
+        DefaultLogWatch.LOGGER.debug("Line processing over.");
     }
 
     @Override
@@ -160,7 +173,7 @@ final class DefaultLogWatch implements LogWatch {
      *         {@link LogWatchBuilder#getStorageCondition()},
      *         {@link MessageDeliveryStatus#REJECTED} otherwise.
      */
-    private synchronized MessageDeliveryStatus handleCompleteMessage(final Message message) {
+    private MessageDeliveryStatus handleCompleteMessage(final Message message) {
         if (!this.hasToLetMessageThroughTheGate(message)) {
             return null;
         }
@@ -182,7 +195,7 @@ final class DefaultLogWatch implements LogWatch {
      *         if stopped at the gate by
      *         {@link LogWatchBuilder#getGateCondition()}.
      */
-    private synchronized boolean handleIncomingMessage(final Message message) {
+    private boolean handleIncomingMessage(final Message message) {
         if (!this.hasToLetMessageThroughTheGate(message)) {
             return false;
         }
@@ -202,7 +215,7 @@ final class DefaultLogWatch implements LogWatch {
      *         stopped at the gate by {@link LogWatchBuilder#getGateCondition()}
      *         .
      */
-    private synchronized boolean handleUndeliveredMessage(final Follower follower, final Message message) {
+    private boolean handleUndeliveredMessage(final Follower follower, final Message message) {
         if (!this.hasToLetMessageThroughTheGate(message)) {
             return false;
         }
@@ -226,7 +239,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean isFollowedBy(final Follower follower) {
+    public boolean isFollowedBy(final Follower follower) {
         return this.isConsuming(follower);
     }
 
@@ -251,8 +264,29 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean isTerminated() {
-        return this.isTerminated;
+    public boolean isStarted() {
+        return this.isStarted;
+    }
+
+    @Override
+    public boolean isStopped() {
+        return this.isStopped;
+    }
+
+    @Override
+    public boolean isTerminated() {
+        return this.isStopped();
+    }
+
+    @Override
+    public synchronized boolean start() {
+        if (this.isStarted()) {
+            return false;
+        }
+        this.isStarted = true;
+        this.tailing.start();
+        this.sweeping.start();
+        return true;
     }
 
     @Override
@@ -288,16 +322,10 @@ final class DefaultLogWatch implements LogWatch {
         }
     }
 
-    /**
-     * @param boolean If the tailer needs a delayed start because of
-     *        {@link #startFollowing(MidDeliveryMessageCondition)}, as explained
-     *        in {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
-     * @return The follower that follows this log watch from now on.
-     */
     private synchronized Pair<Follower, Future<Message>> startFollowingActually(
             final MidDeliveryMessageCondition<LogWatch> condition) {
-        if (this.isTerminated()) {
-            throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
+        if (this.isStopped()) {
+            throw new IllegalStateException("Cannot start following on an already terminated LogWatch.");
         }
         // assemble list of consumers to be handing down and then the follower
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number, Follower>>>();
@@ -325,7 +353,7 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean startHandingDown(final MessageMeasure<? extends Number, Follower> measure,
         final String id) {
-        if (this.isTerminated()) {
+        if (this.isStopped()) {
             throw new IllegalStateException("Log watch already terminated.");
         } else if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
@@ -342,6 +370,30 @@ final class DefaultLogWatch implements LogWatch {
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
             final String id) {
         return this.consumers.startMeasuring(measure, id);
+    }
+
+    /**
+     * Invoking this method will cause the running
+     * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
+     * {@link Message}s will only be removed from memory when this watch
+     * instance is removed from memory.
+     */
+    @Override
+    public synchronized boolean stop() {
+        if (!this.isStarted()) {
+            throw new IllegalStateException("Cannot terminate what was not started.");
+        } else if (this.isStopped()) {
+            return false;
+        }
+        DefaultLogWatch.LOGGER.info("Terminating {}.", this);
+        this.isStopped = true;
+        this.consumers.stop();
+        this.tailing.stop();
+        this.handingDown.clear();
+        this.previousAcceptedMessage = null;
+        this.sweeping.stop();
+        DefaultLogWatch.LOGGER.info("Terminated {}.", this);
+        return true;
     }
 
     @Override
@@ -392,24 +444,9 @@ final class DefaultLogWatch implements LogWatch {
         return this.consumers.stopMeasuring(id);
     }
 
-    /**
-     * Invoking this method will cause the running
-     * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
-     * {@link Message}s will only be removed from memory when this watch
-     * instance is removed from memory.
-     */
     @Override
-    public synchronized boolean terminate() {
-        if (this.isTerminated()) {
-            return false;
-        }
-        DefaultLogWatch.LOGGER.info("Terminating {}.", this);
-        this.isTerminated = true;
-        this.consumers.stop();
-        this.handingDown.clear();
-        this.previousAcceptedMessage = null;
-        DefaultLogWatch.LOGGER.info("Terminated {}.", this);
-        return true;
+    public boolean terminate() {
+        return this.stop();
     }
 
     @Override
@@ -419,7 +456,7 @@ final class DefaultLogWatch implements LogWatch {
         if (this.getWatchedFile() != null) {
             builder.append("getWatchedFile()=").append(this.getWatchedFile()).append(", ");
         }
-        builder.append("isTerminated()=").append(this.isTerminated()).append("]");
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
         return builder.toString();
     }
 

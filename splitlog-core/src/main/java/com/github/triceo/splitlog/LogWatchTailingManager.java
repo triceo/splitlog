@@ -85,12 +85,6 @@ final class LogWatchTailingManager {
         // forcibly terminate tailer
         this.tailer.stop();
         this.tailerFuture.cancel(true);
-        // wait for completion
-        final long start = System.nanoTime();
-        this.tailer.waitUntilStopped();
-        final long duration = System.nanoTime() - start;
-        LogWatchTailingManager.LOGGER.debug("It took {} ms for the tailing to actually stop.",
-                TimeUnit.NANOSECONDS.toMillis(duration));
         // cleanup
         this.tailer = null;
         this.tailerFuture = null;

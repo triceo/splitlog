@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
@@ -28,11 +29,10 @@ final class LogWatchStorageManager {
     private final Map<Follower, Integer> startingMessageIds = new WeakHashMap<Follower, Integer>(),
             endingMessageIds = new WeakHashMap<Follower, Integer>();
 
-    public LogWatchStorageManager(final LogWatch watch, final int capacity,
-        final SimpleMessageCondition acceptanceCondition) {
+    public LogWatchStorageManager(final LogWatch watch, final LogWatchBuilder builder) {
         this.logWatch = watch;
-        this.messages = new MessageStore(capacity);
-        this.acceptanceCondition = acceptanceCondition;
+        this.messages = new MessageStore(builder.getCapacityLimit());
+        this.acceptanceCondition = builder.getStorageCondition();
     }
 
     public synchronized void followerStarted(final Follower follower) {

@@ -52,11 +52,32 @@ public interface LogWatch extends MessageProducer<LogWatch> {
     boolean isHandingDown(final String id);
 
     /**
+     * Whether or not {@link #start()} has been called.
+     * @return
+     */
+    boolean isStarted();
+
+    /**
+     * Whether or not {@link #stop()} has been called.
+     *
+     * @return True if it has.
+     */
+    boolean isStopped();
+
+    /**
      * Whether or not {@link #terminate()} has been called.
      *
      * @return True if it has.
      */
+    @Deprecated
     boolean isTerminated();
+
+    /**
+     * Start tailing the log file.
+     *
+     * @return True if just started, false if already started.
+     */
+    boolean start();
 
     /**
      * Begin watching for new messages from this point in time.
@@ -137,6 +158,14 @@ public interface LogWatch extends MessageProducer<LogWatch> {
     boolean startHandingDown(final MessageMeasure<? extends Number, Follower> measure, final String id);
 
     /**
+     * Stop all followers from following and free resources. Will terminate
+     * every running measurement via {@link MessageMetric}.
+     *
+     * @return True if terminated as a result, false if already terminated.
+     */
+    boolean stop();
+
+    /**
      * Stop particular follower from following.
      *
      * @param follower
@@ -177,5 +206,6 @@ public interface LogWatch extends MessageProducer<LogWatch> {
      *
      * @return True if terminated as a result, false if already terminated.
      */
+    @Deprecated
     boolean terminate();
 }

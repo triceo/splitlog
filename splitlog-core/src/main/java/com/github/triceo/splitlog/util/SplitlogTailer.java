@@ -18,7 +18,6 @@ public class SplitlogTailer extends Tailer {
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(SplitlogTailer.class);
 
     private final CountDownLatch started = new CountDownLatch(1);
-    private final CountDownLatch stopped = new CountDownLatch(1);
 
     public SplitlogTailer(final File file, final TailerListener listener, final long delayMillis, final boolean end,
         final boolean reOpen, final int bufSize) {
@@ -27,16 +26,10 @@ public class SplitlogTailer extends Tailer {
 
     @Override
     public void run() {
-        try {
-            SplitlogTailer.LOGGER.info("Tailer thread started.");
-            this.started.countDown();
-            SplitlogTailer.LOGGER.debug("Tailer super.run() starting.");
-            super.run();
-            SplitlogTailer.LOGGER.debug("Tailer super.run() finished.");
-        } finally {
-            this.stopped.countDown();
-            SplitlogTailer.LOGGER.info("Tailer thread stopped.");
-        }
+        SplitlogTailer.LOGGER.info("Tailer thread started.");
+        this.started.countDown();
+        super.run();
+        SplitlogTailer.LOGGER.info("Tailer thread stopped.");
     }
 
     public void waitUntilStarted() {
@@ -47,11 +40,4 @@ public class SplitlogTailer extends Tailer {
         }
     }
 
-    public void waitUntilStopped() {
-        try {
-            this.stopped.await();
-        } catch (final InterruptedException e) {
-            this.waitUntilStopped();
-        }
-    }
 }

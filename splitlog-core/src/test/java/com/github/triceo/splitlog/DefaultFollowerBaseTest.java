@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.api.Assertions;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,6 @@ import com.github.triceo.splitlog.api.Message;
 
 public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
 
-    private static final String INITIAL_MESSAGE = "INITIAL";
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultFollowerBaseTest.class);
 
     /**
@@ -80,7 +78,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     }
 
     private final LogWatchBuilder builder;
-    private LogWatch logwatch;
+    private final LogWatch logwatch;
 
     public DefaultFollowerBaseTest() {
         this(LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()));
@@ -88,12 +86,13 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
 
     public DefaultFollowerBaseTest(final LogWatchBuilder builder) {
         this.builder = builder;
+        this.logwatch = builder.build();
     }
 
     @After
     public synchronized void destroyEverything() {
         DefaultFollowerBaseTest.LOGGER.info("@After started.");
-        this.logwatch.terminate();
+        this.logwatch.stop();
     }
 
     protected LogWatchBuilder getBuilder() {
@@ -104,21 +103,4 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
         return this.logwatch;
     }
 
-    @Before
-    public synchronized void startEverything() {
-        this.logwatch = this.getBuilder().build();
-        // this will write an initial message to the log
-        if (this.getBuilder().isReadingFromBeginning()) {
-            /*
-             * if we are reading from beginning, we get rid of the first message;
-             * this way, Github issue #25 is tested and all tests still work for
-             * both cases.
-             */
-            DefaultFollowerBaseTest.LOGGER.info("Initial message written.");
-            final Follower f = this.getLogWatch().startFollowing();
-            LogWriter.write(f, DefaultFollowerBaseTest.INITIAL_MESSAGE);
-            this.getLogWatch().stopFollowing(f);
-        }
-        DefaultFollowerBaseTest.LOGGER.info("@Before finished.");
-    }
 }

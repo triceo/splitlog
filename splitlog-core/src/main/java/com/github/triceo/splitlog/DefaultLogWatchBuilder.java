@@ -58,9 +58,13 @@ final public class DefaultLogWatchBuilder extends LogWatchBuilder {
         } else if ((splitter instanceof SimpleTailSplitter)
                 && (this.getGateCondition() instanceof SplitlogMessagesRejectingCondition)) {
             DefaultLogWatchBuilder.LOGGER
-                    .warn("Using default TailSplitter with default gating condition. All messages will pass through gate, as the TailSplitter will not provide all the necessary information.");
+            .warn("Using default TailSplitter with default gating condition. All messages will pass through gate, as the TailSplitter will not provide all the necessary information.");
         }
-        return new DefaultLogWatch(this, splitter);
+        final LogWatch watch = new DefaultLogWatch(this, splitter);
+        if (this.willBeStarted()) {
+            watch.start();
+        }
+        return watch;
     }
 
 }
