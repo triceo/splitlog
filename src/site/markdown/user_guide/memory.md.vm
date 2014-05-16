@@ -12,12 +12,9 @@ Obviously, as the log files watched by *Splitlog* grow in size, so will the amou
 
 $h2 Weak referencing
 
-The *Java Virtual Machine* supports two kinds of object references, weak and strong. Garbage collectors won't remove objects from memory for as long as there are strong references to them. And *Splitlog*'s internals will only store ```Message```s as weak references - as long as there's nothing else pointing to those ```Message``` instances, they will be garbage-collected. So, what else can be pointing to those instances?
+The *Java Virtual Machine* supports two kinds of object references, weak and strong. Garbage collectors won't remove objects from memory for as long as there are strong references to them. And *Splitlog*'s internals will only store ```Follower```s as weak references - as long as there are no Followers pointing to a ```Message``` instance, it will be garbage-collected. So, what else can be pointing to those instances? No message will ever be garbage-collected for as long as there are ```CommonFollower``` instances that have been notified of it. If memory consumption is your concern, it is highly recommended you throw follower references away immediately after you've stopped the follower.
 
-- You. Anytime you keep a reference to ```Message``` for any longer than you actually need it, you are preventing it, and every one of its predecessors, from being garbage-collected.
-- Followers. No message will ever be garbage-collected for as long as there are ```CommonFollower``` instances that have been notified of it. If memory consumption is your concern, it is highly recommended you throw follower references away immediately after you've stopped the follower.
-
-Keep in mind that *Splitlog* is very smart here. If you stop a particular follower, it will throw away all messages no longer accessible through any other follower. It will be impossible, from that point, to retrieve those messages in any way. When the strong references are gone, the messages are gone as well, for good.
+If a follower is garbage-collected, it will take with it all messages no longer accessible through any other follower. It will be impossible, from that point, to retrieve those messages in any way.
 
 $h2 Keeping the memory consumption down
 
