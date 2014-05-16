@@ -1,5 +1,6 @@
 package com.github.triceo.splitlog;
 
+import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.api.MessageConsumer;
@@ -26,18 +27,25 @@ final class LogWatchConsumerManager extends ConsumerManager<LogWatch> {
     @Override
     public synchronized boolean registerConsumer(final MessageConsumer<LogWatch> consumer) {
         final boolean result = super.registerConsumer(consumer);
-        this.startTailing();
+        this.startTailing(consumer);
         return result;
     }
 
     @Override
     public synchronized MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> listener) {
         final MessageConsumer<LogWatch> result = super.startConsuming(listener);
-        this.startTailing();
+        this.startTailing(listener);
         return result;
     }
 
-    private synchronized void startTailing() {
+    private synchronized void startTailing(final MessageListener<LogWatch> watch) {
+        if (!(watch instanceof Follower)) {
+            /*
+             * only start the threads if we're actually capable of receiving
+             * messages
+             */
+            return;
+        }
         this.sweeping.start();
         this.tailing.start();
     }
@@ -52,7 +60,7 @@ final class LogWatchConsumerManager extends ConsumerManager<LogWatch> {
     @Override
     public synchronized boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
         final boolean result = super.stopConsuming(consumer);
-        if (this.countConsumers() < 1) {
+        if ((consumer instanceof Follower) && (this.countConsumers() < 1)) {
             this.tailing.stop();
         }
         return result;
