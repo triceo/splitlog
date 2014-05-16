@@ -66,10 +66,12 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     synchronized void addLine(final String line) {
+        DefaultLogWatch.LOGGER.debug("Line '{}' arrived in {}.", line, this);
         final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
         if (this.splitter.isStartingLine(line)) {
             // new message begins
             if (isMessageBeingProcessed) { // finish old message
+                DefaultLogWatch.LOGGER.debug("Existing message will be finished.");
                 final Message completeMessage = this.currentlyProcessedMessage.buildFinal(this.splitter);
                 final MessageDeliveryStatus accepted = this.handleCompleteMessage(completeMessage);
                 if (accepted == null) {
@@ -81,6 +83,7 @@ final class DefaultLogWatch implements LogWatch {
                 }
             }
             // prepare for new message
+            DefaultLogWatch.LOGGER.debug("New message is being prepared.");
             this.currentlyProcessedMessage = new MessageBuilder(line);
             if (this.previousAcceptedMessage != null) {
                 this.currentlyProcessedMessage.setPreviousMessage(this.previousAcceptedMessage.get());
@@ -88,12 +91,15 @@ final class DefaultLogWatch implements LogWatch {
         } else {
             // continue present message
             if (!isMessageBeingProcessed) {
+                DefaultLogWatch.LOGGER.debug("Disregarding line as trash.");
                 // most likely just a garbage immediately after start
                 return;
             }
+            DefaultLogWatch.LOGGER.debug("Existing message is being updated.");
             this.currentlyProcessedMessage.add(line);
         }
         this.handleIncomingMessage(this.currentlyProcessedMessage.buildIntermediate(this.splitter));
+        DefaultLogWatch.LOGGER.debug("Line processing over.");
     }
 
     @Override
