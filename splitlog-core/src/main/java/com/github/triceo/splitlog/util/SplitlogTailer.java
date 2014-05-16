@@ -2,7 +2,6 @@ package com.github.triceo.splitlog.util;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
@@ -28,14 +27,16 @@ public class SplitlogTailer extends Tailer {
 
     @Override
     public void run() {
-        SplitlogTailer.LOGGER.info("Tailer thread started.");
         try {
+            SplitlogTailer.LOGGER.info("Tailer thread started.");
             this.started.countDown();
+            SplitlogTailer.LOGGER.debug("Tailer super.run() starting.");
             super.run();
+            SplitlogTailer.LOGGER.debug("Tailer super.run() finished.");
         } finally {
             this.stopped.countDown();
+            SplitlogTailer.LOGGER.info("Tailer thread stopped.");
         }
-        SplitlogTailer.LOGGER.info("Tailer thread stopped.");
     }
 
     public void waitUntilStarted() {
@@ -48,9 +49,9 @@ public class SplitlogTailer extends Tailer {
 
     public void waitUntilStopped() {
         try {
-            this.stopped.await(this.getDelay(), TimeUnit.MILLISECONDS);
+            this.stopped.await();
         } catch (final InterruptedException e) {
-            SplitlogTailer.LOGGER.warn("Waiting for Tailer to stop received an interrupt.");
+            this.waitUntilStopped();
         }
     }
 }
