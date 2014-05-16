@@ -2,7 +2,7 @@
 
 $h1 Advanced *Splitlog* Concepts
 
-In this section, we will look under the hood of *Splitlog*. These are the things you might now know and might even surprise you. 
+In this section, we will look under the hood of *Splitlog*. These are the things you might not know and might even surprise you. 
 
 [Message Lifecycle](message_lifecycle.html)
 : Explains how ```Message```s are created out of log files and what changes they go through during their lifecycle.
