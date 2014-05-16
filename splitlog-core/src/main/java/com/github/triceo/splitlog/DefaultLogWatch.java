@@ -42,23 +42,27 @@ final class DefaultLogWatch implements LogWatch {
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultLogWatch.class);
 
-    private final ConsumerManager<LogWatch> consumers;
+    private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
     private MessageBuilder currentlyProcessedMessage;
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
+    private boolean isStarted = false;
     private boolean isTerminated = false;
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
     private final LogWatchStorageManager storage;
+    private final LogWatchSweepingManager sweeping;
+    private final LogWatchTailingManager tailing;
     private final long uniqueId = DefaultLogWatch.ID_GENERATOR.getAndIncrement();
     private final File watchedFile;
 
     protected DefaultLogWatch(final LogWatchBuilder builder, final TailSplitter splitter) {
         this.splitter = splitter;
         this.gateCondition = builder.getGateCondition();
-        this.storage = new LogWatchStorageManager(this, builder.getCapacityLimit(), builder.getStorageCondition());
-        this.consumers = new LogWatchConsumerManager(builder, this.storage, this);
+        this.storage = new LogWatchStorageManager(this, builder);
         this.watchedFile = builder.getFileToWatch();
+        this.tailing = new LogWatchTailingManager(this, builder);
+        this.sweeping = new LogWatchSweepingManager(this.storage, builder.getDelayBetweenSweeps());
     }
 
     synchronized void addLine(final String line) {
@@ -251,8 +255,24 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
+    public boolean isStarted() {
+        return this.isStarted;
+    }
+
+    @Override
     public synchronized boolean isTerminated() {
         return this.isTerminated;
+    }
+
+    @Override
+    public synchronized boolean start() {
+        if (this.isStarted()) {
+            return false;
+        }
+        this.isStarted = true;
+        this.tailing.start();
+        this.sweeping.start();
+        return true;
     }
 
     @Override
@@ -288,16 +308,10 @@ final class DefaultLogWatch implements LogWatch {
         }
     }
 
-    /**
-     * @param boolean If the tailer needs a delayed start because of
-     *        {@link #startFollowing(MidDeliveryMessageCondition)}, as explained
-     *        in {@link LogWatchBuilder#getDelayBeforeTailingStarts()}.
-     * @return The follower that follows this log watch from now on.
-     */
     private synchronized Pair<Follower, Future<Message>> startFollowingActually(
             final MidDeliveryMessageCondition<LogWatch> condition) {
         if (this.isTerminated()) {
-            throw new IllegalStateException("Cannot start tailing on an already terminated LogWatch.");
+            throw new IllegalStateException("Cannot start following on an already terminated LogWatch.");
         }
         // assemble list of consumers to be handing down and then the follower
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number, Follower>>>();
@@ -400,14 +414,18 @@ final class DefaultLogWatch implements LogWatch {
      */
     @Override
     public synchronized boolean terminate() {
-        if (this.isTerminated()) {
+        if (!this.isStarted()) {
+            throw new IllegalStateException("Cannot terminate what was not started.");
+        } else if (this.isTerminated()) {
             return false;
         }
         DefaultLogWatch.LOGGER.info("Terminating {}.", this);
         this.isTerminated = true;
+        this.tailing.stop();
         this.consumers.stop();
         this.handingDown.clear();
         this.previousAcceptedMessage = null;
+        this.sweeping.stop();
         DefaultLogWatch.LOGGER.info("Terminated {}.", this);
         return true;
     }

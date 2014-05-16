@@ -5,8 +5,9 @@ import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Prepares an instance of {@link LogWatch}. Unless overriden by the user, the
- * instance will have the following properties:
+ * Prepares an instance of {@link LogWatch} that will automatically
+ * {@link LogWatch#start()}. Unless overriden by the user, the instance will
+ * have the following properties:
  *
  * <dl>
  * <dt>Reads file from beginning?</dt>
@@ -68,6 +69,7 @@ public abstract class LogWatchBuilder {
         return unit.toMillis(length);
     }
 
+    private boolean autoStarting = true;
     private int bufferSize = LogWatchBuilder.DEFAULT_READ_BUFFER_SIZE_IN_BYTES;
     private boolean closingBetweenReads;
     private long delayBetweenReads = LogWatchBuilder.DEFAULT_DELAY_BETWEEN_READS_IN_MILLISECONDS;
@@ -143,6 +145,16 @@ public abstract class LogWatchBuilder {
     }
 
     /**
+     * Do not run {@link LogWatch#start()} on the new instance.
+     *
+     * @return This.
+     */
+    public LogWatchBuilder doNotStart() {
+        this.autoStarting = false;
+        return this;
+    }
+
+    /**
      * Get the capacity of the future log watch.
      *
      * @return Maximum capacity in messages.
@@ -177,7 +189,6 @@ public abstract class LogWatchBuilder {
     public File getFileToWatch() {
         return this.fileToWatch;
     }
-
     /**
      * The condition that will be used for accepting a {@link Message} into
      * {@link LogWatch}.
@@ -187,6 +198,7 @@ public abstract class LogWatchBuilder {
     public SimpleMessageCondition getGateCondition() {
         return this.gateCondition;
     }
+
     /**
      * Get the buffer size for the log watch.
      *
@@ -268,7 +280,6 @@ public abstract class LogWatchBuilder {
         builder.append("]");
         return builder.toString();
     }
-
     /**
      * Set the file that the future {@link LogWatch} will be tailing.
      *
@@ -283,6 +294,7 @@ public abstract class LogWatchBuilder {
         this.fileToWatch = f;
         return this;
     }
+
     /**
      * Set the file that the future {@link LogWatch} will be tailing.
      *
@@ -293,6 +305,12 @@ public abstract class LogWatchBuilder {
     @Deprecated
     public LogWatchBuilder watchingFile(final File f) {
         return this.watchedFile(f);
+    }
+    /**
+     * @return True if the new logwatch will already be {@link LogWatch#start()}ed.
+     */
+    public boolean willBeStarted() {
+        return this.autoStarting;
     }
 
     /**

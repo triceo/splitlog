@@ -52,11 +52,23 @@ public interface LogWatch extends MessageProducer<LogWatch> {
     boolean isHandingDown(final String id);
 
     /**
+     * Whether or not {@link #start()} has been called.
+     * @return
+     */
+    boolean isStarted();
+
+    /**
      * Whether or not {@link #terminate()} has been called.
      *
      * @return True if it has.
      */
     boolean isTerminated();
+
+    /**
+     * Start tailing the log file.
+     * @return True if just started, false if already started.
+     */
+    boolean start();
 
     /**
      * Begin watching for new messages from this point in time.
