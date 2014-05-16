@@ -92,7 +92,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
     @After
     public synchronized void destroyEverything() {
         DefaultFollowerBaseTest.LOGGER.info("@After started.");
-        this.logwatch.terminate();
+        this.logwatch.stop();
     }
 
     protected LogWatchBuilder getBuilder() {

@@ -17,7 +17,7 @@ public class TerminationTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testTermination() {
-        Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch terminated immediately after starting.")
+        Assertions.assertThat(this.getLogWatch().isStopped()).as("Log watch terminated immediately after starting.")
         .isFalse();
         final Follower follower1 = this.getLogWatch().startFollowing();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
@@ -29,11 +29,11 @@ public class TerminationTest extends DefaultFollowerBaseTest {
         .as("Follower terminated without termination.").isTrue();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower1))
         .as("Follower not terminated after termination.").isFalse();
-        Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isTrue();
-        Assertions.assertThat(this.getLogWatch().terminate()).as("Wrong termination result.").isFalse();
+        Assertions.assertThat(this.getLogWatch().stop()).as("Wrong termination result.").isTrue();
+        Assertions.assertThat(this.getLogWatch().stop()).as("Wrong termination result.").isFalse();
         Assertions.assertThat(this.getLogWatch().isFollowedBy(follower2))
         .as("Follower not terminated after termination.").isFalse();
-        Assertions.assertThat(this.getLogWatch().isTerminated()).as("Log watch not terminated after termination.")
+        Assertions.assertThat(this.getLogWatch().isStopped()).as("Log watch not terminated after termination.")
         .isTrue();
     }
 

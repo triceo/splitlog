@@ -83,7 +83,7 @@ public class MergingTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(merge2.isStopped()).isFalse();
         Assertions.assertThat(merge.isStopped()).isFalse();
         // first watch is terminated, second one remains alive
-        watch1.terminate();
+        watch1.stop();
         Assertions.assertThat(follower1.isStopped()).isTrue();
         Assertions.assertThat(merge4.isStopped()).isTrue();
         Assertions.assertThat(merge3.isStopped()).isTrue();
@@ -128,7 +128,7 @@ public class MergingTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(mf5.getMessages()).hasSize(2);
         final MergingFollower mf6 = mf5.remove(f);
         Assertions.assertThat(mf6.getMessages()).hasSize(1);
-        this.getLogWatch().terminate();
+        this.getLogWatch().stop();
         Assertions.assertThat(mf.isStopped()).isTrue();
     }
 

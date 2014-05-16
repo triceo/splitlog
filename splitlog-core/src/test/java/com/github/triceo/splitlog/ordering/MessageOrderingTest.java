@@ -43,8 +43,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
 
     @After
     public void terminateWatch() {
-        this.watch.terminate();
-        this.watch = null;
+        this.watch.stop();
     }
 
     @Test

@@ -174,7 +174,7 @@ public class RealWorldTest extends AbstractSplitlogTest {
          * the beginning
          */
         Assertions.assertThat(onlyLastBatch.getMessages()).hasSize(bothBatches.getMessages().size() - messagesInFirst);
-        watch.terminate();
+        watch.stop();
     }
 
 }

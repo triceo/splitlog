@@ -47,7 +47,7 @@ final class DefaultLogWatch implements LogWatch {
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
     private boolean isStarted = false;
-    private boolean isTerminated = false;
+    private boolean isStopped = false;
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
     private final LogWatchStorageManager storage;
@@ -269,8 +269,13 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
+    public boolean isStopped() {
+        return this.isStopped;
+    }
+
+    @Override
     public boolean isTerminated() {
-        return this.isTerminated;
+        return this.isStopped();
     }
 
     @Override
@@ -319,7 +324,7 @@ final class DefaultLogWatch implements LogWatch {
 
     private synchronized Pair<Follower, Future<Message>> startFollowingActually(
             final MidDeliveryMessageCondition<LogWatch> condition) {
-        if (this.isTerminated()) {
+        if (this.isStopped()) {
             throw new IllegalStateException("Cannot start following on an already terminated LogWatch.");
         }
         // assemble list of consumers to be handing down and then the follower
@@ -348,7 +353,7 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public synchronized boolean startHandingDown(final MessageMeasure<? extends Number, Follower> measure,
         final String id) {
-        if (this.isTerminated()) {
+        if (this.isStopped()) {
             throw new IllegalStateException("Log watch already terminated.");
         } else if (measure == null) {
             throw new IllegalArgumentException("Measure may not be null.");
@@ -365,6 +370,30 @@ final class DefaultLogWatch implements LogWatch {
     public <T extends Number> MessageMetric<T, LogWatch> startMeasuring(final MessageMeasure<T, LogWatch> measure,
             final String id) {
         return this.consumers.startMeasuring(measure, id);
+    }
+
+    /**
+     * Invoking this method will cause the running
+     * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
+     * {@link Message}s will only be removed from memory when this watch
+     * instance is removed from memory.
+     */
+    @Override
+    public synchronized boolean stop() {
+        if (!this.isStarted()) {
+            throw new IllegalStateException("Cannot terminate what was not started.");
+        } else if (this.isStopped()) {
+            return false;
+        }
+        DefaultLogWatch.LOGGER.info("Terminating {}.", this);
+        this.isStopped = true;
+        this.consumers.stop();
+        this.tailing.stop();
+        this.handingDown.clear();
+        this.previousAcceptedMessage = null;
+        this.sweeping.stop();
+        DefaultLogWatch.LOGGER.info("Terminated {}.", this);
+        return true;
     }
 
     @Override
@@ -415,28 +444,9 @@ final class DefaultLogWatch implements LogWatch {
         return this.consumers.stopMeasuring(id);
     }
 
-    /**
-     * Invoking this method will cause the running
-     * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
-     * {@link Message}s will only be removed from memory when this watch
-     * instance is removed from memory.
-     */
     @Override
-    public synchronized boolean terminate() {
-        if (!this.isStarted()) {
-            throw new IllegalStateException("Cannot terminate what was not started.");
-        } else if (this.isTerminated()) {
-            return false;
-        }
-        DefaultLogWatch.LOGGER.info("Terminating {}.", this);
-        this.isTerminated = true;
-        this.consumers.stop();
-        this.tailing.stop();
-        this.handingDown.clear();
-        this.previousAcceptedMessage = null;
-        this.sweeping.stop();
-        DefaultLogWatch.LOGGER.info("Terminated {}.", this);
-        return true;
+    public boolean terminate() {
+        return this.stop();
     }
 
     @Override
@@ -446,7 +456,7 @@ final class DefaultLogWatch implements LogWatch {
         if (this.getWatchedFile() != null) {
             builder.append("getWatchedFile()=").append(this.getWatchedFile()).append(", ");
         }
-        builder.append("isTerminated()=").append(this.isTerminated()).append("]");
+        builder.append("isStopped()=").append(this.isStopped()).append("]");
         return builder.toString();
     }
 
