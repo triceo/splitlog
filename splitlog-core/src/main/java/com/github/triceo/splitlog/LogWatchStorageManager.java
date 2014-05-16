@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
@@ -20,6 +21,7 @@ final class LogWatchStorageManager {
     private final SimpleMessageCondition acceptanceCondition;
     private final LogWatch logWatch;
     private final MessageStore messages;
+    private final AtomicLong numberOfActiveFollowers = new AtomicLong(0);
     /**
      * These maps are weak; when a follower stops being used by user code, we do
      * not want these IDs to prevent it from being GC'd. Yet, for as long as the
@@ -36,6 +38,9 @@ final class LogWatchStorageManager {
     }
 
     public synchronized void followerStarted(final Follower follower) {
+        if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
+            LogWatchStorageManager.LOGGER.info("New follower registered. Messages can be received.");
+        }
         final int startingMessageId = this.messages.getNextPosition();
         LogWatchStorageManager.LOGGER.info("First message position is {} for {}.", startingMessageId, follower);
         this.startingMessageIds.put(follower, startingMessageId);
@@ -45,6 +50,9 @@ final class LogWatchStorageManager {
         final int endingMessageId = this.messages.getLatestPosition();
         LogWatchStorageManager.LOGGER.info("Last message position is {} for {}.", endingMessageId, follower);
         this.endingMessageIds.put(follower, endingMessageId);
+        if (this.numberOfActiveFollowers.decrementAndGet() == 0) {
+            LogWatchStorageManager.LOGGER.info("Last remaining follower terminated. No messages can be received.");
+        }
     }
 
     /**
@@ -147,7 +155,9 @@ final class LogWatchStorageManager {
             throw new IllegalStateException("Sources don't match.");
         }
         final boolean messageAccepted = this.acceptanceCondition.accept(message);
-        if (messageAccepted) {
+        if (this.numberOfActiveFollowers.get() == 0) {
+            LogWatchStorageManager.LOGGER.info("Message thrown away as there are no followers: {}.", message);
+        } else if (messageAccepted) {
             LogWatchStorageManager.LOGGER.info("Message '{}' stored into {}.", message, source);
             this.messages.add(message);
         }

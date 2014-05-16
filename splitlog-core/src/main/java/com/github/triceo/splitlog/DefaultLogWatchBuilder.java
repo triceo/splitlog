@@ -63,6 +63,9 @@ final public class DefaultLogWatchBuilder extends LogWatchBuilder {
         final LogWatch watch = new DefaultLogWatch(this, splitter);
         if (this.willBeStarted()) {
             watch.start();
+        } else {
+            DefaultLogWatchBuilder.LOGGER
+                    .info("LogWatch will not be started automatically. To receive messages, you need to start it yourself.");
         }
         return watch;
     }
