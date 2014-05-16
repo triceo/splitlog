@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.triceo.splitlog</groupId>
   <artifactId>splitlog-parent</artifactId>
-  <version>1.6.0-RC3-SNAPSHOT</version>
+  <version>1.6.0-RC3</version>
   <packaging>pom</packaging>
   <name>splitlog: watching your logs</name>
   <description>Tool to monitor log files from your Java applications as they fill.</description>
