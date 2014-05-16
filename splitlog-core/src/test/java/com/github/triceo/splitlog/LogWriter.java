@@ -60,7 +60,6 @@ public class LogWriter {
      * @return The line that was written, or null otherwise.
      */
     public static String write(final Follower follower, final String line) {
-        final File target = follower.getFollowed().getWatchedFile();
         final Future<Message> future = follower.expect(new MidDeliveryMessageCondition<LogWatch>() {
 
             @Override
@@ -72,11 +71,14 @@ public class LogWriter {
             }
 
         });
-        if (!LogWriter.write(target, line)) {
+        if (!LogWriter.write(follower.getFollowed().getWatchedFile(), line)) {
             throw new IllegalStateException("Failed writing message.");
+        } else if (follower.isStopped()) {
+            throw new IllegalStateException("Follower cannot receive message as it is already stopped.");
         }
         try {
             // wait until the last part of the string is finally present
+            LogWriter.LOGGER.info("Waiting for '{}' starting in {}.", line, follower);
             final Message result = future.get(10, TimeUnit.SECONDS);
             final List<String> lines = result.getLines();
             return lines.get(lines.size() - 1);
