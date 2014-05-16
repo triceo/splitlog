@@ -23,6 +23,9 @@
         Splitlog logging is now disabled by default. This will prevent endless feedback loops when Splitlog is deployed 
         within a web app.
       </action>
+      <action issue="54" dev="triceo" type="update">
+        Tailing will now span the entire lifespan on LogWatch. 
+      </action>
       <action issue="52" dev="triceo" type="update">
         MergingFollower.separate() is deprecated in favor of MergingFollower.remove(). 
       </action>
