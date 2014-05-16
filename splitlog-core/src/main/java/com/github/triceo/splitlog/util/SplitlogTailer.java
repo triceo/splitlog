@@ -28,7 +28,6 @@ public class SplitlogTailer extends Tailer {
     public void run() {
         SplitlogTailer.LOGGER.info("Tailer thread started.");
         this.started.countDown();
-        SplitlogTailer.LOGGER.debug("Tailer super.run() starting.");
         super.run();
         SplitlogTailer.LOGGER.info("Tailer thread stopped.");
     }
