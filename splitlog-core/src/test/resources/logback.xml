@@ -5,12 +5,9 @@
       <pattern>%d{HH:mm:ss.SSS} %5p [%-17t :: %-35c{35}] %m%n</pattern>
     </encoder>
   </appender>
-  <appender name="asyncConsoleAppender" class="ch.qos.logback.classic.AsyncAppender">
-    <appender-ref ref="consoleAppender" />
-  </appender>
 
   <logger name="com.github.triceo.splitlog">
     <level value="TRACE" />
-    <appender-ref ref="asyncConsoleAppender" />
+    <appender-ref ref="consoleAppender" />
   </logger>
 </configuration>
