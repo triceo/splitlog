@@ -37,7 +37,8 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
 
     @Before
     public void buildWatch() {
-        this.watch = LogWatchBuilder.getDefault().watchedFile(this.target).buildWith(new JBossServerLogTailSplitter());
+        this.watch = LogWatchBuilder.getDefault().watchedFile(this.target).doNotStart()
+                .buildWith(new JBossServerLogTailSplitter());
     }
 
     @After
@@ -49,6 +50,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
     @Test
     public void testOriginalOrdering() {
         final Follower f = this.watch.startFollowing();
+        this.watch.start();
         // will make sure all messages from the existing log file are ACCEPTED
         LogWriter.write(f, "test");
         // messages will be ordered exactly as they came in
@@ -64,6 +66,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
     @Test
     public void testTimeBasedOrdering() {
         final Follower f = this.watch.startFollowing();
+        this.watch.start();
         // will make sure all messages from the existing log file are ACCEPTED
         LogWriter.write(f, "test");
         // messages will be ordered by their timestamp
