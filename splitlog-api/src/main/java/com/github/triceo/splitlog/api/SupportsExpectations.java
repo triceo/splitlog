@@ -12,8 +12,6 @@ interface SupportsExpectations<S extends MessageProducer<S>, C> {
      * @param condition
      *            Condition that needs to be true for the future to unblock.
      * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
      */
     Future<Message> expect(C condition);
 
@@ -28,8 +26,6 @@ interface SupportsExpectations<S extends MessageProducer<S>, C> {
      * @param action
      *            Action to execute when the condition becomes true.
      * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
      */
     Future<Message> expect(C condition, MessageAction<S> action);
 
@@ -39,8 +35,6 @@ interface SupportsExpectations<S extends MessageProducer<S>, C> {
      * @param condition
      *            Condition that needs to be true for the method to unblock.
      * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
      */
     @Deprecated
     Message waitFor(C condition);
@@ -56,8 +50,6 @@ interface SupportsExpectations<S extends MessageProducer<S>, C> {
      * @param unit
      *            Unit of time.
      * @return Null if the method unblocked due to some other reason.
-     * @throws IllegalStateException
-     *             When already {@link #isStopped()}.
      */
     @Deprecated
     Message waitFor(C condition, long timeout, TimeUnit unit);

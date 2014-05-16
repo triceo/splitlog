@@ -83,7 +83,7 @@ public abstract class LogWatchBuilder {
     /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden. Such log watch will not start actually reading
-     * {@link #getWatchedFile()} until after {@link LogWatch#startFollowing()}
+     * {@link #getFileToWatch()} until after {@link LogWatch#startFollowing()}
      * or
      * {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
      * .
@@ -118,7 +118,7 @@ public abstract class LogWatchBuilder {
     /**
      * Build the log watch with previously defined properties, or defaults where
      * not overriden. Such log watch will not start actually reading
-     * {@link #getWatchedFile()} until after {@link LogWatch#startFollowing()}
+     * {@link #getFileToWatch()} until after {@link LogWatch#startFollowing()}
      * or
      * {@link LogWatch#startConsuming(com.github.triceo.splitlog.api.MessageListener)}
      * .
