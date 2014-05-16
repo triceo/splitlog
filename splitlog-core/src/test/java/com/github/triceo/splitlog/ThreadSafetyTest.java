@@ -33,7 +33,7 @@ public class ThreadSafetyTest extends DefaultFollowerBaseTest {
         }
     }
 
-    @Test(timeout = ThreadSafetyTest.TIMEOUT_MILLIS)
+    @Test
     public void testThreadSafety() throws InterruptedException, ExecutionException {
         this.es.execute(new Runnable() {
 
@@ -53,11 +53,11 @@ public class ThreadSafetyTest extends DefaultFollowerBaseTest {
                 int size = 0;
                 final long maxMillis = ThreadSafetyTest.TIMEOUT_MILLIS / 2;
                 final long start = System.currentTimeMillis();
-                while ((size < 1000) && ((System.currentTimeMillis() - start) < maxMillis)) {
+                while ((size < 1000000) && ((System.currentTimeMillis() - start) < maxMillis)) {
                     size = follower.getMessages().size();
                     System.out.println("Messages: " + size);
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(1);
                     } catch (final InterruptedException ex) {
                         System.err.println("Interrupted.");
                     }
