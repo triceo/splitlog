@@ -65,8 +65,11 @@ final class DefaultLogWatch implements LogWatch {
         this.sweeping = new LogWatchSweepingManager(this.storage, builder.getDelayBetweenSweeps());
     }
 
-    synchronized void addLine(final String line) {
-        DefaultLogWatch.LOGGER.debug("Line '{}' arrived in {}.", line, this);
+    void addLine(final String line) {
+        if (this.isTerminated()) {
+            DefaultLogWatch.LOGGER.debug("Line '{}' ignored due to termination in {}.", line, this);
+            return;
+        }
         final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
         if (this.splitter.isStartingLine(line)) {
             // new message begins
@@ -170,7 +173,7 @@ final class DefaultLogWatch implements LogWatch {
      *         {@link LogWatchBuilder#getStorageCondition()},
      *         {@link MessageDeliveryStatus#REJECTED} otherwise.
      */
-    private synchronized MessageDeliveryStatus handleCompleteMessage(final Message message) {
+    private MessageDeliveryStatus handleCompleteMessage(final Message message) {
         if (!this.hasToLetMessageThroughTheGate(message)) {
             return null;
         }
@@ -192,7 +195,7 @@ final class DefaultLogWatch implements LogWatch {
      *         if stopped at the gate by
      *         {@link LogWatchBuilder#getGateCondition()}.
      */
-    private synchronized boolean handleIncomingMessage(final Message message) {
+    private boolean handleIncomingMessage(final Message message) {
         if (!this.hasToLetMessageThroughTheGate(message)) {
             return false;
         }
@@ -212,7 +215,7 @@ final class DefaultLogWatch implements LogWatch {
      *         stopped at the gate by {@link LogWatchBuilder#getGateCondition()}
      *         .
      */
-    private synchronized boolean handleUndeliveredMessage(final Follower follower, final Message message) {
+    private boolean handleUndeliveredMessage(final Follower follower, final Message message) {
         if (!this.hasToLetMessageThroughTheGate(message)) {
             return false;
         }
@@ -236,7 +239,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean isFollowedBy(final Follower follower) {
+    public boolean isFollowedBy(final Follower follower) {
         return this.isConsuming(follower);
     }
 
@@ -266,7 +269,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean isTerminated() {
+    public boolean isTerminated() {
         return this.isTerminated;
     }
 
@@ -427,8 +430,8 @@ final class DefaultLogWatch implements LogWatch {
         }
         DefaultLogWatch.LOGGER.info("Terminating {}.", this);
         this.isTerminated = true;
-        this.tailing.stop();
         this.consumers.stop();
+        this.tailing.stop();
         this.handingDown.clear();
         this.previousAcceptedMessage = null;
         this.sweeping.stop();
