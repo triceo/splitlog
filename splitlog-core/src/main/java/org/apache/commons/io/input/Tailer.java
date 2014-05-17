@@ -309,7 +309,7 @@ public class Tailer implements Runnable {
 
     private final TailerListener listener;
 
-    private CountDownLatch runTrigger = new CountDownLatch(1);
+    private final CountDownLatch runTrigger = new CountDownLatch(1);
 
     private final TailerRun scheduled;
 
@@ -498,7 +498,7 @@ public class Tailer implements Runnable {
         } finally {
             future.cancel(true); // stop the periodic reading
             this.scheduled.cleanup();
-            this.runTrigger = new CountDownLatch(1); // prepare for re-run
+            this.executor.shutdownNow();
         }
     }
 
