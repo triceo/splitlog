@@ -296,17 +296,6 @@ public abstract class LogWatchBuilder {
     }
 
     /**
-     * Set the file that the future {@link LogWatch} will be tailing.
-     *
-     * @param f
-     *            File to watch.
-     * @return This.
-     */
-    @Deprecated
-    public LogWatchBuilder watchingFile(final File f) {
-        return this.watchedFile(f);
-    }
-    /**
      * @return True if the new logwatch will already be {@link LogWatch#start()}ed.
      */
     public boolean willBeStarted() {

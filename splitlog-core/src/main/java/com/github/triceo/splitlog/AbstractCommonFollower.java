@@ -3,7 +3,6 @@ package com.github.triceo.splitlog;
 import java.io.OutputStream;
 import java.util.SortedSet;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.triceo.splitlog.api.CommonFollower;
@@ -159,24 +158,6 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
     @Override
     public boolean stopMeasuring(final String id) {
         return this.getConsumerManager().stopMeasuring(id);
-    }
-
-    @Override
-    public Message waitFor(final MidDeliveryMessageCondition<C> condition) {
-        try {
-            return this.expect(condition).get();
-        } catch (final Exception e) {
-            return null;
-        }
-    }
-
-    @Override
-    public Message waitFor(final MidDeliveryMessageCondition<C> condition, final long timeout, final TimeUnit unit) {
-        try {
-            return this.expect(condition).get(timeout, unit);
-        } catch (final Exception e) {
-            return null;
-        }
     }
 
     @Override

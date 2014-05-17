@@ -3,7 +3,6 @@ package com.github.triceo.splitlog;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -134,24 +133,6 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         }
         builder.append("isStopped()=").append(this.isStopped()).append("]");
         return builder.toString();
-    }
-
-    @Override
-    public Message waitFor(final MessageMetricCondition<T, S> condition) {
-        try {
-            return this.expect(condition).get();
-        } catch (final Exception e) {
-            return null;
-        }
-    }
-
-    @Override
-    public Message waitFor(final MessageMetricCondition<T, S> condition, final long timeout, final TimeUnit unit) {
-        try {
-            return this.expect(condition).get(timeout, unit);
-        } catch (final Exception e) {
-            return null;
-        }
     }
 
 }

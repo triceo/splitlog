@@ -29,8 +29,8 @@ public class GatingTest extends DefaultFollowerBaseTest {
         return Arrays.asList(new Object[][] {
                 { LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile()), false },
                 {
-                        LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
-                                .withGateCondition(AllFollowerMessagesAcceptingCondition.INSTANCE), true } });
+                    LogWatchBuilder.getDefault().watchedFile(LogWriter.createTempFile())
+                    .withGateCondition(AllFollowerMessagesAcceptingCondition.INSTANCE), true } });
     }
 
     private final boolean isGatingDisabled;
@@ -64,7 +64,7 @@ public class GatingTest extends DefaultFollowerBaseTest {
         watch.addLine("07:30:02,670 INFO  [com.github.triceo.splitlog.check] (main) something else random");
         watch.addLine("07:30:02,739 DEBUG [org.jboss.as.config] (MSC service thread 1-7) Configured system properties:");
         watch.addLine("07:30:02,731 INFO  [org.jboss.as] (MSC service thread 1-7) JBAS015899: JBoss BRMS 6.0.1.GA (AS 7.2.1.Final-redhat-10) starting");
-        watch.terminate();
+        watch.stop();
         return metric;
     }
 

@@ -146,16 +146,6 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
     }
 
     @Override
-    public boolean separate(final Follower f) {
-        if (!this.followers.remove(f)) {
-            return false;
-        }
-        // we know about this follower, so the cast is safe
-        DefaultMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
-        return f.stopConsuming(this);
-    }
-
-    @Override
     public synchronized boolean stop() {
         if (this.isStopped()) {
             return false;

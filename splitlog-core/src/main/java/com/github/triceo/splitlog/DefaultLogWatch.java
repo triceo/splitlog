@@ -5,7 +5,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.collections4.BidiMap;
@@ -66,7 +65,7 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     void addLine(final String line) {
-        if (this.isTerminated()) {
+        if (this.isStopped()) {
             DefaultLogWatch.LOGGER.debug("Line '{}' ignored due to termination in {}.", line, this);
             return;
         }
@@ -274,11 +273,6 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean isTerminated() {
-        return this.isStopped();
-    }
-
-    @Override
     public synchronized boolean start() {
         if (this.isStarted()) {
             return false;
@@ -297,29 +291,6 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public Follower startFollowing() {
         return this.startFollowingActually(null).getKey();
-    }
-
-    @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor) {
-        final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
-        final Follower f = pair.getKey();
-        try {
-            return ImmutablePair.of(f, pair.getValue().get());
-        } catch (final Exception e) {
-            return ImmutablePair.of(f, null);
-        }
-    }
-
-    @Override
-    public Pair<Follower, Message> startFollowing(final MidDeliveryMessageCondition<LogWatch> waitFor,
-            final long howLong, final TimeUnit unit) {
-        final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
-        final Follower f = pair.getKey();
-        try {
-            return ImmutablePair.of(f, pair.getValue().get(howLong, unit));
-        } catch (final Exception e) {
-            return ImmutablePair.of(f, null);
-        }
     }
 
     private synchronized Pair<Follower, Future<Message>> startFollowingActually(
@@ -341,13 +312,6 @@ final class DefaultLogWatch implements LogWatch {
         this.storage.followerStarted(follower);
         DefaultLogWatch.LOGGER.info("Registered {} for {}.", follower, this);
         return ImmutablePair.of(follower, expectation);
-    }
-
-    @Override
-    public Pair<Follower, Future<Message>> startFollowingWithExpectation(
-            final MidDeliveryMessageCondition<LogWatch> waitFor) {
-        final Pair<Follower, Future<Message>> pair = this.startFollowingActually(waitFor);
-        return ImmutablePair.of(pair.getKey(), pair.getValue());
     }
 
     @Override
@@ -442,11 +406,6 @@ final class DefaultLogWatch implements LogWatch {
     @Override
     public boolean stopMeasuring(final String id) {
         return this.consumers.stopMeasuring(id);
-    }
-
-    @Override
-    public boolean terminate() {
-        return this.stop();
     }
 
     @Override
