@@ -50,7 +50,6 @@ final class DefaultLogWatch implements LogWatch {
     private WeakReference<Message> previousAcceptedMessage;
     private final TailSplitter splitter;
     private final LogWatchStorageManager storage;
-    private final LogWatchSweepingManager sweeping;
     private final LogWatchTailingManager tailing;
     private final long uniqueId = DefaultLogWatch.ID_GENERATOR.getAndIncrement();
     private final File watchedFile;
@@ -61,7 +60,6 @@ final class DefaultLogWatch implements LogWatch {
         this.storage = new LogWatchStorageManager(this, builder);
         this.watchedFile = builder.getFileToWatch();
         this.tailing = new LogWatchTailingManager(this, builder);
-        this.sweeping = new LogWatchSweepingManager(this.storage, builder.getDelayBetweenSweeps());
     }
 
     void addLine(final String line) {
@@ -279,7 +277,6 @@ final class DefaultLogWatch implements LogWatch {
         }
         this.isStarted = true;
         this.tailing.start();
-        this.sweeping.start();
         return true;
     }
 
@@ -337,10 +334,9 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     /**
-     * Invoking this method will cause the running
-     * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
-     * {@link Message}s will only be removed from memory when this watch
-     * instance is removed from memory.
+     * Invoking this method will cause the running message sweep to be
+     * de-scheduled. Any currently present {@link Message}s will only be removed
+     * from memory when this watch instance is removed from memory.
      */
     @Override
     public synchronized boolean stop() {
@@ -351,11 +347,11 @@ final class DefaultLogWatch implements LogWatch {
         }
         DefaultLogWatch.LOGGER.info("Terminating {}.", this);
         this.isStopped = true;
-        this.consumers.stop();
         this.tailing.stop();
+        this.consumers.stop();
         this.handingDown.clear();
         this.previousAcceptedMessage = null;
-        this.sweeping.stop();
+        this.storage.logWatchTerminated();
         DefaultLogWatch.LOGGER.info("Terminated {}.", this);
         return true;
     }

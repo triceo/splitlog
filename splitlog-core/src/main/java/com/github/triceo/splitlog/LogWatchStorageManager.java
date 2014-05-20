@@ -30,11 +30,13 @@ final class LogWatchStorageManager {
      */
     private final Map<Follower, Integer> startingMessageIds = new WeakHashMap<Follower, Integer>(),
             endingMessageIds = new WeakHashMap<Follower, Integer>();
+    private final LogWatchSweepingManager sweeping;
 
     public LogWatchStorageManager(final LogWatch watch, final LogWatchBuilder builder) {
         this.logWatch = watch;
         this.messages = new MessageStore(builder.getCapacityLimit());
         this.acceptanceCondition = builder.getStorageCondition();
+        this.sweeping = new LogWatchSweepingManager(this, builder);
     }
 
     public synchronized void followerStarted(final Follower follower) {
@@ -150,6 +152,20 @@ final class LogWatchStorageManager {
         return Math.max(this.messages.getFirstPosition(), this.startingMessageIds.get(follower));
     }
 
+    /**
+     * Will mean the end of the storage, including the termination of sweeping.
+     */
+    public synchronized void logWatchTerminated() {
+        for (final Follower f: this.startingMessageIds.keySet()) {
+            if (this.endingMessageIds.containsKey(f)) {
+                // already terminated
+                continue;
+            }
+            this.followerTerminated(f);
+        }
+        this.sweeping.stop();
+    }
+
     public synchronized boolean registerMessage(final Message message, final LogWatch source) {
         if (source != this.logWatch) {
             throw new IllegalStateException("Sources don't match.");
@@ -160,6 +176,7 @@ final class LogWatchStorageManager {
         } else if (messageAccepted) {
             LogWatchStorageManager.LOGGER.info("Message '{}' stored into {}.", message, source);
             this.messages.add(message);
+            this.sweeping.start();
         }
         return messageAccepted;
     }
