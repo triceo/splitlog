@@ -3,7 +3,6 @@ package com.github.triceo.splitlog;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,9 +35,6 @@ final class LogWatchTailingManager {
     private final boolean reopenBetweenReads, ignoreExistingContent;
     private final TailSplitter splitter;
     private SplitlogTailer tailer;
-
-    private Future<?> tailerFuture;
-
     private final DefaultLogWatch watch;
 
     public LogWatchTailingManager(final DefaultLogWatch watch, final LogWatchBuilder builder,
@@ -124,7 +120,7 @@ final class LogWatchTailingManager {
                 : "won't");
         this.tailer = new SplitlogTailer(this.watch.getWatchedFile(), new LogWatchTailerListener(this),
                 this.delayBetweenReads, this.willReadFromEnd(), this.reopenBetweenReads, this.bufferSize);
-        this.tailerFuture = LogWatchTailingManager.EXECUTOR.submit(this.tailer);
+        LogWatchTailingManager.EXECUTOR.submit(this.tailer);
         final long start = System.nanoTime();
         this.tailer.waitUntilStarted();
         final long duration = System.nanoTime() - start;
@@ -146,12 +142,12 @@ final class LogWatchTailingManager {
             LogWatchTailingManager.LOGGER.debug("Tailer not running, therefore not terminating.");
             return false;
         }
-        // forcibly terminate tailer
+        /*
+         * terminate tailer; we stop the scheduler and the task will therefore
+         * never be started again
+         */
         this.tailer.stop();
-        this.tailerFuture.cancel(true);
         // cleanup
-        this.tailer = null;
-        this.tailerFuture = null;
         this.currentlyProcessedMessage = null;
         this.previousAcceptedMessage = null;
         LogWatchTailingManager.LOGGER.info("Terminated tailing #{} for {}.",

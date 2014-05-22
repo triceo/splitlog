@@ -12,6 +12,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.triceo.splitlog.api.Follower;
 import com.github.triceo.splitlog.api.LogWatch;
@@ -75,7 +77,9 @@ public class RealWorldTest extends AbstractSplitlogTest {
         }
 
     };
+
     private static final int BASE_TIMEOUT_SECONDS = 5;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RealWorldTest.class);
     private static final String METRIC_ID = "Accepted Non-WARNING";
 
     private static final String METRIC_ID_2 = "Accepted ERROR";
@@ -119,6 +123,7 @@ public class RealWorldTest extends AbstractSplitlogTest {
         try {
             FileUtils.copyInputStreamToFile(RealWorldTest.class.getResourceAsStream("realworld.initial"),
                     watch.getWatchedFile());
+            RealWorldTest.LOGGER.info("File copied: {}", watch.getWatchedFile());
         } catch (final IOException e) {
             Assertions.fail("Failed copying file.", e);
         }
