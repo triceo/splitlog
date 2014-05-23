@@ -4,6 +4,7 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.input.Tailer;
@@ -30,11 +31,13 @@ final class LogWatchTailingManager {
     private final int bufferSize;
     private MessageBuilder currentlyProcessedMessage;
     private final long delayBetweenReads;
+    private final AtomicBoolean isReading = new AtomicBoolean(false);
     private final AtomicLong numberOfTimesThatTailerWasStarted = new AtomicLong(0);
     private WeakReference<Message> previousAcceptedMessage;
     private final boolean reopenBetweenReads, ignoreExistingContent;
     private final TailSplitter splitter;
     private SplitlogTailer tailer;
+
     private final DefaultLogWatch watch;
 
     public LogWatchTailingManager(final DefaultLogWatch watch, final LogWatchBuilder builder,
@@ -47,7 +50,45 @@ final class LogWatchTailingManager {
         this.ignoreExistingContent = !builder.isReadingFromBeginning();
     }
 
-    protected void addLine(final String line) {
+    public Message getCurrentlyProcessedMessage() {
+        if (this.currentlyProcessedMessage == null) {
+            return null;
+        } else {
+            return this.currentlyProcessedMessage.buildIntermediate(this.splitter);
+        }
+    }
+
+    public DefaultLogWatch getWatch() {
+        return this.watch;
+    }
+
+    public synchronized boolean isRunning() {
+        return (this.tailer != null);
+    }
+
+    protected void readingFinished() {
+        if (!this.isReading.compareAndSet(true, false)) {
+            return;
+        }
+        LogWatchTailingManager.LOGGER.info("Tailing stopped submitting lines.");
+        if (this.currentlyProcessedMessage != null) {
+            /*
+             * there will be no more lines from the current reading burst; the
+             * currently processed message must be marked as INCOMING with the
+             * possibility of being finished in the subsequent reading burst(s).
+             */
+            this.getWatch().messageIncoming(this.currentlyProcessedMessage.buildIntermediate(this.splitter));
+        }
+    }
+
+    protected void readingStarted() {
+        if (!this.isReading.compareAndSet(false, true)) {
+            return;
+        }
+        LogWatchTailingManager.LOGGER.info("Tailing will now start submitting lines.");
+    }
+
+    protected void readLine(final String line) {
         if (!this.isRunning()) {
             LogWatchTailingManager.LOGGER.debug("Line '{}' ignored s the tailing is inactive for {}.", line, this);
             return;
@@ -85,24 +126,7 @@ final class LogWatchTailingManager {
             LogWatchTailingManager.LOGGER.debug("Existing message is being updated.");
             this.currentlyProcessedMessage.add(line);
         }
-        this.getWatch().messageIncoming(this.currentlyProcessedMessage.buildIntermediate(this.splitter));
         LogWatchTailingManager.LOGGER.debug("Line processing over.");
-    }
-
-    public Message getCurrentlyProcessedMessage() {
-        if (this.currentlyProcessedMessage == null) {
-            return null;
-        } else {
-            return this.currentlyProcessedMessage.buildIntermediate(this.splitter);
-        }
-    }
-
-    public DefaultLogWatch getWatch() {
-        return this.watch;
-    }
-
-    public synchronized boolean isRunning() {
-        return (this.tailer != null);
     }
 
     /**

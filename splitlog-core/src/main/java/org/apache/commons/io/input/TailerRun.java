@@ -123,6 +123,7 @@ class TailerRun implements Runnable {
     @Override
     public void run() {
         try {
+            this.listener.begin();
             // Open the file
             if (this.reader == null) {
                 try {
@@ -197,6 +198,8 @@ class TailerRun implements Runnable {
             }
         } catch (final Exception e) {
             this.listener.handle(e);
+        } finally {
+            this.listener.commit();
         }
     }
 

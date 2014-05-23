@@ -17,6 +17,16 @@ final class LogWatchTailerListener implements TailerListener {
     }
 
     @Override
+    public void begin() {
+        this.manager.readingStarted();
+    }
+
+    @Override
+    public void commit() {
+        this.manager.readingFinished();
+    }
+
+    @Override
     public void fileNotFound() {
         LogWatchTailerListener.LOGGER.info("Log file not found: {}.", this.manager.getWatch().getWatchedFile());
     }
@@ -36,13 +46,12 @@ final class LogWatchTailerListener implements TailerListener {
     public void handle(final String line) {
         LogWatchTailerListener.LOGGER.info("Tailer for {} received line '{}'.", this.manager.getWatch()
                 .getWatchedFile(), line);
-        this.manager.addLine(line);
+        this.manager.readLine(line);
     }
 
     @Override
     public void init(final Tailer tailer) {
-        LogWatchTailerListener.LOGGER
-.info("Tailer {} initialized for file: {}.", tailer, this.manager.getWatch()
+        LogWatchTailerListener.LOGGER.info("Tailer {} initialized for file: {}.", tailer, this.manager.getWatch()
                 .getWatchedFile());
     }
 
