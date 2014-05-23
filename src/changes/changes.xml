@@ -6,6 +6,11 @@
     <author email="lukas@petrovicky.net">Lukáš Petrovický</author>
   </properties>
   <body> <!-- Features first, then bugfixes, then updates. -->
+    <release version="1.7.0" date="2014-06-19" description="Message deliveries streamlined.">
+      <action issue="55" dev="triceo" type="update">
+        Greatly reduced the number of INCOMING messages. This potentially affects runtime backwards compatibility. 
+      </action>
+    </release>
     <release version="1.6.0" date="2014-05-19" description="Documentation! Also, non-blocking wait, metrics on merges, fixes for app servers.">
       <action issue="46" dev="triceo" type="add">
         Splitlog now boasts shiny new user documentation! 
