@@ -510,4 +510,15 @@ public class Tailer implements Runnable {
         this.runTrigger.countDown();
     }
 
+    public void waitUntilStarted() {
+        while (!this.scheduled.hasStartedOnce() || this.scheduled.hasFinished()) {
+            try {
+                // wait for a miniscule amount of time
+                Thread.sleep(Math.max(this.getDelay() / 100, 1));
+            } catch (final InterruptedException e) {
+                // do nothing
+            }
+        }
+    }
+
 }

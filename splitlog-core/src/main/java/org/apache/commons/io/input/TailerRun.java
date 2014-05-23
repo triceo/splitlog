@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -30,6 +31,8 @@ class TailerRun implements Runnable {
      */
     private final File file;
 
+    private final AtomicBoolean finished = new AtomicBoolean(false);
+
     /**
      * Buffer on top of RandomAccessFile.
      */
@@ -49,12 +52,14 @@ class TailerRun implements Runnable {
      * position within the file
      */
     private long position = 0;
-
     private RandomAccessFile reader = null;
+
     /**
      * Whether to close and reopen the file whilst waiting for more input.
      */
     private final boolean reOpen;
+
+    private final AtomicBoolean startedOnce = new AtomicBoolean(false);
 
     public TailerRun(final File file, final Charset cset, final TailerListener listener, final boolean end,
         final boolean reOpen, final int bufSize) {
@@ -69,6 +74,15 @@ class TailerRun implements Runnable {
     public void cleanup() {
         IOUtils.closeQuietly(this.reader);
         this.reader = null;
+        this.finished.set(true);
+    }
+
+    public boolean hasFinished() {
+        return this.finished.get();
+    }
+
+    public boolean hasStartedOnce() {
+        return this.startedOnce.get();
     }
 
     /**
@@ -123,6 +137,7 @@ class TailerRun implements Runnable {
     @Override
     public void run() {
         try {
+            this.startedOnce.set(true);
             this.listener.begin();
             // Open the file
             if (this.reader == null) {
