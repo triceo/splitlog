@@ -499,6 +499,7 @@ public class Tailer implements Runnable {
             future.cancel(true); // stop the periodic reading
             this.scheduled.cleanup();
             this.executor.shutdownNow();
+            this.listener.destroy();
         }
     }
 

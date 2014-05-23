@@ -27,6 +27,11 @@ final class LogWatchTailerListener implements TailerListener {
     }
 
     @Override
+    public void destroy() {
+        this.manager.tailingFinished();
+    }
+
+    @Override
     public void fileNotFound() {
         LogWatchTailerListener.LOGGER.info("Log file not found: {}.", this.manager.getWatch().getWatchedFile());
     }

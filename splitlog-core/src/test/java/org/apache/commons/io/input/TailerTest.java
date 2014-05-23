@@ -81,6 +81,11 @@ public class TailerTest extends FileBasedTestCase {
         }
 
         @Override
+        public void destroy() {
+            // do nothing
+        }
+
+        @Override
         public void fileNotFound() {
             this.notFound++; // not atomic, but OK because only updated here.
         }

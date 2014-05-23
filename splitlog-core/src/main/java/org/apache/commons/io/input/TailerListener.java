@@ -43,6 +43,14 @@ public interface TailerListener {
     void commit();
 
     /**
+     * The tailer will call this method as the last operation before being
+     * terminated.
+     *
+     * TODO submit as pull request after IO-444 is merged
+     */
+    void destroy();
+
+    /**
      * This method is called if the tailed file is not found.
      * <p>
      * <b>Note:</b> this is called from the tailer thread.
@@ -87,5 +95,4 @@ public interface TailerListener {
      *            the tailer.
      */
     void init(Tailer tailer);
-
 }

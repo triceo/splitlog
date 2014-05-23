@@ -89,8 +89,9 @@ final class LogWatchTailingManager {
     }
 
     protected void readLine(final String line) {
-        if (!this.isRunning()) {
-            LogWatchTailingManager.LOGGER.debug("Line '{}' ignored s the tailing is inactive for {}.", line, this);
+        if (!this.isReading.get()) {
+            LogWatchTailingManager.LOGGER.warn("Line '{}' received when the tailer shouldn't have been sending: {}.",
+                    line, this);
             return;
         }
         final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
@@ -171,12 +172,23 @@ final class LogWatchTailingManager {
          * never be started again
          */
         this.tailer.stop();
-        // cleanup
-        this.currentlyProcessedMessage = null;
-        this.previousAcceptedMessage = null;
         LogWatchTailingManager.LOGGER.info("Terminated tailing #{} for {}.",
                 this.numberOfTimesThatTailerWasStarted.get(), this.watch);
         return true;
+    }
+
+    protected void tailingFinished() {
+        this.isReading.set(false);
+        LogWatchTailingManager.LOGGER.info("Tailing terminated.");
+        if (this.currentlyProcessedMessage != null) {
+            /*
+             * there will be no more lines. the last message must be accepted or
+             * rejected as well.
+             */
+            this.getWatch().messageArrived(this.currentlyProcessedMessage.buildFinal(this.splitter));
+            this.currentlyProcessedMessage = null;
+            this.previousAcceptedMessage = null;
+        }
     }
 
     private synchronized boolean willReadFromEnd() {
