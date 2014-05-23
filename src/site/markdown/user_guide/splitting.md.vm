@@ -16,8 +16,7 @@ In order to be able to separate the random set of lines into ```Message```s, *Sp
 This has multiple consequences:
 
 1. There can be no generic splitter for Logback, JBoss Logging or what have you. The current JBossServerLogTailSplitter, for example, only supports the default JBoss log file layout.
-2. The users have to write their own ```TailSplitter``` implementations for their particular logger patterns.
-3. The last ```Message``` in the log file will generally never be ```ACCEPTED``` and only ever be ```INCOMING``` and then ```UNDELIVERED```.
+2. Users have to write their own ```TailSplitter``` implementations for their particular logger patterns.
 
 $h2 Message metadata
 

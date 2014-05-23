@@ -47,20 +47,20 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
         final CountingMessageListener<LogWatch> l1 = new CountingMessageListener<LogWatch>();
         // direct consumption
         w.startConsuming(l1);
-        w.addLine("test");
+        w.messageIncoming(new MessageBuilder("test").buildIntermediate());
         Assertions.assertThat(l1.getNumberOfTimesCalled()).isEqualTo(1);
         // indirection of first order
         final CountingMessageListener<Follower> l2 = new CountingMessageListener<Follower>();
         final Follower f = w.startFollowing();
         f.startConsuming(l2);
-        w.addLine("test2");
+        w.messageIncoming(new MessageBuilder("test2").buildIntermediate());
         Assertions.assertThat(l2.getNumberOfTimesCalled()).isEqualTo(1);
         // indirection of second order
         final CountingMessageListener<MergingFollower> l3 = new CountingMessageListener<MergingFollower>();
         final Follower f2 = w.startFollowing();
         final MergingFollower mf = f2.mergeWith(f);
         mf.startConsuming(l3);
-        w.addLine("test3");
+        w.messageIncoming(new MessageBuilder("test3").buildIntermediate());
         /*
          * will receive the same message from two followers
          */

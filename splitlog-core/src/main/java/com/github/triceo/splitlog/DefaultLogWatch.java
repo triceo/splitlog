@@ -1,7 +1,6 @@
 package com.github.triceo.splitlog;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -42,66 +41,20 @@ final class DefaultLogWatch implements LogWatch {
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultLogWatch.class);
 
     private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
-    private MessageBuilder currentlyProcessedMessage;
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
     private boolean isStarted = false;
     private boolean isStopped = false;
-    private WeakReference<Message> previousAcceptedMessage;
-    private final TailSplitter splitter;
     private final LogWatchStorageManager storage;
-    private final LogWatchSweepingManager sweeping;
     private final LogWatchTailingManager tailing;
     private final long uniqueId = DefaultLogWatch.ID_GENERATOR.getAndIncrement();
     private final File watchedFile;
 
     protected DefaultLogWatch(final LogWatchBuilder builder, final TailSplitter splitter) {
-        this.splitter = splitter;
         this.gateCondition = builder.getGateCondition();
         this.storage = new LogWatchStorageManager(this, builder);
         this.watchedFile = builder.getFileToWatch();
-        this.tailing = new LogWatchTailingManager(this, builder);
-        this.sweeping = new LogWatchSweepingManager(this.storage, builder.getDelayBetweenSweeps());
-    }
-
-    void addLine(final String line) {
-        if (this.isStopped()) {
-            DefaultLogWatch.LOGGER.debug("Line '{}' ignored due to termination in {}.", line, this);
-            return;
-        }
-        final boolean isMessageBeingProcessed = this.currentlyProcessedMessage != null;
-        if (this.splitter.isStartingLine(line)) {
-            // new message begins
-            if (isMessageBeingProcessed) { // finish old message
-                DefaultLogWatch.LOGGER.debug("Existing message will be finished.");
-                final Message completeMessage = this.currentlyProcessedMessage.buildFinal(this.splitter);
-                final MessageDeliveryStatus accepted = this.handleCompleteMessage(completeMessage);
-                if (accepted == null) {
-                    DefaultLogWatch.LOGGER.info("Message {} rejected at the gate to {}.", completeMessage, this);
-                } else if (accepted == MessageDeliveryStatus.ACCEPTED) {
-                    this.previousAcceptedMessage = new WeakReference<Message>(completeMessage);
-                } else {
-                    DefaultLogWatch.LOGGER.info("Message {} rejected from storage in {}.", completeMessage, this);
-                }
-            }
-            // prepare for new message
-            DefaultLogWatch.LOGGER.debug("New message is being prepared.");
-            this.currentlyProcessedMessage = new MessageBuilder(line);
-            if (this.previousAcceptedMessage != null) {
-                this.currentlyProcessedMessage.setPreviousMessage(this.previousAcceptedMessage.get());
-            }
-        } else {
-            // continue present message
-            if (!isMessageBeingProcessed) {
-                DefaultLogWatch.LOGGER.debug("Disregarding line as trash.");
-                // most likely just a garbage immediately after start
-                return;
-            }
-            DefaultLogWatch.LOGGER.debug("Existing message is being updated.");
-            this.currentlyProcessedMessage.add(line);
-        }
-        this.handleIncomingMessage(this.currentlyProcessedMessage.buildIntermediate(this.splitter));
-        DefaultLogWatch.LOGGER.debug("Line processing over.");
+        this.tailing = new LogWatchTailingManager(this, builder, splitter);
     }
 
     @Override
@@ -159,72 +112,10 @@ final class DefaultLogWatch implements LogWatch {
         return this.watchedFile;
     }
 
-    /**
-     * Notify {@link MessageConsumer}s of a message that is either
-     * {@link MessageDeliveryStatus#ACCEPTED} or
-     * {@link MessageDeliveryStatus#REJECTED}.
-     *
-     * @param message
-     *            The message in question.
-     * @return Null if stopped at the gate by
-     *         {@link LogWatchBuilder#getGateCondition()},
-     *         {@link MessageDeliveryStatus#ACCEPTED} if accepted in
-     *         {@link LogWatchBuilder#getStorageCondition()},
-     *         {@link MessageDeliveryStatus#REJECTED} otherwise.
-     */
-    private MessageDeliveryStatus handleCompleteMessage(final Message message) {
-        if (!this.hasToLetMessageThroughTheGate(message)) {
-            return null;
-        }
-        final boolean messageAccepted = this.storage.registerMessage(message, this);
-        final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
-                : MessageDeliveryStatus.REJECTED;
-        this.consumers.messageReceived(message, status, this);
-        this.currentlyProcessedMessage = null;
-        return status;
-    }
-
-    /**
-     * Notify {@link MessageConsumer}s of a message that is
-     * {@link MessageDeliveryStatus#INCOMING}.
-     *
-     * @param message
-     *            The message in question.
-     * @return True if the message was passed to {@link MessageConsumer}s, false
-     *         if stopped at the gate by
-     *         {@link LogWatchBuilder#getGateCondition()}.
-     */
-    private boolean handleIncomingMessage(final Message message) {
-        if (!this.hasToLetMessageThroughTheGate(message)) {
-            return false;
-        }
-        this.consumers.messageReceived(message, MessageDeliveryStatus.INCOMING, this);
-        return true;
-    }
-
-    /**
-     * Notify {@link Follower} of a message that could not be delivered fully as
-     * the Follower terminated. Will not notify local consumers.
-     *
-     * @param follower
-     *            The follower that was terminated.
-     * @param message
-     *            The message in question.
-     * @return True if the message was passed to the {@link Follower}, false if
-     *         stopped at the gate by {@link LogWatchBuilder#getGateCondition()}
-     *         .
-     */
-    private boolean handleUndeliveredMessage(final Follower follower, final Message message) {
-        if (!this.hasToLetMessageThroughTheGate(message)) {
-            return false;
-        }
-        // FIXME should inform other consumers? or just metrics on LogWatch?
-        follower.messageReceived(message, MessageDeliveryStatus.INCOMPLETE, this);
-        return true;
-    }
-
     private boolean hasToLetMessageThroughTheGate(final Message message) {
         if (this.gateCondition.accept(message)) {
+            DefaultLogWatch.LOGGER.debug("Message '{}' passed gate condition {} in {}.", message, this.gateCondition,
+                    this);
             return true;
         } else {
             DefaultLogWatch.LOGGER.info("Message '{}' stopped at the gate in {}.", message, this);
@@ -272,6 +163,48 @@ final class DefaultLogWatch implements LogWatch {
         return this.isStopped;
     }
 
+    /**
+     * Notify {@link MessageConsumer}s of a message that is either
+     * {@link MessageDeliveryStatus#ACCEPTED} or
+     * {@link MessageDeliveryStatus#REJECTED}.
+     *
+     * @param message
+     *            The message in question.
+     * @return Null if stopped at the gate by
+     *         {@link LogWatchBuilder#getGateCondition()},
+     *         {@link MessageDeliveryStatus#ACCEPTED} if accepted in
+     *         {@link LogWatchBuilder#getStorageCondition()},
+     *         {@link MessageDeliveryStatus#REJECTED} otherwise.
+     */
+    public MessageDeliveryStatus messageArrived(final Message message) {
+        if (!this.hasToLetMessageThroughTheGate(message)) {
+            return null;
+        }
+        final boolean messageAccepted = this.storage.registerMessage(message, this);
+        final MessageDeliveryStatus status = messageAccepted ? MessageDeliveryStatus.ACCEPTED
+                : MessageDeliveryStatus.REJECTED;
+        this.consumers.messageReceived(message, status, this);
+        return status;
+    }
+
+    /**
+     * Notify {@link MessageConsumer}s of a message that is
+     * {@link MessageDeliveryStatus#INCOMING}.
+     *
+     * @param message
+     *            The message in question.
+     * @return True if the message was passed to {@link MessageConsumer}s, false
+     *         if stopped at the gate by
+     *         {@link LogWatchBuilder#getGateCondition()}.
+     */
+    public boolean messageIncoming(final Message message) {
+        if (!this.hasToLetMessageThroughTheGate(message)) {
+            return false;
+        }
+        this.consumers.messageReceived(message, MessageDeliveryStatus.INCOMING, this);
+        return true;
+    }
+
     @Override
     public synchronized boolean start() {
         if (this.isStarted()) {
@@ -279,7 +212,6 @@ final class DefaultLogWatch implements LogWatch {
         }
         this.isStarted = true;
         this.tailing.start();
-        this.sweeping.start();
         return true;
     }
 
@@ -337,10 +269,9 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     /**
-     * Invoking this method will cause the running
-     * {@link LogWatchStorageSweeper} to be de-scheduled. Any currently present
-     * {@link Message}s will only be removed from memory when this watch
-     * instance is removed from memory.
+     * Invoking this method will cause the running message sweep to be
+     * de-scheduled. Any currently present {@link Message}s will only be removed
+     * from memory when this watch instance is removed from memory.
      */
     @Override
     public synchronized boolean stop() {
@@ -351,11 +282,10 @@ final class DefaultLogWatch implements LogWatch {
         }
         DefaultLogWatch.LOGGER.info("Terminating {}.", this);
         this.isStopped = true;
-        this.consumers.stop();
         this.tailing.stop();
+        this.consumers.stop();
         this.handingDown.clear();
-        this.previousAcceptedMessage = null;
-        this.sweeping.stop();
+        this.storage.logWatchTerminated();
         DefaultLogWatch.LOGGER.info("Terminated {}.", this);
         return true;
     }
@@ -369,9 +299,6 @@ final class DefaultLogWatch implements LogWatch {
         if (consumer instanceof Follower) {
             this.storage.followerTerminated((Follower) consumer);
         }
-        if (this.countConsumers() < 1) {
-            this.currentlyProcessedMessage = null;
-        }
         return true;
     }
 
@@ -380,9 +307,12 @@ final class DefaultLogWatch implements LogWatch {
         if (!this.isFollowedBy(follower)) {
             return false;
         }
-        if (this.currentlyProcessedMessage != null) {
-            this.handleUndeliveredMessage(follower, this.currentlyProcessedMessage.buildIntermediate(this.splitter));
+        // handle incomplete message; to be removed in 1.8.x
+        final Message current = this.tailing.getCurrentlyProcessedMessage();
+        if ((current != null) && this.hasToLetMessageThroughTheGate(current)) {
+            follower.messageReceived(current, MessageDeliveryStatus.INCOMPLETE, this);
         }
+        // and actually terminate
         this.stopConsuming(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
         return true;

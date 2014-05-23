@@ -5,7 +5,7 @@
 
     <faq id="messages-not-arriving">
       <question>
-        Splitlog is always one line behind the watched log. What's wrong?
+        Splitlog seems to be one line behind the watched log. What's wrong?
       </question>
       <answer>
         Well, nothing is. In order to be able to tell you where log messages end, we first need to see the beginning of 

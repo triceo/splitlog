@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 
+import com.github.triceo.splitlog.api.LogWatchBuilder;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
@@ -19,14 +20,14 @@ final class LogWatchSweepingManager {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchSweepingManager.class);
     private static final ScheduledExecutorService TIMER = Executors.newScheduledThreadPool(1,
-            new SplitlogThreadFactory("sweeps"));
+            new SplitlogThreadFactory("sweeps")); // FIXME 1 thread for all?
     private ScheduledFuture<?> currentlyRunningSweeper = null;
     private final long delayBetweenSweeps;
     private final LogWatchStorageManager messaging;
 
-    public LogWatchSweepingManager(final LogWatchStorageManager messaging, final long delayBetweenSweeps) {
+    public LogWatchSweepingManager(final LogWatchStorageManager messaging, final LogWatchBuilder builder) {
         this.messaging = messaging;
-        this.delayBetweenSweeps = delayBetweenSweeps;
+        this.delayBetweenSweeps = builder.getDelayBetweenSweeps();
     }
 
     public synchronized boolean isRunning() {

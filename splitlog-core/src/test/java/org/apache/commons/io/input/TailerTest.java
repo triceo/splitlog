@@ -66,8 +66,23 @@ public class TailerTest extends FileBasedTestCase {
 
         volatile int rotated = 0;
 
+        @Override
+        public void begin() {
+            // do nothing
+        }
+
         public void clear() {
             this.lines.clear();
+        }
+
+        @Override
+        public void commit() {
+            // do nothing
+        }
+
+        @Override
+        public void destroy() {
+            // do nothing
         }
 
         @Override

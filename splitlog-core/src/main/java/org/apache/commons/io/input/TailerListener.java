@@ -27,6 +27,30 @@ package org.apache.commons.io.input;
 public interface TailerListener {
 
     /**
+     * The tailer will call this method when it's ready to start reading the
+     * file.
+     *
+     * TODO submit as pull request after IO-444 is merged
+     */
+    void begin();
+
+    /**
+     * The tailer will call this method when it's gone to sleep for the delay
+     * between reads.
+     *
+     * TODO submit as pull request after IO-444 is merged
+     */
+    void commit();
+
+    /**
+     * The tailer will call this method as the last operation before being
+     * terminated.
+     *
+     * TODO submit as pull request after IO-444 is merged
+     */
+    void destroy();
+
+    /**
      * This method is called if the tailed file is not found.
      * <p>
      * <b>Note:</b> this is called from the tailer thread.
@@ -47,7 +71,9 @@ public interface TailerListener {
      * Handles an Exception .
      * <p>
      * <b>Note:</b> this is called from the tailer thread.
-     * @param ex the exception.
+     *
+     * @param ex
+     *            the exception.
      */
     void handle(Exception ex);
 
@@ -55,15 +81,18 @@ public interface TailerListener {
      * Handles a line from a Tailer.
      * <p>
      * <b>Note:</b> this is called from the tailer thread.
-     * @param line the line.
+     *
+     * @param line
+     *            the line.
      */
     void handle(String line);
 
     /**
-     * The tailer will call this method during construction,
-     * giving the listener a method of stopping the tailer.
-     * @param tailer the tailer.
+     * The tailer will call this method during construction, giving the listener
+     * a method of stopping the tailer.
+     *
+     * @param tailer
+     *            the tailer.
      */
     void init(Tailer tailer);
-
 }

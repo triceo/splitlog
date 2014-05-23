@@ -2,6 +2,7 @@ package com.github.triceo.splitlog.util;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
@@ -28,8 +29,10 @@ public class SplitlogTailer extends Tailer {
     public void run() {
         SplitlogTailer.LOGGER.info("Tailer thread started.");
         this.started.countDown();
+        final long start = System.nanoTime();
         super.run();
-        SplitlogTailer.LOGGER.info("Tailer thread stopped.");
+        final long result = System.nanoTime() - start;
+        SplitlogTailer.LOGGER.info("Tailer thread stopped, took {} ms.", TimeUnit.NANOSECONDS.toMillis(result));
     }
 
     public void waitUntilStarted() {
