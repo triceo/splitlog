@@ -1,14 +1,12 @@
 package com.github.triceo.splitlog;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,20 +32,14 @@ public class LogWriter {
     }
 
     public static boolean write(final File target, final String line) {
-        BufferedWriter w = null;
         try {
-            w = new BufferedWriter(new FileWriter(target, true));
-            w.write(line);
-            w.newLine();
+            FileUtils.writeStringToFile(target, line + "\n", "UTF-8", true);
             LogWriter.LOGGER.info("Written '{}' into {}.", line, target);
+            return true;
         } catch (final IOException ex) {
-            LogWriter.LOGGER.warn("Failed writing '{}' into {}.", line, target, ex);
+            LogWriter.LOGGER.error("Failed writing '{}' into {}.", line, target, ex);
             return false;
-        } finally {
-            IOUtils.closeQuietly(w);
-            LogWriter.LOGGER.debug("File closed: {}.", target);
         }
-        return true;
     }
 
     /**
