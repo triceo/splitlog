@@ -307,7 +307,7 @@ final class DefaultLogWatch implements LogWatch {
         if (!this.isFollowedBy(follower)) {
             return false;
         }
-        // handle incomplete message
+        // handle incomplete message; to be removed in 1.8.x
         final Message current = this.tailing.getCurrentlyProcessedMessage();
         if ((current != null) && this.hasToLetMessageThroughTheGate(current)) {
             follower.messageReceived(current, MessageDeliveryStatus.INCOMPLETE, this);

@@ -50,6 +50,7 @@ final class LogWatchTailingManager {
         this.ignoreExistingContent = !builder.isReadingFromBeginning();
     }
 
+    @Deprecated
     public Message getCurrentlyProcessedMessage() {
         if (this.currentlyProcessedMessage == null) {
             return null;
