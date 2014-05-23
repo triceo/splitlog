@@ -6,9 +6,9 @@ import org.junit.runners.Parameterized;
 import com.github.triceo.splitlog.api.LogWatchBuilder;
 
 @RunWith(Parameterized.class)
-public class PostTerminationMessageWritingTest extends AbstractMessageWritingTest {
+public class AfterTerminationMessageWritingTest extends AbstractMessageWritingTest {
 
-    public PostTerminationMessageWritingTest(final LogWatchBuilder builder) {
+    public AfterTerminationMessageWritingTest(final LogWatchBuilder builder) {
         super(builder);
     }
 
