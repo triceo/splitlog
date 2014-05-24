@@ -15,6 +15,8 @@ import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageListener;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.LogUtil;
+import com.github.triceo.splitlog.util.LogUtil.Level;
 import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
 /**
@@ -96,7 +98,7 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
 
     @Override
     public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
-        AbstractExpectation.LOGGER.info("Notified of message '{}' in state {} from {}.", msg, status, source);
+        LogUtil.newMessage(AbstractExpectation.LOGGER, Level.INFO, "New message received:", msg, status, source, this);
         // check if the user code accepts the message
         if (!this.isAccepted(msg, status, source)) {
             return;

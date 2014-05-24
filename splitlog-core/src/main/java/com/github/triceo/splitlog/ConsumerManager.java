@@ -18,6 +18,8 @@ import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.LogUtil;
+import com.github.triceo.splitlog.util.LogUtil.Level;
 
 class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P>,
 ConsumerRegistrar<P> {
@@ -84,11 +86,10 @@ ConsumerRegistrar<P> {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }
-        ConsumerManager.LOGGER.info("{} notified of '{}' with status {}.", this, message, status);
+        LogUtil.newMessage(ConsumerManager.LOGGER, Level.INFO, "New message received:", message, status, producer, this);
         for (final MessageConsumer<P> consumer : this.consumers) {
             try {
                 consumer.messageReceived(message, status, producer);
-                ConsumerManager.LOGGER.debug("{} notified of '{}' with status {}.", consumer, message, status);
             } catch (final Throwable t) {
                 // calling user code; we need to be prepared for anything
                 ConsumerManager.LOGGER.warn("Failed notifying {} of '{}' with status {}. Stack trace on DEBUG.",

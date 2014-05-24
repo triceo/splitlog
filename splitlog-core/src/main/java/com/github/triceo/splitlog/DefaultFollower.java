@@ -27,6 +27,8 @@ import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.NoopMessageFormatter;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.LogUtil;
+import com.github.triceo.splitlog.util.LogUtil.Level;
 
 /**
  * This is a log follower that holds no message data, just the tags. For message
@@ -52,7 +54,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     private final DefaultLogWatch watch;
 
     public DefaultFollower(final DefaultLogWatch watch,
-            final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
+        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.startMeasuring(pair.getValue(), pair.getKey(), false);
         }
@@ -129,7 +131,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
         } else if (source != this.getWatch()) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
-        DefaultFollower.LOGGER.info("{} notified of '{}' with status {}.", this, msg, status);
+        LogUtil.newMessage(DefaultFollower.LOGGER, Level.INFO, "New message received:", msg, status, source, this);
         this.getExpectationManager().messageReceived(msg, status, source);
         this.getConsumerManager().messageReceived(msg, status, this);
     }

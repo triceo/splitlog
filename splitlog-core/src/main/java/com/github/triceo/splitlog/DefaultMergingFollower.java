@@ -29,6 +29,8 @@ import com.github.triceo.splitlog.api.MessageFormatter;
 import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.LogUtil;
+import com.github.triceo.splitlog.util.LogUtil.Level;
 
 /**
  * Will use {@link UnifyingMessageFormatter} as default message formatter.
@@ -126,7 +128,8 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
         } else if (!this.getMerged().contains(source)) {
             throw new IllegalArgumentException("Forbidden notification source: " + source);
         }
-        DefaultMergingFollower.LOGGER.info("{} notified of '{}' with status {} by {}.", this, msg, status, source);
+        LogUtil.newMessage(DefaultMergingFollower.LOGGER, Level.INFO, "New message received:", msg, status, source,
+                this);
         this.getExpectationManager().messageReceived(msg, status, source);
         this.getConsumerManager().messageReceived(msg, status, this);
     }

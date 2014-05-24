@@ -14,6 +14,8 @@ import com.github.triceo.splitlog.api.MessageConsumer;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageProducer;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.LogUtil;
+import com.github.triceo.splitlog.util.LogUtil.Level;
 import com.github.triceo.splitlog.util.SplitlogThreadFactory;
 
 /**
@@ -41,13 +43,14 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
     }
 
     @Override
-    public synchronized void
-    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Already stopped.");
         }
+        LogUtil.newMessage(AbstractExpectationManager.LOGGER, Level.INFO, "New message received:", msg, status,
+                producer, this);
         for (final AbstractExpectation<C, P> exchange : this.expectations.keySet()) {
-            exchange.messageReceived(message, status, producer);
+            exchange.messageReceived(msg, status, producer);
         }
     }
 
