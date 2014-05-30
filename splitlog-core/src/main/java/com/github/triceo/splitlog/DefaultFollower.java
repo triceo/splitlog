@@ -38,11 +38,6 @@ import com.github.triceo.splitlog.util.LogUtil.Level;
  * use it. Never use one instance of this class from two or more user threads.
  * Otherwise, unpredictable behavior from waitFor() methods is possible.
  *
- * Metrics within will never be terminated (and thus removed) unless done by the
- * user. Not even when no longer {@link #isFollowing()}.
- *
- * FIXME maybe we should do something about that ^^^^
- *
  * Will use {@link NoopMessageFormatter} as default message formatter.
  */
 final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> implements Follower {
@@ -76,9 +71,9 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
         return this.getWatch();
     }
 
-    // FIXME should be synchronized; but then the tests hang weirdly
     @Override
-    public SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order) {
+    public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
+        final MessageComparator order) {
         final SortedSet<Message> messages = new TreeSet<Message>(order);
         for (final Message msg : this.getWatch().getAllMessages(this)) {
             if (!condition.accept(msg)) {
