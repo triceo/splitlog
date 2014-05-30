@@ -30,13 +30,13 @@ final class LogWatchStorageManager {
      */
     private final Map<Follower, Integer> startingMessageIds = new WeakHashMap<Follower, Integer>(),
             endingMessageIds = new WeakHashMap<Follower, Integer>();
-    private final LogWatchSweepingManager sweeping;
+    private final LogWatchStorageSweeper sweeping;
 
     public LogWatchStorageManager(final LogWatch watch, final LogWatchBuilder builder) {
         this.logWatch = watch;
         this.messages = new MessageStore(builder.getCapacityLimit());
         this.acceptanceCondition = builder.getStorageCondition();
-        this.sweeping = new LogWatchSweepingManager(this, builder);
+        this.sweeping = new LogWatchStorageSweeper(this, builder);
     }
 
     public synchronized void followerStarted(final Follower follower) {
