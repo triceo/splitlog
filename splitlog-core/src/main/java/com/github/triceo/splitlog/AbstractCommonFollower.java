@@ -134,14 +134,6 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     @Override
     public <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure, final String id) {
-        return this.startMeasuring(measure, id, true);
-    }
-
-    protected synchronized <T extends Number> MessageMetric<T, P> startMeasuring(final MessageMeasure<T, P> measure,
-            final String id, final boolean checkIfFollowing) {
-        if (checkIfFollowing && this.isStopped()) {
-            throw new IllegalStateException("Cannot start measurement as the follower is no longer active.");
-        }
         return this.getConsumerManager().startMeasuring(measure, id);
     }
 

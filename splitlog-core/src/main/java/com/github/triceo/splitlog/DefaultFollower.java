@@ -56,7 +56,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     public DefaultFollower(final DefaultLogWatch watch,
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
-            this.startMeasuring(pair.getValue(), pair.getKey(), false);
+            this.startMeasuring(pair.getValue(), pair.getKey());
         }
         this.watch = watch;
     }
