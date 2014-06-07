@@ -1,9 +1,8 @@
 package com.github.triceo.splitlog;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections4.BidiMap;
@@ -26,7 +25,7 @@ ConsumerRegistrar<P> {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(ConsumerManager.class);
 
-    private final Set<MessageConsumer<P>> consumers = new LinkedHashSet<MessageConsumer<P>>();
+    private final Set<MessageConsumer<P>> consumers = new CopyOnWriteArraySet<MessageConsumer<P>>();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, P>>();
 
@@ -42,7 +41,7 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public int countMetrics() {
+    public synchronized int countMetrics() {
         return this.metrics.size();
     }
 
@@ -66,12 +65,12 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public boolean isMeasuring(final MessageMetric<? extends Number, P> metric) {
+    public synchronized boolean isMeasuring(final MessageMetric<? extends Number, P> metric) {
         return this.metrics.containsValue(metric);
     }
 
     @Override
-    public boolean isMeasuring(final String id) {
+    public synchronized boolean isMeasuring(final String id) {
         return this.metrics.containsKey(id);
     }
 
@@ -81,8 +80,7 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public synchronized void
-    messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
+    public void messageReceived(final Message message, final MessageDeliveryStatus status, final P producer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         }
@@ -101,7 +99,7 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public synchronized boolean registerConsumer(final MessageConsumer<P> consumer) {
+    public boolean registerConsumer(final MessageConsumer<P> consumer) {
         if (this.isStopped()) {
             throw new IllegalStateException("Consumer manager already stopped.");
         } else if (this.consumers.add(consumer)) {
@@ -113,7 +111,7 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public synchronized MessageConsumer<P> startConsuming(final MessageListener<P> listener) {
+    public MessageConsumer<P> startConsuming(final MessageListener<P> listener) {
         if (listener instanceof MessageConsumer<?>) {
             throw new IllegalArgumentException("Cannot consume consumers.");
         }
@@ -155,12 +153,12 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public synchronized boolean stop() {
+    public boolean stop() {
         if (!this.isStopped.compareAndSet(false, true)) {
             return false;
         }
         ConsumerManager.LOGGER.info("Stopping consumer manager for {}.", this.producer);
-        for (final MessageConsumer<P> consumer : new LinkedList<MessageConsumer<P>>(this.consumers)) {
+        for (final MessageConsumer<P> consumer : this.consumers) {
             this.stopConsuming(consumer);
         }
         for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
@@ -171,7 +169,7 @@ ConsumerRegistrar<P> {
     }
 
     @Override
-    public synchronized boolean stopConsuming(final MessageConsumer<P> consumer) {
+    public boolean stopConsuming(final MessageConsumer<P> consumer) {
         if (this.consumers.remove(consumer)) {
             ConsumerManager.LOGGER.info("Unregistered consumer {} for {}.", consumer, this.producer);
             return true;

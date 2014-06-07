@@ -74,8 +74,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
     }
 
     @Override
-    public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
-            final MessageComparator order) {
+    public SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order) {
         final SortedSet<Message> sorted = new TreeSet<Message>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {
@@ -121,8 +120,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
     }
 
     @Override
-    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
-        final Follower source) {
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final Follower source) {
         if (this.isStopped()) {
             throw new IllegalStateException("Follower already stopped.");
         } else if (!this.getMerged().contains(source)) {
@@ -149,7 +147,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
     }
 
     @Override
-    public synchronized boolean stop() {
+    public boolean stop() {
         if (this.isStopped()) {
             return false;
         }

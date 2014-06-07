@@ -97,7 +97,7 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
     protected abstract boolean isAccepted(final Message msg, final MessageDeliveryStatus status, final S source);
 
     @Override
-    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status, final S source) {
         LogUtil.newMessage(AbstractExpectation.LOGGER, Level.INFO, "New message received:", msg, status, source, this);
         // check if the user code accepts the message
         if (!this.isAccepted(msg, status, source)) {

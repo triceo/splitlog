@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 
@@ -20,8 +21,8 @@ final class LogWatchStorageSweeper implements Runnable {
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(LogWatchStorageSweeper.class);
     private static final ThreadFactory THREAD_FACTORY = new SplitlogThreadFactory("sweeps");
     private final long delayBetweenSweeps;
-    private boolean isStarted = false;
-    private boolean isStopped = false;
+    private final AtomicBoolean isStarted = new AtomicBoolean(false);
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final LogWatchStorageManager messaging;
     private final ScheduledExecutorService timer = Executors.newScheduledThreadPool(1,
             LogWatchStorageSweeper.THREAD_FACTORY);
@@ -56,11 +57,10 @@ final class LogWatchStorageSweeper implements Runnable {
      *
      * @return False if already called before, true otherwise.
      */
-    public synchronized boolean start() {
-        if (this.isStarted) {
+    public boolean start() {
+        if (!this.isStarted.compareAndSet(false, true)) {
             return false;
         }
-        this.isStarted = true;
         final long delay = this.delayBetweenSweeps;
         this.timer.scheduleWithFixedDelay(this, delay, delay, TimeUnit.MILLISECONDS);
         LogWatchStorageSweeper.LOGGER.info(
@@ -75,11 +75,10 @@ final class LogWatchStorageSweeper implements Runnable {
      * @return False if {@link #start()} not called or {@link #stop()} called
      *         already.
      */
-    public synchronized boolean stop() {
-        if (!this.isStarted || this.isStopped) {
+    public boolean stop() {
+        if (!this.isStarted.get() || !this.isStopped.compareAndSet(false, true)) {
             return false;
         }
-        this.isStopped = false;
         this.timer.shutdown();
         LogWatchStorageSweeper.LOGGER.info("Cancelled automated unreachable message sweep in {}.",
                 this.messaging.getLogWatch());

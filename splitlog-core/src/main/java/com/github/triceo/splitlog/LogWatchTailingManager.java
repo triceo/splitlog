@@ -32,6 +32,7 @@ final class LogWatchTailingManager {
     private MessageBuilder currentlyProcessedMessage;
     private final long delayBetweenReads;
     private final AtomicBoolean isReading = new AtomicBoolean(false);
+    private final AtomicBoolean isTailing = new AtomicBoolean(false);
     private final AtomicLong numberOfTimesThatTailerWasStarted = new AtomicLong(0);
     private WeakReference<Message> previousAcceptedMessage;
     private final boolean reopenBetweenReads, ignoreExistingContent;
@@ -61,10 +62,6 @@ final class LogWatchTailingManager {
 
     public DefaultLogWatch getWatch() {
         return this.watch;
-    }
-
-    public synchronized boolean isRunning() {
-        return (this.tailer != null);
     }
 
     protected void readingFinished() {
@@ -137,8 +134,8 @@ final class LogWatchTailingManager {
      *
      * @return True if the start was scheduled, false if scheduled already.
      */
-    public synchronized boolean start() {
-        if (this.isRunning()) {
+    public boolean start() {
+        if (!this.isTailing.compareAndSet(false, true)) {
             return false;
         }
         final boolean willReadFromEnd = this.willReadFromEnd();
@@ -163,8 +160,8 @@ final class LogWatchTailingManager {
      *
      * @return True if stopped, false if never running.
      */
-    public synchronized boolean stop() {
-        if (!this.isRunning()) {
+    public boolean stop() {
+        if (!this.isTailing.get()) {
             LogWatchTailingManager.LOGGER.debug("Tailer not running, therefore not terminating.");
             return false;
         }
@@ -192,7 +189,7 @@ final class LogWatchTailingManager {
         }
     }
 
-    private synchronized boolean willReadFromEnd() {
+    private boolean willReadFromEnd() {
         if (this.numberOfTimesThatTailerWasStarted.get() > 0) {
             return true;
         } else {

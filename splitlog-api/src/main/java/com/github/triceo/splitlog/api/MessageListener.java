@@ -17,10 +17,6 @@ public interface MessageListener<P extends MessageProducer<P>> {
      * this method. Only the authorized sources, all part of Splitlog core, may
      * use it.
      *
-     * Implementors are encouraged to properly synchronize this method, as it is
-     * expected that message notifications will be received in the same order in
-     * which the messages appear in the log.
-     *
      * @param message
      *            Message in question.
      * @param status

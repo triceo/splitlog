@@ -96,7 +96,7 @@ final class LogWatchStorageManager {
      * @param follower
      *            Tailer in question.
      */
-    private int getEndingMessageId(final Follower follower) {
+    private synchronized int getEndingMessageId(final Follower follower) {
         return this.endingMessageIds.containsKey(follower) ? this.endingMessageIds.get(follower) : this.messages
                 .getLatestPosition();
     }
@@ -148,7 +148,7 @@ final class LogWatchStorageManager {
      * @param follower
      *            Tailer in question.
      */
-    private int getStartingMessageId(final Follower follower) {
+    private synchronized int getStartingMessageId(final Follower follower) {
         return Math.max(this.messages.getFirstPosition(), this.startingMessageIds.get(follower));
     }
 

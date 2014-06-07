@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 
@@ -23,7 +24,7 @@ final class MessageStore {
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(MessageStore.class);
 
     private final int messageLimit;
-    private int nextMessagePosition = MessageStore.INITIAL_MESSAGE_POSITION;
+    private final AtomicInteger nextMessagePosition = new AtomicInteger(MessageStore.INITIAL_MESSAGE_POSITION);
     private final SortedMap<Integer, Message> store = new TreeMap<Integer, Message>();
 
     /**
@@ -63,7 +64,7 @@ final class MessageStore {
         final int nextKey = this.getNextPosition();
         this.store.put(nextKey, msg);
         MessageStore.LOGGER.info("Message #{} stored on position #{}", msg.getUniqueId(), nextKey);
-        this.nextMessagePosition++;
+        this.nextMessagePosition.incrementAndGet();
         if (this.store.size() > this.messageLimit) {
             // discard first message if we're over limit
             this.store.remove(this.store.firstKey());
@@ -124,7 +125,7 @@ final class MessageStore {
      *
      * @return Unmodifiable list containing those messages.
      */
-    public synchronized List<Message> getAll() {
+    public List<Message> getAll() {
         final int firstMessagePosition = this.getFirstPosition();
         if (firstMessagePosition < MessageStore.INITIAL_MESSAGE_POSITION) {
             return Collections.unmodifiableList(Collections.<Message> emptyList());
@@ -153,7 +154,7 @@ final class MessageStore {
      *            Least position, inclusive.
      * @return Unmodifiable list containing those messages.
      */
-    public synchronized List<Message> getFrom(final int startPosition) {
+    public List<Message> getFrom(final int startPosition) {
         return this.getFromRange(startPosition, this.getNextPosition());
     }
 
@@ -192,7 +193,7 @@ final class MessageStore {
      * @return -1 if no messages yet.
      */
     public synchronized int getLatestPosition() {
-        return (this.store.isEmpty()) ? this.nextMessagePosition - 1 : this.store.lastKey();
+        return (this.store.isEmpty()) ? this.nextMessagePosition.get() - 1 : this.store.lastKey();
     }
 
     /**
@@ -201,8 +202,8 @@ final class MessageStore {
      *
      * @return 0 if no messages have been inserted yet.
      */
-    public synchronized int getNextPosition() {
-        return this.nextMessagePosition;
+    public int getNextPosition() {
+        return this.nextMessagePosition.get();
     }
 
     /**

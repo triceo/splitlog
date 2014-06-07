@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -45,7 +46,9 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultFollower.class);
 
     private final ConsumerManager<Follower> consumers = new ConsumerManager<Follower>(this);
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final Set<Message> tags = new LinkedHashSet<Message>();
+
     private final DefaultLogWatch watch;
 
     public DefaultFollower(final DefaultLogWatch watch,
@@ -72,8 +75,8 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     }
 
     @Override
-    public synchronized SortedSet<Message> getMessages(final SimpleMessageCondition condition,
-        final MessageComparator order) {
+    public SortedSet<Message> getMessages(final SimpleMessageCondition condition,
+            final MessageComparator order) {
         final SortedSet<Message> messages = new TreeSet<Message>(order);
         for (final Message msg : this.getWatch().getAllMessages(this)) {
             if (!condition.accept(msg)) {
@@ -94,8 +97,15 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     }
 
     @Override
-    public boolean isStopped() {
-        return !this.getFollowed().isFollowedBy(this);
+    public synchronized boolean isStopped() {
+        if (this.isStopped.get()) {
+            return true;
+        } else if (this.getFollowed().isFollowedBy(this)) {
+            return false;
+        } else {
+            this.isStopped.set(true);
+            return true;
+        }
     }
 
     @Override
@@ -119,7 +129,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     }
 
     @Override
-    public synchronized void messageReceived(final Message msg, final MessageDeliveryStatus status,
+    public void messageReceived(final Message msg, final MessageDeliveryStatus status,
         final LogWatch source) {
         if (this.isStopped()) {
             throw new IllegalStateException("Follower already stopped.");
@@ -132,7 +142,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     }
 
     @Override
-    public synchronized boolean stop() {
+    public boolean stop() {
         if (this.isStopped()) {
             return false;
         }

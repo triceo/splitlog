@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.collections4.BidiMap;
@@ -43,8 +44,8 @@ final class DefaultLogWatch implements LogWatch {
     private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
     private final SimpleMessageCondition gateCondition;
     private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
-    private boolean isStarted = false;
-    private boolean isStopped = false;
+    private final AtomicBoolean isStarted = new AtomicBoolean(false);
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final LogWatchStorageManager storage;
     private final LogWatchTailingManager tailing;
     private final long uniqueId = DefaultLogWatch.ID_GENERATOR.getAndIncrement();
@@ -134,12 +135,12 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public boolean isHandingDown(final MessageMeasure<? extends Number, Follower> measure) {
+    public synchronized boolean isHandingDown(final MessageMeasure<? extends Number, Follower> measure) {
         return this.handingDown.containsValue(measure);
     }
 
     @Override
-    public boolean isHandingDown(final String id) {
+    public synchronized boolean isHandingDown(final String id) {
         return this.handingDown.containsKey(id);
     }
 
@@ -155,12 +156,12 @@ final class DefaultLogWatch implements LogWatch {
 
     @Override
     public boolean isStarted() {
-        return this.isStarted;
+        return this.isStarted.get();
     }
 
     @Override
     public boolean isStopped() {
-        return this.isStopped;
+        return this.isStopped.get();
     }
 
     /**
@@ -206,17 +207,16 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean start() {
-        if (this.isStarted()) {
+    public boolean start() {
+        if (!this.isStarted.compareAndSet(false, true)) {
             return false;
         }
-        this.isStarted = true;
         this.tailing.start();
         return true;
     }
 
     @Override
-    public synchronized MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> consumer) {
+    public MessageConsumer<LogWatch> startConsuming(final MessageListener<LogWatch> consumer) {
         return this.consumers.startConsuming(consumer);
     }
 
@@ -277,11 +277,10 @@ final class DefaultLogWatch implements LogWatch {
     public synchronized boolean stop() {
         if (!this.isStarted()) {
             throw new IllegalStateException("Cannot terminate what was not started.");
-        } else if (this.isStopped()) {
+        } else if (!this.isStopped.compareAndSet(false, true)) {
             return false;
         }
         DefaultLogWatch.LOGGER.info("Terminating {}.", this);
-        this.isStopped = true;
         this.tailing.stop();
         this.consumers.stop();
         this.handingDown.clear();
@@ -291,9 +290,8 @@ final class DefaultLogWatch implements LogWatch {
     }
 
     @Override
-    public synchronized boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
-        final boolean result = this.consumers.stopConsuming(consumer);
-        if (!result) {
+    public boolean stopConsuming(final MessageConsumer<LogWatch> consumer) {
+        if (!this.consumers.stopConsuming(consumer)) {
             return false;
         }
         if (consumer instanceof Follower) {
@@ -302,6 +300,10 @@ final class DefaultLogWatch implements LogWatch {
         return true;
     }
 
+    /**
+     * Is synchronized since we want to prevent multiple stops of the same
+     * follower.
+     */
     @Override
     public synchronized boolean stopFollowing(final Follower follower) {
         if (!this.isFollowedBy(follower)) {
