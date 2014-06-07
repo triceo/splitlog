@@ -13,7 +13,7 @@ import java.util.SortedSet;
  * the follower and not notify anyone.
  */
 public interface CommonFollower<P extends MessageProducer<P>, C extends MessageProducer<C>> extends MessageProducer<P>,
-        MessageConsumer<C>, SupportsExpectations<C, MidDeliveryMessageCondition<C>> {
+MessageConsumer<C>, SupportsExpectations<C, MidDeliveryMessageCondition<C>> {
 
     /**
      * Retrieve all {@link MessageDeliveryStatus#ACCEPTED} messages that this
@@ -65,8 +65,7 @@ public interface CommonFollower<P extends MessageProducer<P>, C extends MessageP
      * Merge this {@link CommonFollower} with another. This
      * {@link CommonFollower} has a responsibility of notifying the resulting
      * {@link MergingFollower} of every {@link Message} that it receives, until
-     * such time that {@link MergingFollower#separate(Follower)} is called on
-     * it.
+     * such time that {@link MergingFollower#remove(Follower)} is called on it.
      *
      * @param f
      *            To merge with.
@@ -82,8 +81,7 @@ public interface CommonFollower<P extends MessageProducer<P>, C extends MessageP
      * Merge this {@link CommonFollower} with another. This
      * {@link CommonFollower} has a responsibility of notifying the resulting
      * {@link MergingFollower} of every {@link Message} that it receives, until
-     * such time that {@link MergingFollower#separate(Follower)} is called on
-     * it.
+     * such time that {@link MergingFollower#remove(Follower)} is called on it.
      *
      * @param f
      *            To merge with.

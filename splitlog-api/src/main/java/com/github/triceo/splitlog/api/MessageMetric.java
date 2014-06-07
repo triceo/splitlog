@@ -24,7 +24,7 @@ SupportsExpectations<S, MessageMetricCondition<T, S>> {
      * Retrieve the number of times that the metric has been invoked on a
      * {@link Message}.
      *
-     * @return A number >= 0.
+     * @return Always 0 or more.
      */
     long getMessageCount();
 

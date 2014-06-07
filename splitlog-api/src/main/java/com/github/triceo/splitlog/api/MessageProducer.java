@@ -14,7 +14,7 @@ public interface MessageProducer<P extends MessageProducer<P>> {
      * {@link #startConsuming(MessageListener)}'d and not
      * {@link #stopConsuming(MessageConsumer)}'d.
      *
-     * @return Always >= 0.
+     * @return Always 0 or more.
      */
     int countConsumers();
 
@@ -23,7 +23,7 @@ public interface MessageProducer<P extends MessageProducer<P>> {
      * {@link #startMeasuring(MessageMeasure, String)}'d and not
      * {@link #stopMeasuring(String)}'d.
      *
-     * @return Always >= 0.
+     * @return Always 0 or more.
      */
     int countMetrics();
 
@@ -99,6 +99,8 @@ public interface MessageProducer<P extends MessageProducer<P>> {
     /**
      * Request that a message property be tracked from now on.
      *
+     * @param <T>
+     *            The numeric type to be measured.
      * @param measure
      *            The class that measures the given property. It is highly
      *            recommended that a measure instance be exclusive to each
