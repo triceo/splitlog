@@ -1,10 +1,14 @@
 package com.github.triceo.splitlog;
 
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
@@ -21,16 +25,15 @@ final class LogWatchStorageManager {
     private final SimpleMessageCondition acceptanceCondition;
     private final LogWatch logWatch;
     private final MessageStore messages;
-    private final AtomicLong numberOfActiveFollowers = new AtomicLong(0);
+    private final Object2IntMap<Follower> runningFollowerStartMarks = new Object2IntLinkedOpenHashMap<Follower>();
+    private final LogWatchStorageSweeper sweeping;
     /**
-     * These maps are weak; when a follower stops being used by user code, we do
-     * not want these IDs to prevent it from being GC'd. Yet, for as long as the
+     * This map is weak; when a follower stops being used by user code, we do
+     * not want this map to prevent it from being GC'd. Yet, for as long as the
      * follower is being used, we want to keep the IDs since the follower may
      * still ask for the messages.
      */
-    private final Map<Follower, Integer> startingMessageIds = new WeakHashMap<Follower, Integer>(),
-            endingMessageIds = new WeakHashMap<Follower, Integer>();
-    private final LogWatchStorageSweeper sweeping;
+    private final Map<Follower, int[]> terminatedFollowerRanges = new WeakHashMap<Follower, int[]>();
 
     public LogWatchStorageManager(final LogWatch watch, final LogWatchBuilder builder) {
         this.logWatch = watch;
@@ -39,22 +42,31 @@ final class LogWatchStorageManager {
         this.sweeping = new LogWatchStorageSweeper(this, builder);
     }
 
-    public synchronized void followerStarted(final Follower follower) {
-        if (this.numberOfActiveFollowers.incrementAndGet() == 1) {
-            LogWatchStorageManager.LOGGER.info("New follower registered. Messages can be received.");
+    public synchronized boolean followerStarted(final Follower follower) {
+        if (this.isFollowerActive(follower) || this.isFollowerTerminated(follower)) {
+            return false;
         }
         final int startingMessageId = this.messages.getNextPosition();
         LogWatchStorageManager.LOGGER.info("First message position is {} for {}.", startingMessageId, follower);
-        this.startingMessageIds.put(follower, startingMessageId);
+        this.runningFollowerStartMarks.put(follower, startingMessageId);
+        if (this.runningFollowerStartMarks.size() == 1) {
+            LogWatchStorageManager.LOGGER.info("New follower registered. Messages can be received.");
+        }
+        return true;
     }
 
-    public synchronized void followerTerminated(final Follower follower) {
+    public synchronized boolean followerTerminated(final Follower follower) {
+        if (!this.isFollowerActive(follower)) {
+            return false;
+        }
+        final int startingMessageId = this.runningFollowerStartMarks.removeInt(follower);
         final int endingMessageId = this.messages.getLatestPosition();
         LogWatchStorageManager.LOGGER.info("Last message position is {} for {}.", endingMessageId, follower);
-        this.endingMessageIds.put(follower, endingMessageId);
-        if (this.numberOfActiveFollowers.decrementAndGet() == 0) {
+        this.terminatedFollowerRanges.put(follower, new int[] { startingMessageId, endingMessageId });
+        if (this.runningFollowerStartMarks.size() == 0) {
             LogWatchStorageManager.LOGGER.info("Last remaining follower terminated. No messages can be received.");
         }
+        return true;
     }
 
     /**
@@ -72,9 +84,13 @@ final class LogWatchStorageManager {
      *         received.
      */
     protected synchronized List<Message> getAllMessages(final Follower follower) {
-        final int start = this.getStartingMessageId(follower);
-        // get the expected ending message ID
         final int end = this.getEndingMessageId(follower);
+        /*
+         * If messages have been discarded, the original starting message ID
+         * will no longer be valid. Therefore, we check for the actual starting
+         * ID.
+         */
+        final int start = Math.max(this.messages.getFirstPosition(), this.getStartingMessageId(follower));
         if (start > end) {
             /*
              * in case some messages have been discarded, the actual start may
@@ -94,11 +110,21 @@ final class LogWatchStorageManager {
      * Get index of the last plus one message that the follower has access to.
      *
      * @param follower
-     *            Tailer in question.
+     *            Follower in question.
+     * @return Ending message ID after {@link #followerTerminated(Follower)}.
+     *         {@link MessageStore#getLatestPosition()} between
+     *         {@link #followerStarted(Follower)} and
+     *         {@link #followerTerminated(Follower)}. Will throw an exception
+     *         otherwise.
      */
     private synchronized int getEndingMessageId(final Follower follower) {
-        return this.endingMessageIds.containsKey(follower) ? this.endingMessageIds.get(follower) : this.messages
-                .getLatestPosition();
+        if (this.isFollowerActive(follower)) {
+            return this.messages.getLatestPosition();
+        } else if (this.isFollowerTerminated(follower)) {
+            return this.terminatedFollowerRanges.get(follower)[1];
+        } else {
+            throw new IllegalStateException("Follower never before seen.");
+        }
     }
 
     /**
@@ -112,17 +138,26 @@ final class LogWatchStorageManager {
      *         this logWatch. -1 when there are no reachable messages.
      */
     protected synchronized int getFirstReachableMessageId() {
-        int minId = Integer.MAX_VALUE;
-        int valueCount = 0;
-        for (final Integer id : this.startingMessageIds.values()) {
-            minId = Math.min(minId, id);
-            valueCount++;
-        }
-        if (valueCount == 0) {
+        final boolean followersRunning = !this.runningFollowerStartMarks.isEmpty();
+        if (!followersRunning && this.terminatedFollowerRanges.isEmpty()) {
+            // no followers present; no reachable messages
             return -1;
-        } else {
-            return minId;
         }
+        final IntSortedSet set = new IntAVLTreeSet(this.runningFollowerStartMarks.values());
+        if (!set.isEmpty()) {
+            final int first = this.messages.getFirstPosition();
+            if (set.firstInt() <= first) {
+                /*
+                 * cannot go below first position; any other calculation
+                 * unnecessary
+                 */
+                return first;
+            }
+        }
+        for (final int[] pair : this.terminatedFollowerRanges.values()) {
+            set.add(pair[0]);
+        }
+        return set.firstInt();
     }
 
     public LogWatch getLogWatch() {
@@ -142,25 +177,54 @@ final class LogWatchStorageManager {
     }
 
     /**
-     * If messages have been discarded, the original starting message ID will no
-     * longer be valid. therefore, we check for the actual starting ID.
+     * For a given follower, return the starting mark.
      *
      * @param follower
      *            Tailer in question.
+     * @return Starting message ID, if after {@link #followerStarted(Follower)}.
+     *         Will throw an exception otherwise.
      */
     private synchronized int getStartingMessageId(final Follower follower) {
-        return Math.max(this.messages.getFirstPosition(), this.startingMessageIds.get(follower));
+        if (this.isFollowerActive(follower)) {
+            return this.runningFollowerStartMarks.getInt(follower);
+        } else if (this.isFollowerTerminated(follower)) {
+            return this.terminatedFollowerRanges.get(follower)[0];
+        } else {
+            throw new IllegalStateException("Follower never before seen.");
+        }
+    }
+
+    /**
+     * Whether {@link #followerStarted(Follower)} has been called and
+     * {@link #followerTerminated(Follower)} has not.
+     *
+     * @param follower
+     *            Follower in question.
+     * @return True if inbetween those two calls for this particular follower.
+     */
+    public synchronized boolean isFollowerActive(final Follower follower) {
+        return this.runningFollowerStartMarks.containsKey(follower);
+    }
+
+    /**
+     * Whether or not {@link #followerTerminated(Follower)} was called on the
+     * follower with a positive result.
+     *
+     * @param follower
+     *            Follower in question.
+     * @return True if called and returned true. May be unpredictable, since it
+     *         will look up references to terminated followers within a weak has
+     *         map.
+     */
+    public synchronized boolean isFollowerTerminated(final Follower follower) {
+        return this.terminatedFollowerRanges.containsKey(follower);
     }
 
     /**
      * Will mean the end of the storage, including the termination of sweeping.
      */
     public synchronized void logWatchTerminated() {
-        for (final Follower f: this.startingMessageIds.keySet()) {
-            if (this.endingMessageIds.containsKey(f)) {
-                // already terminated
-                continue;
-            }
+        for (final Follower f : this.runningFollowerStartMarks.keySet()) {
             this.followerTerminated(f);
         }
         this.sweeping.stop();
@@ -171,7 +235,7 @@ final class LogWatchStorageManager {
             throw new IllegalStateException("Sources don't match.");
         }
         final boolean messageAccepted = this.acceptanceCondition.accept(message);
-        if (this.numberOfActiveFollowers.get() == 0) {
+        if (this.runningFollowerStartMarks.size() == 0) {
             LogWatchStorageManager.LOGGER.info("Message thrown away as there are no followers: {}.", message);
         } else if (messageAccepted) {
             LogWatchStorageManager.LOGGER.info("Message '{}' stored into {}.", message, source);
