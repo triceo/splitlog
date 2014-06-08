@@ -1,10 +1,12 @@
 package com.github.triceo.splitlog;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -25,7 +27,7 @@ final class MessageStore {
 
     private final int messageLimit;
     private final AtomicInteger nextMessagePosition = new AtomicInteger(MessageStore.INITIAL_MESSAGE_POSITION);
-    private final SortedMap<Integer, Message> store = new TreeMap<Integer, Message>();
+    private final Int2ObjectSortedMap<Message> store = new Int2ObjectAVLTreeMap<Message>();
 
     /**
      * Create a message store with a maximum capacity of
@@ -143,7 +145,7 @@ final class MessageStore {
         if (this.store.isEmpty()) {
             return MessageStore.INITIAL_MESSAGE_POSITION - 1;
         } else {
-            return this.store.firstKey();
+            return this.store.firstIntKey();
         }
     }
 
@@ -193,7 +195,7 @@ final class MessageStore {
      * @return -1 if no messages yet.
      */
     public synchronized int getLatestPosition() {
-        return (this.store.isEmpty()) ? this.nextMessagePosition.get() - 1 : this.store.lastKey();
+        return (this.store.isEmpty()) ? this.nextMessagePosition.get() - 1 : this.store.lastIntKey();
     }
 
     /**
