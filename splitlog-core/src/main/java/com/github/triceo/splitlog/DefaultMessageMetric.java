@@ -1,7 +1,8 @@
 package com.github.triceo.splitlog;
 
-import java.util.SortedMap;
-import java.util.TreeMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectRBTreeMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectSortedMap;
+
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -22,7 +23,7 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
     private final MessageMeasure<T, S> measure;
     private final S source;
 
-    private final SortedMap<Long, Pair<Long, T>> stats = new TreeMap<Long, Pair<Long, T>>();
+    private final Long2ObjectSortedMap<Pair<Long, T>> stats = new Long2ObjectRBTreeMap<Pair<Long, T>>();
 
     public DefaultMessageMetric(final S source, final MessageMeasure<T, S> measure) {
         if (measure == null) {
@@ -54,7 +55,7 @@ final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>>
         if (this.stats.isEmpty()) {
             return 0;
         }
-        return this.stats.get(this.stats.lastKey()).getLeft();
+        return this.stats.get(this.stats.lastLongKey()).getLeft();
     }
 
     @Override
