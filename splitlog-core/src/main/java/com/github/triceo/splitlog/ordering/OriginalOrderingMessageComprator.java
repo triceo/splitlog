@@ -10,8 +10,8 @@ import com.github.triceo.splitlog.api.MessageComparator;
  */
 public final class OriginalOrderingMessageComprator implements MessageComparator {
 
-    private static final long serialVersionUID = 4745195072835417880L;
     public static final MessageComparator INSTANCE = new OriginalOrderingMessageComprator();
+    private static final long serialVersionUID = 4745195072835417880L;
 
     private OriginalOrderingMessageComprator() {
         // singleton
@@ -19,13 +19,7 @@ public final class OriginalOrderingMessageComprator implements MessageComparator
 
     @Override
     public int compare(final Message o1, final Message o2) {
-        if (o1.getUniqueId() == o2.getUniqueId()) {
-            return 0;
-        } else if (o1.getUniqueId() < o2.getUniqueId()) {
-            return -1;
-        } else {
-            return 1;
-        }
+        return o1.compareTo(o2);
     }
 
 }

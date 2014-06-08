@@ -1,5 +1,8 @@
 package com.github.triceo.splitlog;
 
+import it.unimi.dsi.fastutil.longs.AbstractLongComparator;
+import it.unimi.dsi.fastutil.longs.LongComparator;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +20,20 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
 
 final class DefaultMessage implements Message {
 
+    private static final LongComparator COMPARATOR = new AbstractLongComparator() {
+
+        @Override
+        public int compare(final long k1, final long k2) {
+            if (k1 < k2) {
+                return -1;
+            } else if (k1 == k2) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+
+    };
     private static final TailSplitter DEFAULT_SPLITTER = new SimpleTailSplitter();
 
     private final ExceptionDescriptor exceptionDescriptor;
@@ -27,6 +44,7 @@ final class DefaultMessage implements Message {
     private final MessageSeverity severity;
     private final TailSplitter splitter;
     private final MessageType type;
+
     private final long uniqueId;
 
     /**
@@ -129,6 +147,11 @@ final class DefaultMessage implements Message {
         this.type = MessageType.TAG;
         this.millisecondsSinceJanuary1st1970 = System.currentTimeMillis();
         this.exceptionDescriptor = null;
+    }
+
+    @Override
+    public int compareTo(final Message o) {
+        return DefaultMessage.COMPARATOR.compare(this.getUniqueId(), o.getUniqueId());
     }
 
     @Override

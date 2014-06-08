@@ -1,12 +1,14 @@
 package com.github.triceo.splitlog;
 
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
+import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -47,7 +49,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
 
     private final ConsumerManager<Follower> consumers = new ConsumerManager<Follower>(this);
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
-    private final Set<Message> tags = new LinkedHashSet<Message>();
+    private final SortedSet<Message> tags = new TreeSet<Message>();
 
     private final DefaultLogWatch watch;
 
@@ -77,19 +79,15 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition,
             final MessageComparator order) {
-        final SortedSet<Message> messages = new TreeSet<Message>(order);
+        final ObjectSortedSet<Message> messages = new ObjectRBTreeSet<Message>(order);
         for (final Message msg : this.getWatch().getAllMessages(this)) {
             if (!condition.accept(msg)) {
                 continue;
             }
             messages.add(msg);
         }
-        messages.addAll(this.getTags());
+        messages.addAll(this.tags);
         return Collections.unmodifiableSortedSet(messages);
-    }
-
-    protected Set<Message> getTags() {
-        return this.tags;
     }
 
     protected DefaultLogWatch getWatch() {

@@ -7,8 +7,10 @@ import java.util.List;
  * A set of lines from the watched file, that is likely to constitute a single
  * log message. No two messages are allowed to be equal, unless they have the
  * same {@link #getUniqueId()}.
+ *
+ * Messages will be comparable by {@link #getUniqueId()} in the natural order.
  */
-public interface Message {
+public interface Message extends Comparable<Message> {
 
     /**
      * Get the date that this message was logged on.
