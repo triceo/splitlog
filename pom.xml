@@ -149,9 +149,46 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <version>2.4</version>
         </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.7.1.201405082137</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-site-plugin</artifactId>
         <version>3.3</version>
@@ -262,15 +299,6 @@
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>2.6</version>
-        <configuration>
-          <aggregate>true</aggregate>
-          <ignoreTrivial>true</ignoreTrivial>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
         <artifactId>javancss-maven-plugin</artifactId>
         <version>2.0</version>
       </plugin>
@@ -284,32 +312,12 @@
         <artifactId>taglist-maven-plugin</artifactId>
         <version>2.4</version>
       </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </reporting>
-  <profiles>
-    <profile>
-      <id>perform-release</id>
-      <activation>
-        <property> <!-- manually -->
-          <name>performRelease</name>
-          <value>true</value>
-        </property>
-        <file> <!-- for the release plugin -->
-          <exists>release.properties</exists>
-        </file>
-      </activation>
-      <build>
-        <plugins>
-          <plugin> <!-- don't run tests in parallel, for Cobertura's sake -->
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <forkCount>1</forkCount>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
   <url>http://triceo.github.io/splitlog/maven-site/${project.version}/</url>
   <scm>
     <url>git@github.com:triceo/splitlog.git</url>
