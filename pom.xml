@@ -106,7 +106,7 @@
           <version>${surefire.version}</version>
           <configuration>
             <argLine>-Xms32m -Xmx64m</argLine>
-            <forkCount>2C</forkCount>
+            <forkCount>1C</forkCount>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <reuseForks>false</reuseForks>
             <runOrder>alphabetical</runOrder>
