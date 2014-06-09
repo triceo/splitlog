@@ -105,10 +105,11 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire.version}</version>
           <configuration>
+            <argLine>-Xms32m -Xmx64m</argLine>
             <forkCount>2C</forkCount>
-            <runOrder>alphabetical</runOrder>
-            <reuseForks>false</reuseForks>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <reuseForks>false</reuseForks>
+            <runOrder>alphabetical</runOrder>
             <systemPropertyVariables>
               <splitlog.logging>on</splitlog.logging> <!-- for debugging purposes -->
             </systemPropertyVariables>
