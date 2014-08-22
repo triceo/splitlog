@@ -85,11 +85,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>findbugs-maven-plugin</artifactId>
-          <version>2.5.4</version> <!-- does not support Java 8 -->
-          <configuration>
-            <effort>Max</effort>
-            <threshold>Low</threshold>
-          </configuration>
+          <version>3.0.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
@@ -216,7 +212,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
         <configuration>
@@ -231,7 +227,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin-->
+      </plugin>
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <executions>
@@ -275,14 +271,14 @@
           <minimumPriority>3</minimumPriority>
         </configuration>
       </plugin>
-      <!-- plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
         <configuration>
           <effort>Max</effort>
           <threshold>Low</threshold>
         </configuration>
-      </plugin -->
+      </plugin>
       <plugin>
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <version>2.7</version>
