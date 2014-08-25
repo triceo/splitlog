@@ -41,10 +41,10 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
         final String seconds = m.group(JBossServerLogTailSplitter.SECONDS);
         final String millis = m.group(JBossServerLogTailSplitter.MILLIS);
         final Calendar c = Calendar.getInstance();
-        c.set(Calendar.HOUR_OF_DAY, Integer.valueOf(hours));
-        c.set(Calendar.MINUTE, Integer.valueOf(minutes));
-        c.set(Calendar.SECOND, Integer.valueOf(seconds));
-        c.set(Calendar.MILLISECOND, Integer.valueOf(millis));
+        c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(hours));
+        c.set(Calendar.MINUTE, Integer.parseInt(minutes));
+        c.set(Calendar.SECOND, Integer.parseInt(seconds));
+        c.set(Calendar.MILLISECOND, Integer.parseInt(millis));
         return c.getTime();
     }
 

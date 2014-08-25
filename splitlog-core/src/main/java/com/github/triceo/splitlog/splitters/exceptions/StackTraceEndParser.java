@@ -12,10 +12,10 @@ class StackTraceEndParser extends ExceptionLineParser<StackTraceEndLine> {
             if (!m2.matches()) {
                 return null;
             } else {
-                return new StackTraceEndLine(Integer.valueOf(m2.group(1)));
+                return new StackTraceEndLine(Integer.parseInt(m2.group(1)));
             }
         } else {
-            return new StackTraceEndLine(Integer.valueOf(m.group(1)));
+            return new StackTraceEndLine(Integer.parseInt(m.group(1)));
         }
     }
 

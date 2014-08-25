@@ -39,9 +39,9 @@ class StackTraceParser extends ExceptionLineParser<StackTraceLine> {
             }
             if (providesJarIdentification) {
                 return StackTraceLine
-                        .newMethod(methodName, parts[0], Integer.valueOf(parts[1]), jarIdentificationParts);
+                        .newMethod(methodName, parts[0], Integer.parseInt(parts[1]), jarIdentificationParts);
             } else {
-                return StackTraceLine.newMethod(methodName, parts[0], Integer.valueOf(parts[1]));
+                return StackTraceLine.newMethod(methodName, parts[0], Integer.parseInt(parts[1]));
             }
         }
     }
