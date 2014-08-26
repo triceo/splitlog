@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 
@@ -33,13 +34,13 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectationManager.class);
     private final ConcurrentMap<AbstractExpectation<C, P>, Future<Message>> expectations = new ConcurrentHashMap<AbstractExpectation<C, P>, Future<Message>>();
 
-    private boolean isStopped = false;
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
 
     protected abstract AbstractExpectation<C, P> createExpectation(final C condition, final MessageAction<P> action);
 
     @Override
-    public boolean isStopped() {
-        return this.isStopped;
+    public synchronized boolean isStopped() {
+        return this.isStopped.get();
     }
 
     @Override
@@ -87,10 +88,10 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
 
     @Override
     public synchronized boolean stop() {
-        if (this.isStopped()) {
+        if (!this.isStopped.compareAndSet(false, true)) {
+            // already stopped
             return false;
         }
-        this.isStopped = true;
         for (final Future<Message> future : this.expectations.values()) {
             future.cancel(true);
         }
