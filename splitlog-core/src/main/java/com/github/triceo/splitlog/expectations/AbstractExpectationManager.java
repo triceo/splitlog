@@ -39,7 +39,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
     protected abstract AbstractExpectation<C, P> createExpectation(final C condition, final MessageAction<P> action);
 
     @Override
-    public synchronized boolean isStopped() {
+    public boolean isStopped() {
         return this.isStopped.get();
     }
 
@@ -87,7 +87,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
     }
 
     @Override
-    public synchronized boolean stop() {
+    public boolean stop() {
         if (!this.isStopped.compareAndSet(false, true)) {
             // already stopped
             return false;
