@@ -6,9 +6,12 @@
     <author email="lukas@petrovicky.net">Lukáš Petrovický</author>
   </properties>
   <body> <!-- Features first, then bugfixes, then updates. -->
-    <release version="1.7.0" date="2014-06-19" description="Message deliveries streamlined.">
+    <release version="1.7.0" date="2015-03-11" description="Message deliveries streamlined.">
       <action issue="55" dev="triceo" type="update">
         Greatly reduced the number of INCOMING messages. This potentially affects runtime backwards compatibility. 
+      </action>
+      <action dev="triceo" type="update">
+        Fixed several concurrency issues. 
       </action>
     </release>
     <release version="1.6.0" date="2014-05-19" description="Documentation! Also, non-blocking wait, metrics on merges, fixes for app servers.">
