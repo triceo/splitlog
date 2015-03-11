@@ -4,10 +4,12 @@ import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
@@ -62,7 +64,7 @@ final class LogWatchStorageManager {
         final int startingMessageId = this.runningFollowerStartMarks.removeInt(follower);
         final int endingMessageId = this.messages.getLatestPosition();
         LogWatchStorageManager.LOGGER.info("Last message position is {} for {}.", endingMessageId, follower);
-        this.terminatedFollowerRanges.put(follower, new int[] { startingMessageId, endingMessageId });
+        this.terminatedFollowerRanges.put(follower, new int[]{startingMessageId, endingMessageId});
         if (this.runningFollowerStartMarks.size() == 0) {
             LogWatchStorageManager.LOGGER.info("Last remaining follower terminated. No messages can be received.");
         }
@@ -224,7 +226,8 @@ final class LogWatchStorageManager {
      * Will mean the end of the storage, including the termination of sweeping.
      */
     public synchronized void logWatchTerminated() {
-        for (final Follower f : this.runningFollowerStartMarks.keySet()) {
+        final Set<Follower> followersToTerminate = new ObjectLinkedOpenHashSet<Follower>(this.runningFollowerStartMarks.keySet());
+        for (final Follower f : followersToTerminate) {
             this.followerTerminated(f);
         }
         this.sweeping.stop();
