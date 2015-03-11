@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,7 +33,7 @@ final class MessageBuilder {
             throw new IllegalArgumentException("First line may not be null.");
         }
         this.timestamp = System.currentTimeMillis();
-        this.lines.add(firstLine);
+        this.add(firstLine);
     }
 
     /**
@@ -42,7 +43,7 @@ final class MessageBuilder {
      *            Add untreated, unprocessed lines retrieved from the log.
      * @return This.
      */
-    public MessageBuilder add(final Collection<String> lines) {
+    public synchronized MessageBuilder add(final Collection<String> lines) {
         this.lines.addAll(lines);
         return this;
     }
@@ -55,8 +56,7 @@ final class MessageBuilder {
      * @return This.
      */
     public MessageBuilder add(final String line) {
-        this.lines.add(line);
-        return this;
+        return this.add(Collections.singletonList(line));
     }
 
     public Message buildFinal() {
@@ -103,16 +103,17 @@ final class MessageBuilder {
      *
      * @return First line from the server log, no pre-processing.
      */
-    public String getFirstLine() {
-        return this.getLines().get(0);
+    private String getFirstLine() {
+        return this.lines.get(0);
     }
 
     /**
      *
-     * @return Raw lines from the server log that have had no pre-processing.
+     * @return Raw lines from the server log that have had no pre-processing. This will create a new list every time it
+     * is called, so that {@link #lines} can be modified independently of this new collection's iteration.
      */
-    public List<String> getLines() {
-        return this.lines;
+    private synchronized List<String> getLines() {
+        return Collections.unmodifiableList(new LinkedList<String>(this.lines));
     }
 
     public Message getPreviousMessage() {
