@@ -1,0 +1,6 @@
+com.github.triceo.splitlog
+com.github.triceo.splitlog.logging
+com.github.triceo.splitlog.ordering
+com.github.triceo.splitlog.splitters.exceptions
+org.apache.commons.io.input
+org.apache.commons.io.testtools
