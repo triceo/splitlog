@@ -16,7 +16,7 @@
  *
  * TODO remove once https://issues.apache.org/jira/browse/IO-444 is fixed
  */
-package org.apache.commons.io.input;
+package org.apache.commons.io.input.fork;
 
 /**
  * Listener for events from a {@link Tailer}.
