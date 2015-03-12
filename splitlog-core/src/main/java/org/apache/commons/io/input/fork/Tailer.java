@@ -16,7 +16,7 @@
  *
  * TODO remove once https://issues.apache.org/jira/browse/IO-444 is fixed
  */
-package org.apache.commons.io.input;
+package org.apache.commons.io.input.fork;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -25,6 +25,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.io.input.TailerListenerAdapter;
 
 /**
  * Simple implementation of the unix "tail -f" functionality.
@@ -168,7 +170,7 @@ public class Tailer implements Runnable {
      * @return The new tailer
      */
     public static Tailer create(final File file, final Charset charset, final TailerListener listener,
-        final long delayMillis, final boolean end, final boolean reOpen, final int bufSize) {
+            final long delayMillis, final boolean end, final boolean reOpen, final int bufSize) {
         final Tailer tailer = new Tailer(file, charset, listener, delayMillis, end, reOpen, bufSize);
         final Thread thread = new Thread(tailer);
         thread.setDaemon(true);
@@ -223,7 +225,7 @@ public class Tailer implements Runnable {
      * @return The new tailer
      */
     public static Tailer create(final File file, final TailerListener listener, final long delayMillis,
-        final boolean end) {
+            final boolean end) {
         return Tailer.create(file, listener, delayMillis, end, Tailer.DEFAULT_BUFSIZE);
     }
 
@@ -245,7 +247,7 @@ public class Tailer implements Runnable {
      * @return The new tailer
      */
     public static Tailer create(final File file, final TailerListener listener, final long delayMillis,
-        final boolean end, final boolean reOpen) {
+            final boolean end, final boolean reOpen) {
         return Tailer.create(file, listener, delayMillis, end, reOpen, Tailer.DEFAULT_BUFSIZE);
     }
 
@@ -269,7 +271,7 @@ public class Tailer implements Runnable {
      * @return The new tailer
      */
     public static Tailer create(final File file, final TailerListener listener, final long delayMillis,
-        final boolean end, final boolean reOpen, final int bufSize) {
+            final boolean end, final boolean reOpen, final int bufSize) {
         return Tailer.create(file, Tailer.DEFAULT_CHARSET, listener, delayMillis, end, reOpen, bufSize);
     }
 
@@ -291,7 +293,7 @@ public class Tailer implements Runnable {
      * @return The new tailer
      */
     public static Tailer create(final File file, final TailerListener listener, final long delayMillis,
-        final boolean end, final int bufSize) {
+            final boolean end, final int bufSize) {
         return Tailer.create(file, listener, delayMillis, end, false, bufSize);
     }
 
@@ -334,7 +336,7 @@ public class Tailer implements Runnable {
      *            Buffer size
      */
     public Tailer(final File file, final Charset cset, final TailerListener listener, final long delayMillis,
-        final boolean end, final boolean reOpen, final int bufSize) {
+            final boolean end, final boolean reOpen, final int bufSize) {
         this.file = file;
         this.delayMillis = delayMillis;
         this.listener = listener;
@@ -407,7 +409,7 @@ public class Tailer implements Runnable {
      *            if true, close and reopen the file between reading chunks
      */
     public Tailer(final File file, final TailerListener listener, final long delayMillis, final boolean end,
-        final boolean reOpen) {
+            final boolean reOpen) {
         this(file, listener, delayMillis, end, reOpen, Tailer.DEFAULT_BUFSIZE);
     }
 
@@ -430,7 +432,7 @@ public class Tailer implements Runnable {
      *            Buffer size
      */
     public Tailer(final File file, final TailerListener listener, final long delayMillis, final boolean end,
-        final boolean reOpen, final int bufSize) {
+            final boolean reOpen, final int bufSize) {
         this(file, Tailer.DEFAULT_CHARSET, listener, delayMillis, end, reOpen, bufSize);
     }
 
@@ -451,7 +453,7 @@ public class Tailer implements Runnable {
      *            Buffer size
      */
     public Tailer(final File file, final TailerListener listener, final long delayMillis, final boolean end,
-        final int bufSize) {
+            final int bufSize) {
         this(file, listener, delayMillis, end, false, bufSize);
     }
 

@@ -1,7 +1,7 @@
 package com.github.triceo.splitlog;
 
-import org.apache.commons.io.input.Tailer;
-import org.apache.commons.io.input.TailerListener;
+import org.apache.commons.io.input.fork.Tailer;
+import org.apache.commons.io.input.fork.TailerListener;
 import org.slf4j.Logger;
 
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;

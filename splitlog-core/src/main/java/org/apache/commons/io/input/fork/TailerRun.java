@@ -1,4 +1,4 @@
-package org.apache.commons.io.input;
+package org.apache.commons.io.input.fork;
 
 /*
  * TODO remove once https://issues.apache.org/jira/browse/IO-444 is fixed
@@ -62,7 +62,7 @@ class TailerRun implements Runnable {
     private final AtomicBoolean startedOnce = new AtomicBoolean(false);
 
     public TailerRun(final File file, final Charset cset, final TailerListener listener, final boolean end,
-        final boolean reOpen, final int bufSize) {
+            final boolean reOpen, final int bufSize) {
         this.file = file;
         this.cset = cset;
         this.end = end;
