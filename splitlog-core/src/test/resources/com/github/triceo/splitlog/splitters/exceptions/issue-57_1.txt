@@ -1,0 +1,46 @@
+14:09:18,117 ERROR [org.apache.camel.processor.DefaultErrorHandler] (Camel (camel-1) thread #65 - NettyOrderedWorker) Failed delivery for (MessageId: ID-localhost-46547-1438258155327-0-1 on ExchangeId: ID-localhost-46547-1438258155327-0-2). Exhausted after delivery attempt: 1 caught: org.switchyard.SwitchYardException: SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleCamelGreetingService
+
+Message History
+---------------------------------------------------------------------------------------------------------------------------------------
+RouteId              ProcessorId          Processor                                                                        Elapsed (ms)
+[V1CamelNettyTcpBin] [V1CamelNettyTcpBin] [tcp://localhost:4000                                                          ] [        99]
+[V1CamelNettyTcpBin] [setProperty9      ] [setProperty[org.switchyard.exchangeGatewayName]                               ] [        12]
+[V1CamelNettyTcpBin] [setProperty10     ] [setProperty[org.switchyard.component.camel.namespace]                         ] [         0]
+[V1CamelNettyTcpBin] [process109        ] [Processor@0x4e02211a                                                          ] [         0]
+[V1CamelNettyTcpBin] [process110        ] [Processor@0x63a18e9f                                                          ] [         0]
+[V1CamelNettyTcpBin] [to5               ] [switchyard://SimpleCamelGreetingService                                       ] [        81]
+
+Exchange
+---------------------------------------------------------------------------------------------------------------------------------------
+Exchange[
+	Id                  ID-localhost-46547-1438258155327-0-2
+	ExchangePattern     InOut
+	Headers             {breadcrumbId=ID-localhost-46547-1438258155327-0-1, CamelNettyChannelHandlerContext=org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext@30c9c681, CamelNettyLocalAddress=/127.0.0.1:4000, CamelNettyMessageEvent=[id: 0xda0f970f, /127.0.0.1:36511 => /127.0.0.1:4000] RECEIVED: <?xml version="1.0" encoding="UTF-8"?> <person xmlns="urn:ledegen:operation-selector-service:1.0">  <name>Chuck</name>  <language>fail</language> </person>, CamelNettyRemoteAddress=/127.0.0.1:36511, CamelRedelivered=false, CamelRedeliveryCounter=0, org.switchyard.messageComposer=org.switchyard.component.camel.common.composer.CamelMessageComposer@304a41ea, org.switchyard.operationSelector=org.switchyard.component.camel.common.selector.CamelOperationSelector@4ec974ac}
+	BodyType            String
+	Body                <?xml version="1.0" encoding="UTF-8"?><person xmlns="urn:ledegen:operation-selector-service:1.0"> <name>Chuck</name> <language>fail</language></person>
+]
+
+Stacktrace
+---------------------------------------------------------------------------------------------------------------------------------------: org.switchyard.SwitchYardException: SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleCamelGreetingService
+	at org.switchyard.internal.ServiceReferenceImpl.createExchange(ServiceReferenceImpl.java:118) [switchyard-runtime-2.0.1.redhat-621013.jar:2.0.1.redhat-621013]
+	at org.switchyard.component.camel.switchyard.SwitchYardProducer.createSwitchyardExchange(SwitchYardProducer.java:190) [switchyard-component-camel-switchyard-2.0.1.redhat-621013.jar:2.0.1.redhat-621013]
+	at org.switchyard.component.camel.switchyard.SwitchYardProducer.process(SwitchYardProducer.java:92) [switchyard-component-camel-switchyard-2.0.1.redhat-621013.jar:2.0.1.redhat-621013]
+	at org.apache.camel.util.AsyncProcessorConverterHelper$ProcessorToAsyncProcessorBridge.process(AsyncProcessorConverterHelper.java:61) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.processor.SendProcessor.process(SendProcessor.java:129) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.management.InstrumentationProcessor.process(InstrumentationProcessor.java:77) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.processor.RedeliveryErrorHandler.process(RedeliveryErrorHandler.java:448) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.processor.CamelInternalProcessor.process(CamelInternalProcessor.java:191) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.processor.Pipeline.process(Pipeline.java:118) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.processor.Pipeline.process(Pipeline.java:80) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.processor.CamelInternalProcessor.process(CamelInternalProcessor.java:191) [camel-core-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.component.netty.handlers.ServerChannelHandler.processAsynchronously(ServerChannelHandler.java:140) [camel-netty-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.apache.camel.component.netty.handlers.ServerChannelHandler.messageReceived(ServerChannelHandler.java:112) [camel-netty-2.15.1.redhat-621013.jar:2.15.1.redhat-621013]
+	at org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:70)
+	at org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:564)
+	at org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:791)
+	at org.jboss.netty.handler.execution.ChannelUpstreamEventRunnable.doRun(ChannelUpstreamEventRunnable.java:43)
+	at org.jboss.netty.handler.execution.ChannelEventRunnable.run(ChannelEventRunnable.java:67)
+	at org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor$ChildExecutor.run(OrderedMemoryAwareThreadPoolExecutor.java:314)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [rt.jar:1.8.0_45]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [rt.jar:1.8.0_45]
+	at java.lang.Thread.run(Thread.java:745) [rt.jar:1.8.0_45]
