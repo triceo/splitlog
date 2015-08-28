@@ -1,11 +1,6 @@
 package com.github.triceo.splitlog.splitters.exceptions;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * A finite automaton for recognizing a Java exception stack trace spanning
@@ -20,70 +15,7 @@ import java.util.Queue;
  */
 final class ExceptionParser {
 
-    /**
-     * Various kinds of states for the parser automaton.
-     */
-    private static enum LineType {
-        CAUSE(true, false), POST_END(false, true), PRE_START(true, false), STACK_TRACE(false, true), STACK_TRACE_END(
-                false, true), SUB_CAUSE(false, false);
-
-        private final boolean mayBeFirstLine, mayBeLastLine;
-        private ExceptionLineParser<?> parser;
-
-        LineType(final boolean mayBeginWith, final boolean mayEndWith) {
-            this.mayBeFirstLine = mayBeginWith;
-            this.mayBeLastLine = mayEndWith;
-        }
-
-        private ExceptionLineParser<?> determineParser() {
-            switch (this) {
-                case PRE_START:
-                case POST_END:
-                    return null;
-                case CAUSE:
-                    return new CauseParser();
-                case STACK_TRACE:
-                    return new StackTraceParser();
-                case STACK_TRACE_END:
-                    return new StackTraceEndParser();
-                case SUB_CAUSE:
-                    return new SubCauseParser();
-            }
-            throw new IllegalStateException("This can never happen.");
-        }
-
-        /**
-         * Whether or not this type can be a start state.
-         */
-        public boolean isAcceptableAsFirstLine() {
-            return this.mayBeFirstLine;
-        }
-
-        /**
-         * Whether or not this type can be an accepting state.
-         */
-        public boolean isAcceptableAsLastLine() {
-            return this.mayBeLastLine;
-        }
-
-        /**
-         * Parse the line according to this state's parser.
-         *
-         * @param line
-         *            Line to parse.
-         * @return Parsed line.
-         * @throws ExceptionParseException
-         *             If the parser doesn't recognize the line.
-         */
-        public ExceptionLine parse(final String line) throws ExceptionParseException {
-            if ((this == LineType.POST_END) || (this == LineType.PRE_START)) {
-                throw new IllegalStateException("No need to parse garbage lines.");
-            } else if (this.parser == null) {
-                this.parser = this.determineParser();
-            }
-            return this.parser.parse(line);
-        }
-    }
+    private final List<ExceptionLine> parsedLines = new LinkedList<ExceptionLine>();
 
     private static String greatestCommonPrefix(final String a, final String b) {
         final int minLength = Math.min(a.length(), b.length());
@@ -134,18 +66,14 @@ final class ExceptionParser {
         return result;
     }
 
-    private final Collection<ExceptionLine> parsedLines = new LinkedList<ExceptionLine>();
-
     /**
      * Browsers through a random log and returns first exception stack trace it
      * could find.
      *
-     * @param input
-     *            Lines of the log. May begin and end with any garbage, may or
-     *            may not contain exception.
+     * @param input Lines of the log. May begin and end with any garbage, may or
+     *              may not contain exception.
      * @return Raw exception data.
-     * @throws ExceptionParseException
-     *             If parsing of the log file failed.
+     * @throws ExceptionParseException If parsing of the log file failed.
      */
     public synchronized Collection<ExceptionLine> parse(final Collection<String> input) throws ExceptionParseException {
         this.parsedLines.clear();
@@ -188,7 +116,8 @@ final class ExceptionParser {
                 return this.parseLine(line, LineType.CAUSE, LineType.PRE_START);
             case CAUSE:
             case SUB_CAUSE:
-                return this.parseLine(line, LineType.STACK_TRACE);
+            case PRE_STACK_TRACE:
+                return this.parseLine(line, LineType.STACK_TRACE, LineType.PRE_STACK_TRACE);
             case STACK_TRACE:
                 return this.parseLine(line, LineType.STACK_TRACE, LineType.STACK_TRACE_END, LineType.SUB_CAUSE);
             case STACK_TRACE_END:
@@ -222,12 +151,86 @@ final class ExceptionParser {
             }
             final ExceptionLine parsedLine = possibleType.parse(line);
             if (parsedLine != null) {
-                this.parsedLines.add(parsedLine);
+                if (possibleType == LineType.PRE_STACK_TRACE) {
+                    // in case the cause is multi-line, update the cause
+                    final ExceptionLine currentTop = this.parsedLines.remove(this.parsedLines.size() - 1);
+                    if (!((currentTop instanceof CauseLine) && (parsedLine instanceof PlainTextLine))) {
+                        throw new IllegalStateException("Garbage in the exception message.");
+                    }
+                    this.parsedLines.add(new CauseLine((CauseLine) currentTop, (PlainTextLine) parsedLine));
+                } else {
+                    this.parsedLines.add(parsedLine);
+                }
                 return possibleType;
             }
         }
         throw new ExceptionParseException(line, "Line not any of the expected types: "
                 + Arrays.toString(allowedLineTypes));
+    }
+
+    /**
+     * Various kinds of states for the parser automaton.
+     */
+    private enum LineType {
+        CAUSE(true, false), POST_END(false, true), PRE_START(true, false), PRE_STACK_TRACE(false, false),
+        STACK_TRACE(false, true), STACK_TRACE_END(false, true), SUB_CAUSE(false, false);
+
+        private final boolean mayBeFirstLine, mayBeLastLine;
+        private ExceptionLineParser<?> parser;
+
+        LineType(final boolean mayBeginWith, final boolean mayEndWith) {
+            this.mayBeFirstLine = mayBeginWith;
+            this.mayBeLastLine = mayEndWith;
+        }
+
+        private ExceptionLineParser<?> determineParser() {
+            switch (this) {
+                case PRE_START:
+                case POST_END:
+                    return null;
+                case CAUSE:
+                    return new CauseParser();
+                case PRE_STACK_TRACE:
+                    return new CopyingParser();
+                case STACK_TRACE:
+                    return new StackTraceParser();
+                case STACK_TRACE_END:
+                    return new StackTraceEndParser();
+                case SUB_CAUSE:
+                    return new SubCauseParser();
+            }
+            throw new IllegalStateException("This can never happen.");
+        }
+
+        /**
+         * Whether or not this type can be a start state.
+         */
+        public boolean isAcceptableAsFirstLine() {
+            return this.mayBeFirstLine;
+        }
+
+        /**
+         * Whether or not this type can be an accepting state.
+         */
+        public boolean isAcceptableAsLastLine() {
+            return this.mayBeLastLine;
+        }
+
+        /**
+         * Parse the line according to this state's parser.
+         *
+         * @param line Line to parse.
+         * @return Parsed line.
+         * @throws ExceptionParseException If the parser doesn't recognize the line.
+         */
+        public ExceptionLine parse(final String line) throws ExceptionParseException {
+            if ((this == LineType.POST_END) || (this == LineType.PRE_START)) {
+                throw new IllegalStateException("No need to parse garbage lines.");
+            } else if (this.parser == null) {
+                this.parser = this.determineParser();
+            }
+            return this.parser.parse(line);
+        }
     }
 
 }

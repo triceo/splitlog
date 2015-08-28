@@ -1,5 +1,11 @@
 package com.github.triceo.splitlog.splitters.exceptions;
 
+import com.github.triceo.splitlog.AbstractSplitlogTest;
+import com.github.triceo.splitlog.splitters.exceptions.StackTraceLine.Source;
+import org.apache.commons.io.IOUtils;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,22 +14,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
-
-import com.github.triceo.splitlog.AbstractSplitlogTest;
-import com.github.triceo.splitlog.splitters.exceptions.StackTraceLine.Source;
-
 public class ExceptionParserTest extends AbstractSplitlogTest {
 
     // FIXME share this in a better way
-    public static final Collection<String> parseIntoLines(final InputStream s) {
+    public static Collection<String> parseIntoLines(final InputStream s) {
         BufferedReader r = null;
         try {
             r = new BufferedReader(new InputStreamReader(s));
             final Collection<String> lines = new ArrayList<String>();
-            String line = null;
+            String line;
             while ((line = r.readLine()) != null) {
                 lines.add(line);
             }
@@ -133,6 +132,52 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
         Assertions.assertThat(stackTraceLine.getClassName()).isEqualTo("GrapheneTestListener.java");
         Assertions.assertThat(stackTraceLine.getClassSource()).isEqualTo(null);
         Assertions.assertThat(stackTraceLine.getClassSourceVersion()).isEqualTo(null);
+    }
+
+    @Test
+    public void testIssue57B() throws ExceptionParseException {
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+                .parseIntoLines(this.getClass().getResourceAsStream("issue-57_2.txt"))));
+        Assertions.assertThat(lines.size()).isEqualTo(18); // one item per line
+        // in the file
+        // verify the initial cause
+        final CauseLine firstLine = (CauseLine) lines.get(0);
+        Assertions.assertThat(firstLine.getClassName()).isEqualTo("org.switchyard.SwitchYardException");
+        Assertions
+                .assertThat(firstLine.getMessage())
+                .isEqualTo(
+                        "SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleHttpGreetingService");
+        // verify one random stack trace line
+        // 	at java.lang.Thread.run(Thread.java:745) [rt.jar:1.8.0_45]
+        final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(17);
+        Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);
+        Assertions.assertThat(stackTraceLine.getMethodName()).isEqualTo(
+                "java.lang.Thread.run");
+        Assertions.assertThat(stackTraceLine.getLineInCode()).isEqualTo(745);
+        Assertions.assertThat(stackTraceLine.getClassName()).isEqualTo("Thread.java");
+        Assertions.assertThat(stackTraceLine.getClassSource()).isEqualTo("rt.jar");
+        Assertions.assertThat(stackTraceLine.getClassSourceVersion()).isEqualTo("1.8.0_45");
+    }
+
+    @Test
+    public void testIssue57A() throws ExceptionParseException {
+        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+                .parseIntoLines(this.getClass().getResourceAsStream("issue-57_1.txt"))));
+        Assertions.assertThat(lines.size()).isEqualTo(23); // one item per line
+        // in the file
+        // verify the initial cause
+        final CauseLine firstLine = (CauseLine) lines.get(0);
+        Assertions.assertThat(firstLine.getClassName()).isEqualTo("org.switchyard.SwitchYardException");
+        // verify one random stack trace line
+        // 	at java.lang.Thread.run(Thread.java:745) [rt.jar:1.8.0_45]
+        final StackTraceLine stackTraceLine = (StackTraceLine) lines.get(22);
+        Assertions.assertThat(stackTraceLine.getSource()).isEqualTo(Source.REGULAR);
+        Assertions.assertThat(stackTraceLine.getMethodName()).isEqualTo(
+                "java.lang.Thread.run");
+        Assertions.assertThat(stackTraceLine.getLineInCode()).isEqualTo(745);
+        Assertions.assertThat(stackTraceLine.getClassName()).isEqualTo("Thread.java");
+        Assertions.assertThat(stackTraceLine.getClassSource()).isEqualTo("rt.jar");
+        Assertions.assertThat(stackTraceLine.getClassSourceVersion()).isEqualTo("1.8.0_45");
     }
 
 }

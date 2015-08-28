@@ -4,6 +4,10 @@ class CauseLine implements ExceptionLine {
 
     private final String className, message;
 
+    public CauseLine(final CauseLine cause, final PlainTextLine newLine) {
+        this(cause.getClassName(), cause.getMessage() + "\n" + newLine.getText());
+    }
+
     public CauseLine(final String className, final String message) {
         this.className = className;
         this.message = message;

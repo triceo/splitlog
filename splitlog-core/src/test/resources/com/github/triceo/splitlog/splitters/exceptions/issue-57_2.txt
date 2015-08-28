@@ -1,0 +1,18 @@
+14:10:13,347 ERROR [org.switchyard.component.http] (http-/127.0.0.1:8080-1) SWITCHYARD036004: Unexpected Exception invoking SwitchYard service: org.switchyard.SwitchYardException: SWITCHYARD014032: Operation fail does not exist for service {urn:ledegen:operation-selector-service:1.0}SimpleHttpGreetingService
+	at org.switchyard.internal.ServiceReferenceImpl.createExchange(ServiceReferenceImpl.java:118) [switchyard-runtime-2.0.1.redhat-621013.jar:2.0.1.redhat-621013]
+	at org.switchyard.component.http.InboundHandler.invoke(InboundHandler.java:108) [switchyard-component-http-2.0.1.redhat-621013.jar:2.0.1.redhat-621013]
+	at org.switchyard.component.http.HttpGatewayServlet.handle(HttpGatewayServlet.java:159) [switchyard-component-http-2.0.1.redhat-621013.jar:2.0.1.redhat-621013]
+	at org.switchyard.component.http.HttpGatewayServlet.service(HttpGatewayServlet.java:124) [switchyard-component-http-2.0.1.redhat-621013.jar:2.0.1.redhat-621013]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:847) [jboss-servlet-api_3.0_spec-1.0.2.Final-redhat-2.jar:1.0.2.Final-redhat-2]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:295)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:214)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:231)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:149)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:150)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:97)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:102)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.process(Http11Processor.java:854)
+	at org.apache.coyote.http11.Http11Protocol$Http11ConnectionHandler.process(Http11Protocol.java:653)
+	at org.apache.tomcat.util.net.JIoEndpoint$Worker.run(JIoEndpoint.java:926)
+	at java.lang.Thread.run(Thread.java:745) [rt.jar:1.8.0_45]
