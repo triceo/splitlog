@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.triceo.splitlog</groupId>
   <artifactId>splitlog-parent</artifactId>
-  <version>1.7.2-SNAPSHOT</version>
+  <version>1.7.2</version>
   <packaging>pom</packaging>
   <name>splitlog: watching your logs</name>
   <description>Tool to monitor log files from your Java applications as they fill.</description>
@@ -321,7 +321,7 @@
     <url>git@github.com:triceo/splitlog.git</url>
     <connection>scm:git:git@github.com:triceo/splitlog.git</connection>
     <developerConnection>scm:git:git@github.com:triceo/splitlog.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>splitlog-parent-1.7.2</tag>
   </scm>
   <issueManagement>
     <system>github</system>
