@@ -1,31 +1,19 @@
 package com.github.triceo.splitlog;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
+import com.github.triceo.splitlog.api.*;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
-import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.LogWatch;
-import com.github.triceo.splitlog.api.LogWatchBuilder;
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageConsumer;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageListener;
-import com.github.triceo.splitlog.api.MessageMeasure;
-import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
-import com.github.triceo.splitlog.api.SimpleMessageCondition;
-import com.github.triceo.splitlog.api.TailSplitter;
-import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Default log watch implementation which provides all the bells and whistles so
@@ -309,12 +297,6 @@ final class DefaultLogWatch implements LogWatch {
         if (!this.isFollowedBy(follower)) {
             return false;
         }
-        // handle incomplete message; to be removed in 1.8.x
-        final Message current = this.tailing.getCurrentlyProcessedMessage();
-        if ((current != null) && this.hasToLetMessageThroughTheGate(current)) {
-            follower.messageReceived(current, MessageDeliveryStatus.INCOMPLETE, this);
-        }
-        // and actually terminate
         this.stopConsuming(follower);
         DefaultLogWatch.LOGGER.info("Unregistered {} for {}.", follower, this);
         return true;

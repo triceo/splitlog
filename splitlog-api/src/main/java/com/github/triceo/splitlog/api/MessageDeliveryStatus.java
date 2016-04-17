@@ -16,12 +16,6 @@ public enum MessageDeliveryStatus {
      */
     INCOMING,
     /**
-     * {@link Follower} terminated before this message could be read fully.
-     * Terminal state.
-     */
-    @Deprecated
-    INCOMPLETE,
-    /**
      * The message has been read fully, but rejected by a user-defined message
      * acceptance filter on a {@link LogWatch}. Terminal state.
      */
