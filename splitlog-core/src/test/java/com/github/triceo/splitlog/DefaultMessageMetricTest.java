@@ -35,7 +35,7 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testGetMeasure() {
-        final MessageMetric<Integer, LogWatch> metric = new DefaultMessageMetric<Integer, LogWatch>(this.getLogWatch(),
+        final MessageMetric<Integer, LogWatch> metric = new DefaultMessageMetric<>(this.getLogWatch(),
                 DefaultMessageMetricTest.DEFAULT_MEASURE);
         Assertions.assertThat(metric.getMeasure()).isSameAs(DefaultMessageMetricTest.DEFAULT_MEASURE);
     }
@@ -79,14 +79,7 @@ public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
         metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
         Assertions.assertThat(metric.getValue()).isEqualTo(3);
         // prepare the waiting
-        final Future<Message> result = metric.expect(new MessageMetricCondition<Integer, LogWatch>() {
-
-            @Override
-            public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                return evaluate.getValue() == 7;
-            }
-
-        });
+        final Future<Message> result = metric.expect(evaluate -> evaluate.getValue() == 7);
         // this message will only increase the metric
         metric.messageReceived(DefaultMessageMetricTest.MESSAGE.buildFinal(), MessageDeliveryStatus.ACCEPTED, watch);
         // this message will put metric over threshold

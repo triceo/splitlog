@@ -1,33 +1,26 @@
 package com.github.triceo.splitlog;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.github.triceo.splitlog.api.*;
+import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
+import com.github.triceo.splitlog.util.LogUtil;
+import com.github.triceo.splitlog.util.LogUtil.Level;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.slf4j.Logger;
 
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageConsumer;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageListener;
-import com.github.triceo.splitlog.api.MessageMeasure;
-import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MessageProducer;
-import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
-import com.github.triceo.splitlog.util.LogUtil;
-import com.github.triceo.splitlog.util.LogUtil.Level;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class ConsumerManager<P extends MessageProducer<P>> implements MessageProducer<P>, MessageConsumer<P>,
 ConsumerRegistrar<P> {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(ConsumerManager.class);
 
-    private final Set<MessageConsumer<P>> consumers = new CopyOnWriteArraySet<MessageConsumer<P>>();
+    private final Set<MessageConsumer<P>> consumers = new CopyOnWriteArraySet<>();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
-    private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<String, DefaultMessageMetric<? extends Number, P>>();
+    private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<>();
 
     private final P producer;
 
@@ -115,7 +108,7 @@ ConsumerRegistrar<P> {
         if (listener instanceof MessageConsumer<?>) {
             throw new IllegalArgumentException("Cannot consume consumers.");
         }
-        final MessageConsumer<P> consumer = new DefaultMessageConsumer<P>(listener, this.producer);
+        final MessageConsumer<P> consumer = new DefaultMessageConsumer<>(listener, this.producer);
         if (this.registerConsumer(consumer)) {
             ConsumerManager.LOGGER.info("Registered new consumer {} for {}.", consumer, listener);
             return consumer;
@@ -146,7 +139,7 @@ ConsumerRegistrar<P> {
             throw new IllegalArgumentException("Duplicate ID:" + id);
         }
         ConsumerManager.LOGGER.info("Starting measuring {} in {}.", id, this.getProducer());
-        final DefaultMessageMetric<T, P> metric = new DefaultMessageMetric<T, P>(this.getProducer(), measure);
+        final DefaultMessageMetric<T, P> metric = new DefaultMessageMetric<>(this.getProducer(), measure);
         this.metrics.put(id, metric);
         this.registerConsumer(metric);
         return metric;
@@ -158,12 +151,8 @@ ConsumerRegistrar<P> {
             return false;
         }
         ConsumerManager.LOGGER.info("Stopping consumer manager for {}.", this.producer);
-        for (final MessageConsumer<P> consumer : this.consumers) {
-            this.stopConsuming(consumer);
-        }
-        for (final String metricId : new HashSet<String>(this.metrics.keySet())) {
-            this.stopMeasuring(metricId);
-        }
+        this.consumers.forEach(this::stopConsuming);
+        new HashSet<>(this.metrics.keySet()).forEach(this::stopMeasuring);
         ConsumerManager.LOGGER.info("Stopped metrics consumer manager for {}.", this.getProducer());
         return true;
     }

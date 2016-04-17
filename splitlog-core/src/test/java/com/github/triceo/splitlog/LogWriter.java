@@ -52,16 +52,11 @@ public class LogWriter {
      * @return The line that was written, or null otherwise.
      */
     public static String write(final Follower follower, final String line) {
-        final Future<Message> future = follower.expect(new MidDeliveryMessageCondition<LogWatch>() {
-
-            @Override
-            public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                final List<String> lines = evaluate.getLines();
-                final String lastLine = lines.get(lines.size() - 1);
-                final String textStr[] = line.split("\\r?\\n");
-                return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
-            }
-
+        final Future<Message> future = follower.expect((evaluate, status, source) -> {
+            final List<String> lines = evaluate.getLines();
+            final String lastLine = lines.get(lines.size() - 1);
+            final String textStr[] = line.split("\\r?\\n");
+            return (textStr[textStr.length - 1].trim().equals(lastLine.trim()));
         });
         if (!LogWriter.write(follower.getFollowed().getWatchedFile(), line)) {
             throw new IllegalStateException("Failed writing message.");

@@ -15,7 +15,7 @@ import com.github.triceo.splitlog.api.MessageType;
 public class MessageTest extends AbstractSplitlogTest {
 
     private Message buildMessage(final Collection<String> raw) {
-        final List<String> lines = new LinkedList<String>(raw);
+        final List<String> lines = new LinkedList<>(raw);
         return new MessageBuilder(lines.get(0)).add(lines.subList(1, lines.size())).buildFinal();
     }
 

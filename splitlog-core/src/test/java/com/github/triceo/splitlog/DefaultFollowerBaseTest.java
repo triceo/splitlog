@@ -1,23 +1,19 @@
 package com.github.triceo.splitlog;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import com.github.triceo.splitlog.api.Follower;
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.LogWatchBuilder;
+import com.github.triceo.splitlog.api.Message;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.LogWatch;
-import com.github.triceo.splitlog.api.LogWatchBuilder;
-import com.github.triceo.splitlog.api.Message;
+import java.util.*;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
 
@@ -34,11 +30,8 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
      *            want to compare against a tag.
      */
     protected static void assertProperOrder(final SortedSet<Message> actualMessages, final Object... expectedMessages) {
-        final List<String> actualLines = new LinkedList<String>();
-        for (final Message actual : actualMessages) {
-            actualLines.add(actual.getLines().get(0));
-        }
-        final List<String> expectedLines = new LinkedList<String>();
+        final List<String> actualLines = actualMessages.stream().map(actual -> actual.getLines().get(0)).collect(Collectors.toCollection(LinkedList::new));
+        final List<String> expectedLines = new LinkedList<>();
         for (final Object expected : expectedMessages) {
             if (expected instanceof Message) {
                 expectedLines.add(((Message) expected).getLines().get(0));

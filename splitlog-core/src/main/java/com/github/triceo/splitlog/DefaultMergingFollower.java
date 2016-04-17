@@ -40,12 +40,12 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultMergingFollower.class);
 
-    private final ConsumerManager<MergingFollower> consumers = new ConsumerManager<MergingFollower>(this);
-    private final Set<Follower> followers = new LinkedHashSet<Follower>();
+    private final ConsumerManager<MergingFollower> consumers = new ConsumerManager<>(this);
+    private final Set<Follower> followers = new LinkedHashSet<>();
 
     protected DefaultMergingFollower(final Follower... followers) {
         DefaultMergingFollower.LOGGER.info("Merging followers into {}.", this);
-        final Set<LogWatch> watches = new HashSet<LogWatch>();
+        final Set<LogWatch> watches = new HashSet<>();
         for (final Follower f : followers) {
             final DefaultFollower af = (DefaultFollower) f;
             this.followers.add(af);
@@ -75,7 +75,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition, final MessageComparator order) {
-        final SortedSet<Message> sorted = new TreeSet<Message>(order);
+        final SortedSet<Message> sorted = new TreeSet<>(order);
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages()) {
                 if (!condition.accept(m)) {
@@ -102,7 +102,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
         if (f == null) {
             throw new IllegalArgumentException("Cannot merge with null.");
         }
-        final Set<Follower> followers = new HashSet<Follower>(this.followers);
+        final Set<Follower> followers = new HashSet<>(this.followers);
         followers.add(f);
         return new DefaultMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
@@ -114,7 +114,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
         } else if (f == this) {
             throw new IllegalArgumentException("Cannot merge with self.");
         }
-        final Set<Follower> followers = new HashSet<Follower>(this.followers);
+        final Set<Follower> followers = new HashSet<>(this.followers);
         followers.addAll(f.getMerged());
         return new DefaultMergingFollower(followers.toArray(new Follower[followers.size()]));
     }
@@ -140,7 +140,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
             return null;
         } else {
             DefaultMergingFollower.LOGGER.info("Separating {} from {}.", f, this);
-            final List<Follower> followers = new ArrayList<Follower>(this.followers);
+            final List<Follower> followers = new ArrayList<>(this.followers);
             followers.remove(f);
             return new DefaultMergingFollower(followers.toArray(new Follower[followers.size()]));
         }
@@ -152,9 +152,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
             return false;
         }
         DefaultMergingFollower.LOGGER.info("Stopping {}.", this);
-        for (final Follower f : this.getMerged()) {
-            f.stop();
-        }
+        this.getMerged().forEach(Follower::stop);
         this.getConsumerManager().stop();
         this.getExpectationManager().stop();
         DefaultMergingFollower.LOGGER.info("Stopped {}.", this);
@@ -184,8 +182,8 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
          * assemble messages per-follower, so that we can properly retrieve
          * their source
          */
-        final SortedSet<Message> messages = new TreeSet<Message>(order);
-        final Map<Message, String> messagesToText = new HashMap<Message, String>();
+        final SortedSet<Message> messages = new TreeSet<>(order);
+        final Map<Message, String> messagesToText = new HashMap<>();
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages(condition)) {
                 messages.add(m);

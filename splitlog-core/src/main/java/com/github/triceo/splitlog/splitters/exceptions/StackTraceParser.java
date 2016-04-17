@@ -19,30 +19,31 @@ class StackTraceParser extends ExceptionLineParser<StackTraceLine> {
         if (providesJarIdentification && (jarIdentificationParts.length != 2)) {
             return null;
         }
-        if (lineIdentifier.equals("Unknown Source")) {
-            if (providesJarIdentification) {
-                return StackTraceLine.newUnknownMethod(methodName, jarIdentificationParts);
-            } else {
-                return StackTraceLine.newUnknownMethod(methodName);
-            }
-        } else if (lineIdentifier.equals("Native Method")) {
-            if (providesJarIdentification) {
-                return StackTraceLine.newNativeMethod(methodName, jarIdentificationParts);
-            } else {
-                return StackTraceLine.newNativeMethod(methodName);
-            }
-        } else {
-            final String[] parts = lineIdentifier.split("\\Q:\\E");
-            if ((parts.length != 2) || !parts[1].matches("\\d+")) {
-                // not a line number
-                return null;
-            }
-            if (providesJarIdentification) {
-                return StackTraceLine
-                        .newMethod(methodName, parts[0], Integer.parseInt(parts[1]), jarIdentificationParts);
-            } else {
-                return StackTraceLine.newMethod(methodName, parts[0], Integer.parseInt(parts[1]));
-            }
+        switch (lineIdentifier) {
+            case "Unknown Source":
+                if (providesJarIdentification) {
+                    return StackTraceLine.newUnknownMethod(methodName, jarIdentificationParts);
+                } else {
+                    return StackTraceLine.newUnknownMethod(methodName);
+                }
+            case "Native Method":
+                if (providesJarIdentification) {
+                    return StackTraceLine.newNativeMethod(methodName, jarIdentificationParts);
+                } else {
+                    return StackTraceLine.newNativeMethod(methodName);
+                }
+            default:
+                final String[] parts = lineIdentifier.split("\\Q:\\E");
+                if ((parts.length != 2) || !parts[1].matches("\\d+")) {
+                    // not a line number
+                    return null;
+                }
+                if (providesJarIdentification) {
+                    return StackTraceLine
+                            .newMethod(methodName, parts[0], Integer.parseInt(parts[1]), jarIdentificationParts);
+                } else {
+                    return StackTraceLine.newMethod(methodName, parts[0], Integer.parseInt(parts[1]));
+                }
         }
     }
 

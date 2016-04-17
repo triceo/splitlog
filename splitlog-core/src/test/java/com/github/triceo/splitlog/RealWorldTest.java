@@ -97,14 +97,7 @@ public class RealWorldTest extends AbstractSplitlogTest {
         }
         // log watch will accept anything not DEBUG
         final LogWatch watch = LogWatchBuilder.getDefault().watchedFile(tmp).ignoringPreexistingContent()
-                .withStorageCondition(new SimpleMessageCondition() {
-
-                    @Override
-                    public boolean accept(final Message evaluate) {
-                        return evaluate.getSeverity() != MessageSeverity.DEBUG;
-                    }
-
-                }).buildWith(new JBossServerLogTailSplitter());
+                .withStorageCondition(evaluate -> evaluate.getSeverity() != MessageSeverity.DEBUG).buildWith(new JBossServerLogTailSplitter());
         // metric will only count everything not WARNING
         final MessageMetric<Integer, LogWatch> nonWarning = watch.startMeasuring(RealWorldTest.ACCEPTED_NONWARNING,
                 RealWorldTest.METRIC_ID);
@@ -112,14 +105,7 @@ public class RealWorldTest extends AbstractSplitlogTest {
                 RealWorldTest.METRIC_ID_2);
         final Follower bothBatches = watch.startFollowing();
         final int messagesInFirst = 66;
-        final Future<Message> expectation = nonWarning.expect(new MessageMetricCondition<Integer, LogWatch>() {
-
-            @Override
-            public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                return evaluate.getValue() == (messagesInFirst - 1);
-            }
-
-        });
+        final Future<Message> expectation = nonWarning.expect(evaluate -> evaluate.getValue() == (messagesInFirst - 1));
         try {
             FileUtils.copyInputStreamToFile(RealWorldTest.class.getResourceAsStream("realworld.initial"),
                     watch.getWatchedFile());
@@ -150,27 +136,13 @@ public class RealWorldTest extends AbstractSplitlogTest {
         }
         // expect 20 errors...
         final Message lastError = DefaultFollowerBaseTest.wrapWaiting(
-                errors.expect(new MessageMetricCondition<Integer, LogWatch>() {
-
-                    @Override
-                    public boolean accept(final MessageMetric<Integer, LogWatch> evaluate) {
-                        return evaluate.getValue() == 20;
-                    }
-
-                }), RealWorldTest.BASE_TIMEOUT_SECONDS * 5, TimeUnit.SECONDS);
+                errors.expect(evaluate -> evaluate.getValue() == 20), RealWorldTest.BASE_TIMEOUT_SECONDS * 5, TimeUnit.SECONDS);
         Assertions.assertThat(lastError).isNotNull();
         Assertions.assertThat(lastError.getUniqueId()).isEqualTo(2599);
         // wait for the last message
         final int lastMessageId = 2672;
         final Message lastMessageInSecondBatch = DefaultFollowerBaseTest.wrapWaiting(
-                onlyLastBatch.expect(new MidDeliveryMessageCondition<LogWatch>() {
-
-                    @Override
-                    public boolean accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                        return ((status == MessageDeliveryStatus.INCOMING) && (evaluate.getUniqueId() == lastMessageId));
-                    }
-
-                }));
+                onlyLastBatch.expect((evaluate, status, source) -> ((status == MessageDeliveryStatus.INCOMING) && (evaluate.getUniqueId() == lastMessageId))));
         Assertions.assertThat(lastMessageInSecondBatch).isNotNull();
         Assertions.assertThat(lastMessageInSecondBatch.getUniqueId()).isEqualTo(lastMessageId);
         Assertions.assertThat(bothBatches.getMessages()).hasSize(lastMessageId - 2);

@@ -41,7 +41,7 @@ CommonFollower<P, C>, ConsumerRegistrar<P> {
 
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
 
-    private final MidDeliveryExpectationManager<C> expectations = new MidDeliveryExpectationManager<C>();
+    private final MidDeliveryExpectationManager<C> expectations = new MidDeliveryExpectationManager<>();
 
     private final long uniqueId = AbstractCommonFollower.ID_GENERATOR.getAndIncrement();
 

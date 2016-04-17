@@ -103,7 +103,7 @@ final class LogWatchTailingManager {
                 if (accepted == null) {
                     LogWatchTailingManager.LOGGER.info("Message {} rejected at the gate to {}.", completeMessage, this);
                 } else if (accepted == MessageDeliveryStatus.ACCEPTED) {
-                    this.previousAcceptedMessage = new WeakReference<Message>(completeMessage);
+                    this.previousAcceptedMessage = new WeakReference<>(completeMessage);
                 } else {
                     LogWatchTailingManager.LOGGER
                     .info("Message {} rejected from storage in {}.", completeMessage, this);

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
@@ -27,7 +28,7 @@ final class LogWatchStorageManager {
     private final SimpleMessageCondition acceptanceCondition;
     private final LogWatch logWatch;
     private final MessageStore messages;
-    private final Object2IntMap<Follower> runningFollowerStartMarks = new Object2IntLinkedOpenHashMap<Follower>();
+    private final Object2IntMap<Follower> runningFollowerStartMarks = new Object2IntLinkedOpenHashMap<>();
     private final LogWatchStorageSweeper sweeping;
     /**
      * This map is weak; when a follower stops being used by user code, we do
@@ -35,7 +36,7 @@ final class LogWatchStorageManager {
      * follower is being used, we want to keep the IDs since the follower may
      * still ask for the messages.
      */
-    private final Map<Follower, int[]> terminatedFollowerRanges = new WeakHashMap<Follower, int[]>();
+    private final Map<Follower, int[]> terminatedFollowerRanges = new WeakHashMap<>();
 
     public LogWatchStorageManager(final LogWatch watch, final LogWatchBuilder builder) {
         this.logWatch = watch;
@@ -156,9 +157,7 @@ final class LogWatchStorageManager {
                 return first;
             }
         }
-        for (final int[] pair : this.terminatedFollowerRanges.values()) {
-            set.add(pair[0]);
-        }
+        set.addAll(this.terminatedFollowerRanges.values().stream().map(pair -> pair[0]).collect(Collectors.toList()));
         return set.firstInt();
     }
 
@@ -226,10 +225,8 @@ final class LogWatchStorageManager {
      * Will mean the end of the storage, including the termination of sweeping.
      */
     public synchronized void logWatchTerminated() {
-        final Set<Follower> followersToTerminate = new ObjectLinkedOpenHashSet<Follower>(this.runningFollowerStartMarks.keySet());
-        for (final Follower f : followersToTerminate) {
-            this.followerTerminated(f);
-        }
+        final Set<Follower> followersToTerminate = new ObjectLinkedOpenHashSet<>(this.runningFollowerStartMarks.keySet());
+        followersToTerminate.forEach(this::followerTerminated);
         this.sweeping.stop();
     }
 

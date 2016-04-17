@@ -1,23 +1,14 @@
 package com.github.triceo.splitlog.expectations;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageAction;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageListener;
-import com.github.triceo.splitlog.api.MessageProducer;
+import com.github.triceo.splitlog.api.*;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import com.github.triceo.splitlog.util.LogUtil;
 import com.github.triceo.splitlog.util.LogUtil.Level;
 import com.github.triceo.splitlog.util.SplitlogThreadFactory;
+import org.slf4j.Logger;
+
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Waits until a {@link Message} arrives that makes a particular condition true.
@@ -110,14 +101,9 @@ abstract class AbstractExpectation<C, S extends MessageProducer<S>> implements M
         AbstractExpectation.LOGGER.debug("Condition passed by message '{}' in state {} from {}.", msg, status, source);
         this.stash = msg;
         if (this.action != null) {
-            this.actionFuture = AbstractExpectation.EXECUTOR.submit(new Callable<Void>() {
-
-                @Override
-                public Void call() throws Exception {
-                    AbstractExpectation.this.action.execute(msg, source);
-                    return null;
-                }
-
+            this.actionFuture = AbstractExpectation.EXECUTOR.submit(() -> {
+                AbstractExpectation.this.action.execute(msg, source);
+                return null;
             });
         }
         this.latch.countDown(); // unblock the other thread

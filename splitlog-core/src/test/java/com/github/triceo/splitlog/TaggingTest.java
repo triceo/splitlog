@@ -53,10 +53,10 @@ public class TaggingTest extends DefaultFollowerBaseTest {
         result = LogWriter.write(follower, message3);
         Assertions.assertThat(result).isEqualTo(message3);
         // make sure all messages are present with the default condition
-        SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
+        SortedSet<Message> messages = new TreeSet<>(follower.getMessages());
         DefaultFollowerBaseTest.assertProperOrder(messages, tag0, message1, tag1, message2, tag2);
         // make sure just the tags are present witn nothing-accepting condition
-        messages = new TreeSet<Message>(follower.getMessages(new NothingAcceptingMessageCondition()));
+        messages = new TreeSet<>(follower.getMessages(new NothingAcceptingMessageCondition()));
         DefaultFollowerBaseTest.assertProperOrder(messages, tag0, tag1, tag2);
     }
 

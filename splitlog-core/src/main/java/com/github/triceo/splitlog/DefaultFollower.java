@@ -47,9 +47,9 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultFollower.class);
 
-    private final ConsumerManager<Follower> consumers = new ConsumerManager<Follower>(this);
+    private final ConsumerManager<Follower> consumers = new ConsumerManager<>(this);
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
-    private final SortedSet<Message> tags = new TreeSet<Message>();
+    private final SortedSet<Message> tags = new TreeSet<>();
 
     private final DefaultLogWatch watch;
 
@@ -79,7 +79,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition,
             final MessageComparator order) {
-        final ObjectSortedSet<Message> messages = new ObjectRBTreeSet<Message>(order);
+        final ObjectSortedSet<Message> messages = new ObjectRBTreeSet<>(order);
         for (final Message msg : this.getWatch().getAllMessages(this)) {
             if (!condition.accept(msg)) {
                 continue;
@@ -121,7 +121,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
         if (f == null) {
             throw new IllegalArgumentException("Cannot merge with null.");
         }
-        final Set<Follower> followers = new HashSet<Follower>(f.getMerged());
+        final Set<Follower> followers = new HashSet<>(f.getMerged());
         followers.add(this);
         return new DefaultMergingFollower(followers.toArray(new Follower[followers.size()]));
     }

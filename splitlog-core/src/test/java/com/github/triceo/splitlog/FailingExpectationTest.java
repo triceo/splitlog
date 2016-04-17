@@ -43,7 +43,7 @@ public class FailingExpectationTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(result).isEqualTo(message);
         result = LogWriter.write(follower, message);
         Assertions.assertThat(result).isEqualTo(message);
-        final SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
+        final SortedSet<Message> messages = new TreeSet<>(follower.getMessages());
         DefaultFollowerBaseTest.assertProperOrder(messages, message);
         this.getLogWatch().stopFollowing(follower);
     }

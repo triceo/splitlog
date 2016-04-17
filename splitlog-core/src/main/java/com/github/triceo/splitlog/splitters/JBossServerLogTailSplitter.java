@@ -69,18 +69,19 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
         final Matcher m = this.pattern.matcher(raw.get(0));
         m.matches();
         final String severity = m.group(JBossServerLogTailSplitter.SEVERITY);
-        if (severity.equals("INFO")) {
-            return MessageSeverity.INFO;
-        } else if (severity.equals("DEBUG")) {
-            return MessageSeverity.DEBUG;
-        } else if (severity.equals("WARN")) {
-            return MessageSeverity.WARNING;
-        } else if (severity.equals("ERROR")) {
-            return MessageSeverity.ERROR;
-        } else if (severity.equals("TRACE")) {
-            return MessageSeverity.TRACE;
-        } else {
-            return MessageSeverity.UNKNOWN;
+        switch (severity) {
+            case "INFO":
+                return MessageSeverity.INFO;
+            case "DEBUG":
+                return MessageSeverity.DEBUG;
+            case "WARN":
+                return MessageSeverity.WARNING;
+            case "ERROR":
+                return MessageSeverity.ERROR;
+            case "TRACE":
+                return MessageSeverity.TRACE;
+            default:
+                return MessageSeverity.UNKNOWN;
         }
     }
 
@@ -93,12 +94,13 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
         final Matcher m = this.pattern.matcher(line);
         m.matches();
         final String type = m.group(JBossServerLogTailSplitter.TYPE);
-        if (type.equals("stderr")) {
-            return MessageType.STDERR;
-        } else if (type.equals("stdout")) {
-            return MessageType.STDOUT;
-        } else {
-            return MessageType.LOG;
+        switch (type) {
+            case "stderr":
+                return MessageType.STDERR;
+            case "stdout":
+                return MessageType.STDOUT;
+            default:
+                return MessageType.LOG;
         }
     }
 

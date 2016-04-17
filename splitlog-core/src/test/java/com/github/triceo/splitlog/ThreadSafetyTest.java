@@ -35,32 +35,24 @@ public class ThreadSafetyTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testThreadSafety() throws InterruptedException, ExecutionException {
-        this.es.execute(new Runnable() {
-
-            @Override
-            public void run() {
-                while (!Thread.interrupted()) {
-                    LogWriter.write(ThreadSafetyTest.this.getLogWatch().getWatchedFile(), UUID.randomUUID()
-                            .toString());
-                }
+        this.es.execute(() -> {
+            while (!Thread.interrupted()) {
+                LogWriter.write(ThreadSafetyTest.this.getLogWatch().getWatchedFile(), UUID.randomUUID()
+                        .toString());
             }
         });
         final Follower follower = this.getLogWatch().startFollowing();
-        final Future<?> reader = this.es.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                int size = 0;
-                final long maxMillis = ThreadSafetyTest.TIMEOUT_MILLIS / 2;
-                final long start = System.currentTimeMillis();
-                while ((size < 1000000) && ((System.currentTimeMillis() - start) < maxMillis)) {
-                    size = follower.getMessages().size();
-                    System.out.println("Messages: " + size);
-                    try {
-                        Thread.sleep(1);
-                    } catch (final InterruptedException ex) {
-                        System.err.println("Interrupted.");
-                    }
+        final Future<?> reader = this.es.submit(() -> {
+            int size = 0;
+            final long maxMillis = ThreadSafetyTest.TIMEOUT_MILLIS / 2;
+            final long start = System.currentTimeMillis();
+            while ((size < 1000000) && ((System.currentTimeMillis() - start) < maxMillis)) {
+                size = follower.getMessages().size();
+                System.out.println("Messages: " + size);
+                try {
+                    Thread.sleep(1);
+                } catch (final InterruptedException ex) {
+                    System.err.println("Interrupted.");
                 }
             }
         });

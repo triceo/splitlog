@@ -17,7 +17,7 @@ final class MessageBuilder {
     private static final long NO_MESSAGE_ID_SET = -1;
 
     private long futureMessageId = MessageBuilder.NO_MESSAGE_ID_SET;
-    private final List<String> lines = new LinkedList<String>();
+    private final List<String> lines = new LinkedList<>();
     private Message previousMessage;
     private long timestamp;
 
@@ -113,7 +113,7 @@ final class MessageBuilder {
      * is called, so that {@link #lines} can be modified independently of this new collection's iteration.
      */
     private synchronized List<String> getLines() {
-        return Collections.unmodifiableList(new LinkedList<String>(this.lines));
+        return Collections.unmodifiableList(new LinkedList<>(this.lines));
     }
 
     public Message getPreviousMessage() {

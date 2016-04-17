@@ -32,7 +32,7 @@ abstract class AbstractExpectationManager<P extends MessageProducer<P>, C> imple
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool(new SplitlogThreadFactory(
             "expectations"));
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(AbstractExpectationManager.class);
-    private final ConcurrentMap<AbstractExpectation<C, P>, Future<Message>> expectations = new ConcurrentHashMap<AbstractExpectation<C, P>, Future<Message>>();
+    private final ConcurrentMap<AbstractExpectation<C, P>, Future<Message>> expectations = new ConcurrentHashMap<>();
 
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
 

@@ -11,28 +11,18 @@ import com.github.triceo.splitlog.api.MessageListener;
 
 public class DefaultMessageConsumerTest extends DefaultFollowerBaseTest {
 
-    private static final MessageListener<LogWatch> LISTENER = new MessageListener<LogWatch>() {
-
-        @Override
-        public void messageReceived(final Message message, final MessageDeliveryStatus status, final LogWatch producer) {
-            return; // doesn't need to do anything
-        }
-
+    private static final MessageListener<LogWatch> LISTENER = (message, status, producer) -> {
+        return; // doesn't need to do anything
     };
 
-    private static final MessageListener<LogWatch> LISTENER2 = new MessageListener<LogWatch>() {
-
-        @Override
-        public void messageReceived(final Message message, final MessageDeliveryStatus status, final LogWatch producer) {
-            return; // doesn't need to do anything
-        }
-
+    private static final MessageListener<LogWatch> LISTENER2 = (message, status, producer) -> {
+        return; // doesn't need to do anything
     };
 
     @Test
     public void testEquality() {
-        final MessageConsumer<LogWatch> mc1 = new DefaultMessageConsumer<LogWatch>(DefaultMessageConsumerTest.LISTENER, this.getLogWatch());
-        final MessageConsumer<LogWatch> mc2 = new DefaultMessageConsumer<LogWatch>(DefaultMessageConsumerTest.LISTENER, this.getLogWatch());
+        final MessageConsumer<LogWatch> mc1 = new DefaultMessageConsumer<>(DefaultMessageConsumerTest.LISTENER, this.getLogWatch());
+        final MessageConsumer<LogWatch> mc2 = new DefaultMessageConsumer<>(DefaultMessageConsumerTest.LISTENER, this.getLogWatch());
         Assertions.assertThat(mc2).isEqualTo(mc1);
         Assertions.assertThat(mc1).isEqualTo(mc2);
         Assertions.assertThat(mc1).isEqualTo(mc1);
@@ -41,9 +31,9 @@ public class DefaultMessageConsumerTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testInequalityByListener() {
-        final MessageConsumer<LogWatch> mc1 = new DefaultMessageConsumer<LogWatch>(DefaultMessageConsumerTest.LISTENER,
+        final MessageConsumer<LogWatch> mc1 = new DefaultMessageConsumer<>(DefaultMessageConsumerTest.LISTENER,
                 this.getLogWatch());
-        final MessageConsumer<LogWatch> mc2 = new DefaultMessageConsumer<LogWatch>(
+        final MessageConsumer<LogWatch> mc2 = new DefaultMessageConsumer<>(
                 DefaultMessageConsumerTest.LISTENER2, this.getLogWatch());
         Assertions.assertThat(mc2).isNotEqualTo(mc1);
         Assertions.assertThat(mc1).isNotEqualTo(mc2);
@@ -51,9 +41,9 @@ public class DefaultMessageConsumerTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testInequalityByProducer() {
-        final MessageConsumer<LogWatch> mc1 = new DefaultMessageConsumer<LogWatch>(DefaultMessageConsumerTest.LISTENER,
+        final MessageConsumer<LogWatch> mc1 = new DefaultMessageConsumer<>(DefaultMessageConsumerTest.LISTENER,
                 this.getLogWatch());
-        final MessageConsumer<LogWatch> mc2 = new DefaultMessageConsumer<LogWatch>(DefaultMessageConsumerTest.LISTENER,
+        final MessageConsumer<LogWatch> mc2 = new DefaultMessageConsumer<>(DefaultMessageConsumerTest.LISTENER,
                 this.getBuilder().build());
         Assertions.assertThat(mc2).isNotEqualTo(mc1);
         Assertions.assertThat(mc1).isNotEqualTo(mc2);
@@ -61,12 +51,12 @@ public class DefaultMessageConsumerTest extends DefaultFollowerBaseTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullListener() {
-        new DefaultMessageConsumer<LogWatch>(null, this.getLogWatch());
+        new DefaultMessageConsumer<>(null, this.getLogWatch());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullProducer() {
-        new DefaultMessageConsumer<LogWatch>(DefaultMessageConsumerTest.LISTENER, null);
+        new DefaultMessageConsumer<>(DefaultMessageConsumerTest.LISTENER, null);
     }
 
 }

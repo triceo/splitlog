@@ -19,11 +19,11 @@ import com.github.triceo.splitlog.expectations.MetricExpectationManager;
 
 final class DefaultMessageMetric<T extends Number, S extends MessageProducer<S>> implements MessageMetric<T, S> {
 
-    private final MetricExpectationManager<T, S> expectations = new MetricExpectationManager<T, S>(this);
+    private final MetricExpectationManager<T, S> expectations = new MetricExpectationManager<>(this);
     private final MessageMeasure<T, S> measure;
     private final S source;
 
-    private final Long2ObjectSortedMap<Pair<Long, T>> stats = new Long2ObjectRBTreeMap<Pair<Long, T>>();
+    private final Long2ObjectSortedMap<Pair<Long, T>> stats = new Long2ObjectRBTreeMap<>();
 
     public DefaultMessageMetric(final S source, final MessageMeasure<T, S> measure) {
         if (measure == null) {

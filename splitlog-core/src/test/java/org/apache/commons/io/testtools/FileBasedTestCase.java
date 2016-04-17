@@ -58,10 +58,9 @@ public abstract class FileBasedTestCase extends TestCase {
 
     /** Assert that the content of a file is equal to that in a byte[]. */
     protected void assertEqualContent(final byte[] b0, final File file) throws IOException {
-        final InputStream is = new java.io.FileInputStream(file);
         int count = 0, numRead = 0;
         final byte[] b1 = new byte[b0.length];
-        try {
+        try (InputStream is = new java.io.FileInputStream(file)) {
             while ((count < b0.length) && (numRead >= 0)) {
                 numRead = is.read(b1, count, b0.length);
                 count += numRead;
@@ -70,17 +69,14 @@ public abstract class FileBasedTestCase extends TestCase {
             for (int i = 0; i < count; i++) {
                 TestCase.assertEquals("byte " + i + " differs", b0[i], b1[i]);
             }
-        } finally {
-            is.close();
         }
     }
 
     /** Assert that the content of a file is equal to that in a char[]. */
     protected void assertEqualContent(final char[] c0, final File file) throws IOException {
-        final Reader ir = new java.io.FileReader(file);
         int count = 0, numRead = 0;
         final char[] c1 = new char[c0.length];
-        try {
+        try (Reader ir = new java.io.FileReader(file)) {
             while ((count < c0.length) && (numRead >= 0)) {
                 numRead = ir.read(c1, count, c0.length);
                 count += numRead;
@@ -89,8 +85,6 @@ public abstract class FileBasedTestCase extends TestCase {
             for (int i = 0; i < count; i++) {
                 TestCase.assertEquals("char " + i + " differs", c0[i], c1[i]);
             }
-        } finally {
-            ir.close();
         }
     }
 
@@ -104,31 +98,24 @@ public abstract class FileBasedTestCase extends TestCase {
                     " have differing file sizes (" + f0.length() +
                     " vs " + f1.length() + ")", ( f0.length() == f1.length() ) );
          */
-        final InputStream is0 = new java.io.FileInputStream( f0 );
-        try {
-            final InputStream is1 = new java.io.FileInputStream( f1 );
-            try {
-                final byte[] buf0 = new byte[ 1024 ];
-                final byte[] buf1 = new byte[ 1024 ];
+        try (InputStream is0 = new java.io.FileInputStream(f0)) {
+            try (InputStream is1 = new java.io.FileInputStream(f1)) {
+                final byte[] buf0 = new byte[1024];
+                final byte[] buf1 = new byte[1024];
                 int n0 = 0;
                 int n1 = 0;
 
-                while( -1 != n0 )
-                {
-                    n0 = is0.read( buf0 );
-                    n1 = is1.read( buf1 );
-                    TestCase.assertTrue( "The files " + f0 + " and " + f1 +
+                while (-1 != n0) {
+                    n0 = is0.read(buf0);
+                    n1 = is1.read(buf1);
+                    TestCase.assertTrue("The files " + f0 + " and " + f1 +
                             " have differing number of bytes available (" + n0 +
-                            " vs " + n1 + ")", ( n0 == n1 ) );
+                            " vs " + n1 + ")", (n0 == n1));
 
-                    TestCase.assertTrue( "The files " + f0 + " and " + f1 +
-                            " have different content", Arrays.equals( buf0, buf1 ) );
+                    TestCase.assertTrue("The files " + f0 + " and " + f1 +
+                            " have different content", Arrays.equals(buf0, buf1));
                 }
-            } finally {
-                is1.close();
             }
-        } finally {
-            is0.close();
         }
     }
 

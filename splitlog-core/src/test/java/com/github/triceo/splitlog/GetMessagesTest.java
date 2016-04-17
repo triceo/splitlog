@@ -58,14 +58,14 @@ public class GetMessagesTest extends DefaultFollowerBaseTest {
         result = LogWriter.write(follower, message3part1 + "\r\n" + message3part2);
         Assertions.assertThat(result).isEqualTo(message3part2);
         // now validate the results with the default condition
-        List<Message> messages = new LinkedList<Message>(follower.getMessages());
+        List<Message> messages = new LinkedList<>(follower.getMessages());
         Assertions.assertThat(messages.size()).isEqualTo(5);
         Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
         Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message2part1);
         Assertions.assertThat(messages.get(3).getLines().get(0)).isEqualTo(message2part2);
         Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(message3part1);
         // now validate a condition that will accept all messages
-        messages = new LinkedList<Message>(follower.getMessages(new TestStartingMessageCondition()));
+        messages = new LinkedList<>(follower.getMessages(new TestStartingMessageCondition()));
         Assertions.assertThat(messages.size()).isEqualTo(5);
         Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message1);
         Assertions.assertThat(messages.get(2).getLines().get(0)).isEqualTo(message2part1);
@@ -73,7 +73,7 @@ public class GetMessagesTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(messages.get(4).getLines().get(0)).isEqualTo(message3part1);
         // now validate a condition that will only accept messages ending with a
         // numeric digit
-        messages = new LinkedList<Message>(follower.getMessages(new NumberEndingMessageCondition()));
+        messages = new LinkedList<>(follower.getMessages(new NumberEndingMessageCondition()));
         Assertions.assertThat(messages.size()).isEqualTo(3);
         Assertions.assertThat(messages.get(0).getLines().get(0)).isEqualTo(message2part1);
         Assertions.assertThat(messages.get(1).getLines().get(0)).isEqualTo(message2part2);

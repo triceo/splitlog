@@ -30,24 +30,24 @@ public class ConsumerManagerTest extends DefaultFollowerBaseTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testDuplicateId() {
-        final ConsumerManager<LogWatch> manager = new ConsumerManager<LogWatch>(this.getLogWatch());
+        final ConsumerManager<LogWatch> manager = new ConsumerManager<>(this.getLogWatch());
         manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
         manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullId() {
-        new ConsumerManager<LogWatch>(this.getLogWatch()).startMeasuring(ConsumerManagerTest.MEASURE, null);
+        new ConsumerManager<>(this.getLogWatch()).startMeasuring(ConsumerManagerTest.MEASURE, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullMeasure() {
-        new ConsumerManager<LogWatch>(this.getLogWatch()).startMeasuring(null, ConsumerManagerTest.ID);
+        new ConsumerManager<>(this.getLogWatch()).startMeasuring(null, ConsumerManagerTest.ID);
     }
 
     @Test
     public void testProperRetrieval() {
-        final ConsumerManager<LogWatch> manager = new ConsumerManager<LogWatch>(this.getLogWatch());
+        final ConsumerManager<LogWatch> manager = new ConsumerManager<>(this.getLogWatch());
         Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         final MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(ConsumerManagerTest.MEASURE,
                 ConsumerManagerTest.ID);
@@ -61,7 +61,7 @@ public class ConsumerManagerTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testTermination() {
-        final ConsumerManager<LogWatch> manager = new ConsumerManager<LogWatch>(this.getLogWatch());
+        final ConsumerManager<LogWatch> manager = new ConsumerManager<>(this.getLogWatch());
         Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         // terminate by ID
         MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(ConsumerManagerTest.MEASURE,

@@ -27,7 +27,7 @@ final class MessageStore {
 
     private final int messageLimit;
     private final AtomicInteger nextMessagePosition = new AtomicInteger(MessageStore.INITIAL_MESSAGE_POSITION);
-    private final Int2ObjectSortedMap<Message> store = new Int2ObjectAVLTreeMap<Message>();
+    private final Int2ObjectSortedMap<Message> store = new Int2ObjectAVLTreeMap<>();
 
     /**
      * Create a message store with a maximum capacity of
@@ -185,7 +185,7 @@ final class MessageStore {
             throw new IllegalArgumentException("Range end cannot be greater than the next message position.");
         }
         // and properly synchronized range retrieval
-        return Collections.unmodifiableList(new LinkedList<Message>(this.store.subMap(startPosition, endPosition)
+        return Collections.unmodifiableList(new LinkedList<>(this.store.subMap(startPosition, endPosition)
                 .values()));
     }
 

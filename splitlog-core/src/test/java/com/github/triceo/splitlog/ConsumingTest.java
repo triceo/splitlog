@@ -44,19 +44,19 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
     @Test
     public void testCallPropagation1() {
         final DefaultLogWatch w = (DefaultLogWatch) this.getLogWatch();
-        final CountingMessageListener<LogWatch> l1 = new CountingMessageListener<LogWatch>();
+        final CountingMessageListener<LogWatch> l1 = new CountingMessageListener<>();
         // direct consumption
         w.startConsuming(l1);
         w.messageIncoming(new MessageBuilder("test").buildIntermediate());
         Assertions.assertThat(l1.getNumberOfTimesCalled()).isEqualTo(1);
         // indirection of first order
-        final CountingMessageListener<Follower> l2 = new CountingMessageListener<Follower>();
+        final CountingMessageListener<Follower> l2 = new CountingMessageListener<>();
         final Follower f = w.startFollowing();
         f.startConsuming(l2);
         w.messageIncoming(new MessageBuilder("test2").buildIntermediate());
         Assertions.assertThat(l2.getNumberOfTimesCalled()).isEqualTo(1);
         // indirection of second order
-        final CountingMessageListener<MergingFollower> l3 = new CountingMessageListener<MergingFollower>();
+        final CountingMessageListener<MergingFollower> l3 = new CountingMessageListener<>();
         final Follower f2 = w.startFollowing();
         final MergingFollower mf = f2.mergeWith(f);
         mf.startConsuming(l3);
@@ -75,11 +75,11 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
     @Test
     public void testConsumerEquality() {
         final DefaultLogWatch w = (DefaultLogWatch) this.getLogWatch();
-        final CountingMessageListener<LogWatch> l1 = new CountingMessageListener<LogWatch>();
+        final CountingMessageListener<LogWatch> l1 = new CountingMessageListener<>();
         final MessageConsumer<LogWatch> c1 = w.startConsuming(l1);
         final MessageConsumer<LogWatch> c2 = w.startConsuming(l1);
         Assertions.assertThat(c2).isSameAs(c1);
-        final CountingMessageListener<LogWatch> l2 = new CountingMessageListener<LogWatch>();
+        final CountingMessageListener<LogWatch> l2 = new CountingMessageListener<>();
         final MessageConsumer<LogWatch> c3 = w.startConsuming(l2);
         final MessageConsumer<LogWatch> c4 = w.startConsuming(l1);
         Assertions.assertThat(c3).isNotSameAs(c1);
@@ -89,7 +89,7 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
     @Test
     public void testStopPropagation1() {
         final LogWatch w = this.getLogWatch();
-        final MessageConsumer<LogWatch> c = w.startConsuming(new FailingMessageListener<LogWatch>());
+        final MessageConsumer<LogWatch> c = w.startConsuming(new FailingMessageListener<>());
         Assertions.assertThat(w.stopConsuming(c)).isTrue();
         Assertions.assertThat(c.isStopped()).isTrue();
     }
@@ -98,7 +98,7 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
     public void testStopPropagation2() {
         final LogWatch w = this.getLogWatch();
         final Follower f = w.startFollowing();
-        final MessageConsumer<Follower> c = f.startConsuming(new FailingMessageListener<Follower>());
+        final MessageConsumer<Follower> c = f.startConsuming(new FailingMessageListener<>());
         Assertions.assertThat(f.stop()).isTrue();
         Assertions.assertThat(c.isStopped()).isTrue();
         // should throw the exception
@@ -126,7 +126,7 @@ public class ConsumingTest extends DefaultFollowerBaseTest {
         final Follower f = w.startFollowing();
         final Follower f2 = w.startFollowing();
         final MergingFollower m = f.mergeWith(f2);
-        final MessageConsumer<MergingFollower> c = m.startConsuming(new FailingMessageListener<MergingFollower>());
+        final MessageConsumer<MergingFollower> c = m.startConsuming(new FailingMessageListener<>());
         // main propagation
         Assertions.assertThat(m.stop()).isTrue();
         Assertions.assertThat(c.isStopped()).isTrue();

@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.github.triceo.splitlog.api.CommonFollower;
 import com.github.triceo.splitlog.api.ExceptionDescriptor;
@@ -88,11 +89,11 @@ final class DefaultMessage implements Message {
         if (previousMessage == null) {
             this.previousMessage = null;
         } else {
-            this.previousMessage = new WeakReference<Message>(previousMessage);
+            this.previousMessage = new WeakReference<>(previousMessage);
         }
         this.uniqueId = id;
         this.splitter = splitter;
-        this.lines = Collections.unmodifiableList(new ArrayList<String>(raw));
+        this.lines = Collections.unmodifiableList(new ArrayList<>(raw));
         final String logger = splitter.determineLogger(this.lines);
         this.logger = (logger == null) ? "" : logger;
         this.severity = splitter.determineSeverity(this.lines);
@@ -193,10 +194,7 @@ final class DefaultMessage implements Message {
             // nothing to split for tags
             return this.lines;
         }
-        final List<String> stripped = new ArrayList<String>();
-        for (final String line : this.lines) {
-            stripped.add(this.splitter.stripOfMetadata(line));
-        }
+        final List<String> stripped = this.lines.stream().map(this.splitter::stripOfMetadata).collect(Collectors.toList());
         return Collections.unmodifiableList(stripped);
     }
 

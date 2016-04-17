@@ -42,10 +42,10 @@ public class NestingTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(nestedFollower.isStopped()).isTrue();
         result = LogWriter.write(follower, message5);
         // and make sure that the original follower has all messages
-        final SortedSet<Message> messages = new TreeSet<Message>(follower.getMessages());
+        final SortedSet<Message> messages = new TreeSet<>(follower.getMessages());
         DefaultFollowerBaseTest.assertProperOrder(messages, message1, message2, message3, message4);
         // and the nested follower has only the two while it was running
-        final SortedSet<Message> nestedMessages = new TreeSet<Message>(nestedFollower.getMessages());
+        final SortedSet<Message> nestedMessages = new TreeSet<>(nestedFollower.getMessages());
         DefaultFollowerBaseTest.assertProperOrder(nestedMessages, message2, message3);
     }
 

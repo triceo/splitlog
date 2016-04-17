@@ -15,7 +15,7 @@ import java.util.*;
  */
 final class ExceptionParser {
 
-    private final List<ExceptionLine> parsedLines = new LinkedList<ExceptionLine>();
+    private final List<ExceptionLine> parsedLines = new LinkedList<>();
 
     private static String greatestCommonPrefix(final String a, final String b) {
         final int minLength = Math.min(a.length(), b.length());
@@ -38,7 +38,7 @@ final class ExceptionParser {
      */
     private static Queue<String> removePrefix(final List<String> input) {
         if (input.size() < 2) {
-            return new LinkedList<String>(input);
+            return new LinkedList<>(input);
         }
         String resultingPrefix = "";
         final String previousGreatestCommonPrefix = input.get(0).trim();
@@ -54,7 +54,7 @@ final class ExceptionParser {
         }
         final int prefixLength = resultingPrefix.length();
         final boolean hasPrefix = prefixLength > 0;
-        final Queue<String> result = new LinkedList<String>();
+        final Queue<String> result = new LinkedList<>();
         for (final String line : input) {
             final String line2 = line.trim();
             if (hasPrefix) {
@@ -77,7 +77,7 @@ final class ExceptionParser {
      */
     public synchronized Collection<ExceptionLine> parse(final Collection<String> input) throws ExceptionParseException {
         this.parsedLines.clear();
-        final Queue<String> linesFromInput = ExceptionParser.removePrefix(new LinkedList<String>(input));
+        final Queue<String> linesFromInput = ExceptionParser.removePrefix(new LinkedList<>(input));
         LineType previousLineType = LineType.PRE_START;
         String currentLine = null;
         boolean isFirstLine = true;
@@ -95,7 +95,7 @@ final class ExceptionParser {
         if (!previousLineType.isAcceptableAsLastLine()) {
             throw new ExceptionParseException(currentLine, "Invalid line type detected at the end: " + previousLineType);
         }
-        return Collections.unmodifiableCollection(new LinkedList<ExceptionLine>(this.parsedLines));
+        return Collections.unmodifiableCollection(new LinkedList<>(this.parsedLines));
     }
 
     /**

@@ -46,24 +46,18 @@ public class LimitedMessageStoreTest extends DefaultFollowerBaseTest {
 
     @Test(timeout = LimitedMessageStoreTest.TIMEOUT_MILLIS)
     public void testLimitedMessageStore() throws InterruptedException, ExecutionException {
-        this.es.execute(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.interrupted()) {
-                    LogWriter.write(LimitedMessageStoreTest.this.getLogWatch().getWatchedFile(), UUID.randomUUID()
-                            .toString());
-                }
+        this.es.execute(() -> {
+            while (!Thread.interrupted()) {
+                LogWriter.write(LimitedMessageStoreTest.this.getLogWatch().getWatchedFile(), UUID.randomUUID()
+                        .toString());
             }
         });
         final Follower follower = this.getLogWatch().startFollowing();
-        final Future<?> reader = this.es.submit(new Runnable() {
-            @Override
-            public void run() {
-                final long maxMillis = LimitedMessageStoreTest.TIMEOUT_MILLIS / 2;
-                final long start = System.currentTimeMillis();
-                while ((System.currentTimeMillis() - start) < maxMillis) {
-                    follower.getMessages();
-                }
+        final Future<?> reader = this.es.submit(() -> {
+            final long maxMillis = LimitedMessageStoreTest.TIMEOUT_MILLIS / 2;
+            final long start = System.currentTimeMillis();
+            while ((System.currentTimeMillis() - start) < maxMillis) {
+                follower.getMessages();
             }
         });
         reader.get();

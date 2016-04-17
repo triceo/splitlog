@@ -53,7 +53,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
         // will make sure all messages from the existing log file are ACCEPTED
         LogWriter.write(f, "test");
         // messages will be ordered exactly as they came in
-        final List<Message> messages = new LinkedList<Message>(f.getMessages());
+        final List<Message> messages = new LinkedList<>(f.getMessages());
         Assertions.assertThat(messages.size()).isEqualTo(3); // 3 ACCEPTED, 1
         // INCOMING
         Assertions.assertThat(messages.get(0).getUniqueId()).isEqualTo(0);
@@ -69,7 +69,7 @@ public class MessageOrderingTest extends AbstractSplitlogTest {
         // will make sure all messages from the existing log file are ACCEPTED
         LogWriter.write(f, "test");
         // messages will be ordered by their timestamp
-        final List<Message> messages = new LinkedList<Message>(
+        final List<Message> messages = new LinkedList<>(
                 f.getMessages(TimestampOrderingMessageComparator.INSTANCE));
         Assertions.assertThat(messages.size()).isEqualTo(3); // 3 ACCEPTED, 1
         // INCOMING

@@ -10,7 +10,7 @@ AbstractExpectationManager<P, MidDeliveryMessageCondition<P>> {
     @Override
     protected AbstractExpectation<MidDeliveryMessageCondition<P>, P> createExpectation(
             final MidDeliveryMessageCondition<P> condition, final MessageAction<P> action) {
-        return new MidDeliveryExpectation<P>(this, condition, action);
+        return new MidDeliveryExpectation<>(this, condition, action);
     }
 
 }

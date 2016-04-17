@@ -62,7 +62,7 @@ public class TailerTest extends FileBasedTestCase {
         volatile int initialised = 0;
 
         // Must be synchronised because it is written by one thread and read by another
-        private final List<String> lines = Collections.synchronizedList(new ArrayList<String>());
+        private final List<String> lines = Collections.synchronizedList(new ArrayList<>());
 
         volatile int notFound = 0;
 
@@ -281,7 +281,7 @@ public class TailerTest extends FileBasedTestCase {
         final Writer out = new OutputStreamWriter(new FileOutputStream(file), charsetUTF8);
         BufferedReader reader = null;
         try{
-            final List<String> lines = new ArrayList<String>();
+            final List<String> lines = new ArrayList<>();
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(origin), charsetUTF8));
             String line = null;
             while((line = reader.readLine()) != null){

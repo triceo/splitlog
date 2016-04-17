@@ -41,9 +41,9 @@ final class DefaultLogWatch implements LogWatch {
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(DefaultLogWatch.class);
 
-    private final ConsumerManager<LogWatch> consumers = new ConsumerManager<LogWatch>(this);
+    private final ConsumerManager<LogWatch> consumers = new ConsumerManager<>(this);
     private final SimpleMessageCondition gateCondition;
-    private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<String, MessageMeasure<? extends Number, Follower>>();
+    private final BidiMap<String, MessageMeasure<? extends Number, Follower>> handingDown = new DualHashBidiMap<>();
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final LogWatchStorageManager storage;
@@ -231,7 +231,7 @@ final class DefaultLogWatch implements LogWatch {
             throw new IllegalStateException("Cannot start following on an already terminated LogWatch.");
         }
         // assemble list of consumers to be handing down and then the follower
-        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<Pair<String, MessageMeasure<? extends Number, Follower>>>();
+        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<>();
         for (final BidiMap.Entry<String, MessageMeasure<? extends Number, Follower>> entry : this.handingDown
                 .entrySet()) {
             pairs.add(ImmutablePair.<String, MessageMeasure<? extends Number, Follower>> of(entry.getKey(),

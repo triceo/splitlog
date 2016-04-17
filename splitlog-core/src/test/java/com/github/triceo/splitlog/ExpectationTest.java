@@ -43,7 +43,7 @@ public class ExpectationTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testConcurrentExpectations() {
-        final HashMap<Future<Message>, String> tasks = new HashMap<Future<Message>, String>(ExpectationTest.THREADS);
+        final HashMap<Future<Message>, String> tasks = new HashMap<>(ExpectationTest.THREADS);
         final Random random = new Random();
         for (int i = 0; i < ExpectationTest.THREADS; i++) {
             // First thread always waits for the last message, the rest is
@@ -52,15 +52,7 @@ public class ExpectationTest extends DefaultFollowerBaseTest {
                     + ((i == 0) ? String.valueOf(ExpectationTest.TOTAL_MESSAGES - 1) : String.valueOf(random
                             .nextInt(ExpectationTest.TOTAL_MESSAGES))) + ">";
             final Follower f = this.getLogWatch().startFollowing();
-            final Future<Message> task = f.expect(new MidDeliveryMessageCondition<LogWatch>() {
-
-                @Override
-                public boolean
-                accept(final Message evaluate, final MessageDeliveryStatus status, final LogWatch source) {
-                    return evaluate.getLines().get(0).endsWith(expectedValue);
-                }
-
-            });
+            final Future<Message> task = f.expect((evaluate, status, source) -> evaluate.getLines().get(0).endsWith(expectedValue));
             tasks.put(task, expectedValue);
         }
         for (int i = 0; i < ExpectationTest.TOTAL_MESSAGES; i++) {
@@ -82,18 +74,14 @@ public class ExpectationTest extends DefaultFollowerBaseTest {
         final Follower f = this.getLogWatch().startFollowing();
         final long startTime = System.nanoTime();
         final Future<Message> future = f.expect(AllLogWatchMessagesAcceptingCondition.INSTANCE,
-                new MessageAction<LogWatch>() {
-
-            @Override
-            public void execute(final Message message, final LogWatch source) {
-                try {
-                    // emulates some long-running action
-                    Thread.sleep(timeout);
-                } catch (final InterruptedException e) {
-                    throw new IllegalStateException("Failed waiting.");
-                }
-            }
-        });
+                (message, source) -> {
+                    try {
+                        // emulates some long-running action
+                        Thread.sleep(timeout);
+                    } catch (final InterruptedException e) {
+                        throw new IllegalStateException("Failed waiting.");
+                    }
+                });
         LogWriter.write(f.getFollowed().getWatchedFile(), "test");
         try {
             future.get(); // should not return before the long-running

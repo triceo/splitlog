@@ -21,7 +21,7 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
         BufferedReader r = null;
         try {
             r = new BufferedReader(new InputStreamReader(s));
-            final Collection<String> lines = new ArrayList<String>();
+            final Collection<String> lines = new ArrayList<>();
             String line;
             while ((line = r.readLine()) != null) {
                 lines.add(line);
@@ -36,7 +36,7 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
 
     @Test
     public void testExceptionWhoseFirstLineDoesntBeginWithClassName() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+        final List<ExceptionLine> lines = new ArrayList<>(new ExceptionParser().parse(ExceptionParserTest
                 .parseIntoLines(this.getClass().getResourceAsStream("exception-with-line-prefix.txt"))));
         // one item per line in the file
         Assertions.assertThat(lines.size()).isEqualTo(31);
@@ -66,7 +66,7 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
 
     @Test
     public void testExceptionWithCauses() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+        final List<ExceptionLine> lines = new ArrayList<>(new ExceptionParser().parse(ExceptionParserTest
                 .parseIntoLines(this.getClass().getResourceAsStream("exception-with-causes.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(48); // one item per line
         // in the file
@@ -91,7 +91,7 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
 
     @Test
     public void testExceptionWithCauses2() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+        final List<ExceptionLine> lines = new ArrayList<>(new ExceptionParser().parse(ExceptionParserTest
                 .parseIntoLines(this.getClass().getResourceAsStream("exception-with-causes2.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(62); // one item per line
         // in the file
@@ -112,7 +112,7 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
 
     @Test
     public void testMavenProducedException() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+        final List<ExceptionLine> lines = new ArrayList<>(new ExceptionParser().parse(ExceptionParserTest
                 .parseIntoLines(this.getClass().getResourceAsStream("exception-maven.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(33); // one item per line
         // in the file
@@ -136,7 +136,7 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
 
     @Test
     public void testIssue57B() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+        final List<ExceptionLine> lines = new ArrayList<>(new ExceptionParser().parse(ExceptionParserTest
                 .parseIntoLines(this.getClass().getResourceAsStream("issue-57_2.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(18); // one item per line
         // in the file
@@ -161,7 +161,7 @@ public class ExceptionParserTest extends AbstractSplitlogTest {
 
     @Test
     public void testIssue57A() throws ExceptionParseException {
-        final List<ExceptionLine> lines = new ArrayList<ExceptionLine>(new ExceptionParser().parse(ExceptionParserTest
+        final List<ExceptionLine> lines = new ArrayList<>(new ExceptionParser().parse(ExceptionParserTest
                 .parseIntoLines(this.getClass().getResourceAsStream("issue-57_1.txt"))));
         Assertions.assertThat(lines.size()).isEqualTo(23); // one item per line
         // in the file

@@ -18,13 +18,13 @@ public class DefaultExceptionDescriptor implements ExceptionDescriptor {
 
     private static class Builder {
 
-        private final Map<CauseLine, List<StackTraceElement>> causes = new LinkedHashMap<CauseLine, List<StackTraceElement>>();
+        private final Map<CauseLine, List<StackTraceElement>> causes = new LinkedHashMap<>();
         private List<StackTraceElement> currentlyUsedStackTrace;
 
         public void addLine(final ExceptionLine line) {
             if (line instanceof CauseLine) {
                 // start a new exception
-                this.causes.put((CauseLine) line, new ArrayList<StackTraceElement>());
+                this.causes.put((CauseLine) line, new ArrayList<>());
                 this.currentlyUsedStackTrace = this.causes.get(line);
             } else if (line instanceof StackTraceLine) {
                 // add a stack trace element to the current exception
@@ -40,7 +40,7 @@ public class DefaultExceptionDescriptor implements ExceptionDescriptor {
         }
 
         public ExceptionDescriptor build() {
-            final List<CauseLine> properlyOrdered = new ArrayList<CauseLine>(this.causes.keySet());
+            final List<CauseLine> properlyOrdered = new ArrayList<>(this.causes.keySet());
             ExceptionDescriptor previousException = null;
             for (int i = properlyOrdered.size() - 1; i >= 0; i--) {
                 final CauseLine cause = properlyOrdered.get(i);
@@ -68,9 +68,7 @@ public class DefaultExceptionDescriptor implements ExceptionDescriptor {
         try {
             final Builder b = new Builder();
             final Collection<ExceptionLine> parsedLines = new ExceptionParser().parse(lines);
-            for (final ExceptionLine line : parsedLines) {
-                b.addLine(line);
-            }
+            parsedLines.forEach(b::addLine);
             return b.build();
         } catch (final ExceptionParseException e) {
             // FIXME provides no information as to why there's no exception
