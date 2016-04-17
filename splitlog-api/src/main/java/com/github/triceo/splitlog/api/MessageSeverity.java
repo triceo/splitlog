@@ -6,6 +6,6 @@ package com.github.triceo.splitlog.api;
  */
 public enum MessageSeverity {
 
-    DEBUG, ERROR, INFO, TRACE, UNKNOWN, WARNING;
+    DEBUG, ERROR, INFO, TRACE, UNKNOWN, WARNING
 
 }

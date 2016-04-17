@@ -16,7 +16,7 @@ import com.github.triceo.splitlog.splitters.SimpleTailSplitter;
  */
 public final class SplitlogMessagesRejectingCondition implements SimpleMessageCondition {
 
-    public static final SplitlogMessagesRejectingCondition INSTANCE = new SplitlogMessagesRejectingCondition();
+    public static final SimpleMessageCondition INSTANCE = new SplitlogMessagesRejectingCondition();
 
     private SplitlogMessagesRejectingCondition() {
         // singleton
@@ -24,10 +24,7 @@ public final class SplitlogMessagesRejectingCondition implements SimpleMessageCo
 
     @Override
     public boolean accept(final Message evaluate) {
-        if (evaluate.getLogger().startsWith("com.github.triceo.splitlog")) {
-            return false;
-        }
-        return true;
+        return !evaluate.getLogger().startsWith("com.github.triceo.splitlog");
     }
 
 }

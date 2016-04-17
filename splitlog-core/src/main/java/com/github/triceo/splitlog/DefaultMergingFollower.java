@@ -1,36 +1,18 @@
 package com.github.triceo.splitlog;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-
-import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.LogWatch;
-import com.github.triceo.splitlog.api.MergingFollower;
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageComparator;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageFormatter;
-import com.github.triceo.splitlog.api.SimpleMessageCondition;
+import com.github.triceo.splitlog.api.*;
 import com.github.triceo.splitlog.formatters.UnifyingMessageFormatter;
 import com.github.triceo.splitlog.logging.SplitlogLoggerFactory;
 import com.github.triceo.splitlog.util.LogUtil;
 import com.github.triceo.splitlog.util.LogUtil.Level;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.*;
 
 /**
  * Will use {@link UnifyingMessageFormatter} as default message formatter.
@@ -45,7 +27,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     protected DefaultMergingFollower(final Follower... followers) {
         DefaultMergingFollower.LOGGER.info("Merging followers into {}.", this);
-        final Set<LogWatch> watches = new HashSet<>();
+        final Collection<LogWatch> watches = new HashSet<>();
         for (final Follower f : followers) {
             final DefaultFollower af = (DefaultFollower) f;
             this.followers.add(af);
@@ -161,11 +143,9 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("DefaultMergingFollower [getUniqueId()=").append(this.getUniqueId()).append(", ");
-        builder.append("getMerged()=").append(this.getMerged()).append(", ");
-        builder.append("isStopped()=").append(this.isStopped()).append("]");
-        return builder.toString();
+        return "DefaultMergingFollower [getUniqueId()=" + this.getUniqueId() + ", " +
+                "getMerged()=" + this.getMerged() + ", " +
+                "isStopped()=" + this.isStopped() + "]";
     }
 
     @Override
@@ -182,7 +162,7 @@ final class DefaultMergingFollower extends AbstractCommonFollower<MergingFollowe
          * assemble messages per-follower, so that we can properly retrieve
          * their source
          */
-        final SortedSet<Message> messages = new TreeSet<>(order);
+        final Collection<Message> messages = new TreeSet<>(order);
         final Map<Message, String> messagesToText = new HashMap<>();
         for (final Follower f : this.getMerged()) {
             for (final Message m : f.getMessages(condition)) {

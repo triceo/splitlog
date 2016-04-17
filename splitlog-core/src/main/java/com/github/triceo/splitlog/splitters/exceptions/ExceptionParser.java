@@ -17,7 +17,7 @@ final class ExceptionParser {
 
     private final List<ExceptionLine> parsedLines = new LinkedList<>();
 
-    private static String greatestCommonPrefix(final String a, final String b) {
+    private static String greatestCommonPrefix(final String a, final CharSequence b) {
         final int minLength = Math.min(a.length(), b.length());
         for (int i = 0; i < minLength; i++) {
             if (a.charAt(i) != b.charAt(i)) {

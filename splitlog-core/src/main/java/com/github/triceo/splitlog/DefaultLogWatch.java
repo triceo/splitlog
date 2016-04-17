@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -78,7 +79,7 @@ final class DefaultLogWatch implements LogWatch {
      * @return Unmodifiable list of all the received messages, in the order
      *         received.
      */
-    protected List<Message> getAllMessages(final Follower follower) {
+    protected Iterable<Message> getAllMessages(final Follower follower) {
         return this.storage.getAllMessages(follower);
     }
 
@@ -213,7 +214,7 @@ final class DefaultLogWatch implements LogWatch {
         return this.startFollowingActually(null).getKey();
     }
 
-    private synchronized Pair<Follower, Future<Message>> startFollowingActually(
+    private synchronized Map.Entry<Follower, Future<Message>> startFollowingActually(
             final MidDeliveryMessageCondition<LogWatch> condition) {
         if (this.isStopped()) {
             throw new IllegalStateException("Cannot start following on an already terminated LogWatch.");
@@ -222,7 +223,7 @@ final class DefaultLogWatch implements LogWatch {
         final List<Pair<String, MessageMeasure<? extends Number, Follower>>> pairs = new ArrayList<>();
         for (final BidiMap.Entry<String, MessageMeasure<? extends Number, Follower>> entry : this.handingDown
                 .entrySet()) {
-            pairs.add(ImmutablePair.<String, MessageMeasure<? extends Number, Follower>> of(entry.getKey(),
+            pairs.add(ImmutablePair.of(entry.getKey(),
                     entry.getValue()));
         }
         // register the follower

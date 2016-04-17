@@ -1,13 +1,8 @@
 package com.github.triceo.splitlog;
 
+import com.github.triceo.splitlog.api.*;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-
-import com.github.triceo.splitlog.api.LogWatch;
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageMeasure;
-import com.github.triceo.splitlog.api.MessageMetric;
 
 public class ConsumerManagerTest extends DefaultFollowerBaseTest {
 
@@ -30,7 +25,7 @@ public class ConsumerManagerTest extends DefaultFollowerBaseTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testDuplicateId() {
-        final ConsumerManager<LogWatch> manager = new ConsumerManager<>(this.getLogWatch());
+        final MessageProducer<LogWatch> manager = new ConsumerManager<>(this.getLogWatch());
         manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
         manager.startMeasuring(ConsumerManagerTest.MEASURE, ConsumerManagerTest.ID);
     }
@@ -47,7 +42,7 @@ public class ConsumerManagerTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testProperRetrieval() {
-        final ConsumerManager<LogWatch> manager = new ConsumerManager<>(this.getLogWatch());
+        final MessageProducer<LogWatch> manager = new ConsumerManager<>(this.getLogWatch());
         Assertions.assertThat(manager.getMetric(ConsumerManagerTest.ID)).isNull();
         final MessageMetric<Integer, LogWatch> metric = manager.startMeasuring(ConsumerManagerTest.MEASURE,
                 ConsumerManagerTest.ID);

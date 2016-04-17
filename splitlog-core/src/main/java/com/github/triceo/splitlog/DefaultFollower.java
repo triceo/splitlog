@@ -7,12 +7,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.IOUtils;
@@ -49,12 +44,12 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
 
     private final ConsumerManager<Follower> consumers = new ConsumerManager<>(this);
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
-    private final SortedSet<Message> tags = new TreeSet<>();
+    private final Collection<Message> tags = new TreeSet<>();
 
     private final DefaultLogWatch watch;
 
     public DefaultFollower(final DefaultLogWatch watch,
-        final List<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
+        final Iterable<Pair<String, MessageMeasure<? extends Number, Follower>>> measuresHandedDown) {
         for (final Pair<String, MessageMeasure<? extends Number, Follower>> pair : measuresHandedDown) {
             this.startMeasuring(pair.getValue(), pair.getKey());
         }
@@ -79,7 +74,7 @@ final class DefaultFollower extends AbstractCommonFollower<Follower, LogWatch> i
     @Override
     public SortedSet<Message> getMessages(final SimpleMessageCondition condition,
             final MessageComparator order) {
-        final ObjectSortedSet<Message> messages = new ObjectRBTreeSet<>(order);
+        final SortedSet<Message> messages = new ObjectRBTreeSet<>(order);
         for (final Message msg : this.getWatch().getAllMessages(this)) {
             if (!condition.accept(msg)) {
                 continue;

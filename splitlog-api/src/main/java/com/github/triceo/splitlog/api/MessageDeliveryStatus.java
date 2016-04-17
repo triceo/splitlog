@@ -19,6 +19,6 @@ public enum MessageDeliveryStatus {
      * The message has been read fully, but rejected by a user-defined message
      * acceptance filter on a {@link LogWatch}. Terminal state.
      */
-    REJECTED;
+    REJECTED
 
 }

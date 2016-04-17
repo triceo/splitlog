@@ -2,6 +2,7 @@ package com.github.triceo.splitlog;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -52,7 +53,7 @@ public class MergingTest extends DefaultFollowerBaseTest {
         Assertions.assertThat(merge.getMessages()).hasSize(3);
         Assertions.assertThat(merge2.getMessages()).hasSize(3);
         // test writing
-        final List<String> messages = new LinkedList<>();
+        final Collection<String> messages = new LinkedList<>();
         messages.add(MergingTest.MESSAGE_1);
         messages.add(MergingTest.MESSAGE_2);
         messages.add(MergingTest.MESSAGE_4);

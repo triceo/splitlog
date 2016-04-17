@@ -12,7 +12,7 @@ import com.github.triceo.splitlog.api.SimpleMessageCondition;
 public final class AllLogWatchMessagesAcceptingCondition implements MidDeliveryMessageCondition<LogWatch>,
         SimpleMessageCondition {
 
-    public static final AllLogWatchMessagesAcceptingCondition INSTANCE = new AllLogWatchMessagesAcceptingCondition();
+    public static final MidDeliveryMessageCondition INSTANCE = new AllLogWatchMessagesAcceptingCondition();
 
     private AllLogWatchMessagesAcceptingCondition() {
         // singleton

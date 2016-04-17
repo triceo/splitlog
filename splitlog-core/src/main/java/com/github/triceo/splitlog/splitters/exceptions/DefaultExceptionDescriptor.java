@@ -1,14 +1,8 @@
 package com.github.triceo.splitlog.splitters.exceptions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.github.triceo.splitlog.api.ExceptionDescriptor;
+
+import java.util.*;
 
 /**
  * A class that describes an exception instance.
@@ -123,10 +117,7 @@ public class DefaultExceptionDescriptor implements ExceptionDescriptor {
         } else if (!this.message.equals(other.message)) {
             return false;
         }
-        if (!Arrays.equals(this.stackTrace, other.stackTrace)) {
-            return false;
-        }
-        return true;
+        return Arrays.equals(this.stackTrace, other.stackTrace);
     }
 
     @Override

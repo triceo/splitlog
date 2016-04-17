@@ -11,7 +11,6 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MessageMetricCondition;
 
 public class DefaultMessageMetricTest extends DefaultFollowerBaseTest {
 

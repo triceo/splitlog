@@ -1,22 +1,19 @@
 package com.github.triceo.splitlog;
 
+import com.github.triceo.splitlog.api.LogWatch;
+import com.github.triceo.splitlog.api.MessageConsumer;
+import com.github.triceo.splitlog.api.MessageListener;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-
-import com.github.triceo.splitlog.api.LogWatch;
-import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageConsumer;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MessageListener;
 
 public class DefaultMessageConsumerTest extends DefaultFollowerBaseTest {
 
     private static final MessageListener<LogWatch> LISTENER = (message, status, producer) -> {
-        return; // doesn't need to do anything
+        // doesn't need to do anything
     };
 
     private static final MessageListener<LogWatch> LISTENER2 = (message, status, producer) -> {
-        return; // doesn't need to do anything
+        // doesn't need to do anything
     };
 
     @Test

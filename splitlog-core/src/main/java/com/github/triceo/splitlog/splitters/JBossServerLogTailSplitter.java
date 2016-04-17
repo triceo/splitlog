@@ -53,7 +53,7 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
         return this.determineLogger(raw.get(0));
     }
 
-    private String determineLogger(final String line) {
+    private String determineLogger(final CharSequence line) {
         final Matcher m = this.pattern.matcher(line);
         m.matches();
         final String type = m.group(JBossServerLogTailSplitter.TYPE);
@@ -90,7 +90,7 @@ final public class JBossServerLogTailSplitter extends AbstractTailSplitter {
         return this.determineType(raw.get(0));
     }
 
-    private MessageType determineType(final String line) {
+    private MessageType determineType(final CharSequence line) {
         final Matcher m = this.pattern.matcher(line);
         m.matches();
         final String type = m.group(JBossServerLogTailSplitter.TYPE);

@@ -14,9 +14,7 @@ class StackTraceEndLine implements ExceptionLine {
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("StackTraceEndLine [howManyOmmitted=").append(this.howManyOmmitted).append("]");
-        return builder.toString();
+        return "StackTraceEndLine [howManyOmmitted=" + this.howManyOmmitted + "]";
     }
 
 }

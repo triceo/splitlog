@@ -1,6 +1,7 @@
 package com.github.triceo.splitlog;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,11 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.triceo.splitlog.api.Follower;
-import com.github.triceo.splitlog.api.LogWatch;
 import com.github.triceo.splitlog.api.Message;
-import com.github.triceo.splitlog.api.MessageAction;
-import com.github.triceo.splitlog.api.MessageDeliveryStatus;
-import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
 import com.github.triceo.splitlog.conditions.AllLogWatchMessagesAcceptingCondition;
 
 public class ExpectationTest extends DefaultFollowerBaseTest {
@@ -43,7 +40,7 @@ public class ExpectationTest extends DefaultFollowerBaseTest {
 
     @Test
     public void testConcurrentExpectations() {
-        final HashMap<Future<Message>, String> tasks = new HashMap<>(ExpectationTest.THREADS);
+        final Map<Future<Message>, String> tasks = new HashMap<>(ExpectationTest.THREADS);
         final Random random = new Random();
         for (int i = 0; i < ExpectationTest.THREADS; i++) {
             // First thread always waits for the last message, the rest is

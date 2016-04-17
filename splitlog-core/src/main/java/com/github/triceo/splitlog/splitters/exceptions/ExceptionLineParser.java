@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
  */
 abstract class ExceptionLineParser<T extends ExceptionLine> {
 
-    protected static String JAVA_FQN_REGEX = "([\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*";
+    protected static final String JAVA_FQN_REGEX = "([\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*";
 
-    protected Matcher getMatcher(final String regex, final String line) {
+    protected Matcher getMatcher(final String regex, final CharSequence line) {
         final Pattern p = Pattern.compile(regex);
         return p.matcher(line);
     }

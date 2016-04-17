@@ -22,10 +22,7 @@ import com.github.triceo.splitlog.api.Message;
 import com.github.triceo.splitlog.api.MessageDeliveryStatus;
 import com.github.triceo.splitlog.api.MessageMeasure;
 import com.github.triceo.splitlog.api.MessageMetric;
-import com.github.triceo.splitlog.api.MessageMetricCondition;
 import com.github.triceo.splitlog.api.MessageSeverity;
-import com.github.triceo.splitlog.api.MidDeliveryMessageCondition;
-import com.github.triceo.splitlog.api.SimpleMessageCondition;
 import com.github.triceo.splitlog.splitters.JBossServerLogTailSplitter;
 
 public class RealWorldTest extends AbstractSplitlogTest {

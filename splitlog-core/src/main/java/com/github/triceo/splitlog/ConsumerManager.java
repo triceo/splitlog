@@ -8,8 +8,8 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.slf4j.Logger;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -18,7 +18,7 @@ ConsumerRegistrar<P> {
 
     private static final Logger LOGGER = SplitlogLoggerFactory.getLogger(ConsumerManager.class);
 
-    private final Set<MessageConsumer<P>> consumers = new CopyOnWriteArraySet<>();
+    private final Collection<MessageConsumer<P>> consumers = new CopyOnWriteArraySet<>();
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final BidiMap<String, DefaultMessageMetric<? extends Number, P>> metrics = new DualHashBidiMap<>();
 

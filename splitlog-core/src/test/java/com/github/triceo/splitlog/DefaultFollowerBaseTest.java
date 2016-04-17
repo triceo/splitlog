@@ -29,7 +29,7 @@ public abstract class DefaultFollowerBaseTest extends AbstractSplitlogTest {
      *            Either {@link Message} to compare messages, or a string if we
      *            want to compare against a tag.
      */
-    protected static void assertProperOrder(final SortedSet<Message> actualMessages, final Object... expectedMessages) {
+    protected static void assertProperOrder(final Collection<Message> actualMessages, final Object... expectedMessages) {
         final List<String> actualLines = actualMessages.stream().map(actual -> actual.getLines().get(0)).collect(Collectors.toCollection(LinkedList::new));
         final List<String> expectedLines = new LinkedList<>();
         for (final Object expected : expectedMessages) {

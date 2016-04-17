@@ -103,7 +103,7 @@ final class LogWatchStorageManager {
              * before the first message in the store, there really is nothing to
              * return.
              */
-            return Collections.unmodifiableList(Collections.<Message> emptyList());
+            return Collections.unmodifiableList(Collections.emptyList());
         } else {
             return Collections.unmodifiableList(this.messages.getFromRange(start, end + 1));
         }
@@ -225,7 +225,7 @@ final class LogWatchStorageManager {
      * Will mean the end of the storage, including the termination of sweeping.
      */
     public synchronized void logWatchTerminated() {
-        final Set<Follower> followersToTerminate = new ObjectLinkedOpenHashSet<>(this.runningFollowerStartMarks.keySet());
+        final Iterable<Follower> followersToTerminate = new ObjectLinkedOpenHashSet<>(this.runningFollowerStartMarks.keySet());
         followersToTerminate.forEach(this::followerTerminated);
         this.sweeping.stop();
     }

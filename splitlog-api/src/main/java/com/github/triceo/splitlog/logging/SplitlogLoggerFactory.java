@@ -1,10 +1,10 @@
 package com.github.triceo.splitlog.logging;
 
-import java.lang.reflect.Proxy;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Proxy;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * When Splitlog is running inside an app server such as JBoss, its internal
@@ -106,11 +106,7 @@ public final class SplitlogLoggerFactory {
             default:
                 final String propertyValue = System.getProperty(SplitlogLoggerFactory.LOGGING_PROPERTY_NAME,
                         SplitlogLoggerFactory.OFF_STATE);
-                if (propertyValue.equals(SplitlogLoggerFactory.ON_STATE)) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return propertyValue.equals(SplitlogLoggerFactory.ON_STATE);
         }
     }
 

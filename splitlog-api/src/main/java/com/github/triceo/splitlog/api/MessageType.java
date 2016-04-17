@@ -20,6 +20,6 @@ public enum MessageType {
     /**
      * A line added by {@link Follower#tag(String)}.
      */
-    TAG;
+    TAG
 
 }

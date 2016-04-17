@@ -3,10 +3,7 @@ package com.github.triceo.splitlog;
 import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.SortedMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -127,10 +124,10 @@ final class MessageStore {
      *
      * @return Unmodifiable list containing those messages.
      */
-    public List<Message> getAll() {
+    public Collection<Message> getAll() {
         final int firstMessagePosition = this.getFirstPosition();
         if (firstMessagePosition < MessageStore.INITIAL_MESSAGE_POSITION) {
-            return Collections.unmodifiableList(Collections.<Message> emptyList());
+            return Collections.unmodifiableList(Collections.emptyList());
         }
         return this.getFrom(firstMessagePosition);
     }

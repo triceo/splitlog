@@ -12,7 +12,7 @@ import com.github.triceo.splitlog.api.SimpleMessageCondition;
 public final class AllFollowerMessagesAcceptingCondition implements MidDeliveryMessageCondition<Follower>,
         SimpleMessageCondition {
 
-    public static final AllFollowerMessagesAcceptingCondition INSTANCE = new AllFollowerMessagesAcceptingCondition();
+    public static final SimpleMessageCondition INSTANCE = new AllFollowerMessagesAcceptingCondition();
 
     private AllFollowerMessagesAcceptingCondition() {
         // singleton

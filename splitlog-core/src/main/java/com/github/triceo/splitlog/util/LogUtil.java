@@ -9,8 +9,8 @@ import com.github.triceo.splitlog.api.MessageProducer;
 
 public class LogUtil {
 
-    public static enum Level {
-        DEBUG, ERROR, INFO, TRACE, WARNING;
+    public enum Level {
+        DEBUG, ERROR, INFO, TRACE, WARNING
     }
 
     private static final Object[] NOARGS = new Object[0];

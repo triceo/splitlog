@@ -167,10 +167,7 @@ final class DefaultMessage implements Message {
             return false;
         }
         final DefaultMessage other = (DefaultMessage) obj;
-        if (this.uniqueId != other.uniqueId) {
-            return false;
-        }
-        return true;
+        return this.uniqueId == other.uniqueId;
     }
 
     @Override
